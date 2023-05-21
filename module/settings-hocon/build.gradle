@@ -1,0 +1,4 @@
+dependencies {
+    api project(':module:settings')
+    api 'com.typesafe:config:1.4.2'
+}

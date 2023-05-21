@@ -1,0 +1,25 @@
+rootProject.name = 'mcode'
+
+// Common project
+include 'common'
+
+// Modules
+include(
+	'module:task',
+	'module:settings',
+	'module:settings-yaml',
+	'module:settings-hocon',
+	'module:settings-toml',
+	'module:lang'
+	)
+
+// Platforms
+include(
+	'platform:bukkit'
+	)
+
+// Extensions
+include(
+	'extension:type',
+	'extension:lookup'
+	)
