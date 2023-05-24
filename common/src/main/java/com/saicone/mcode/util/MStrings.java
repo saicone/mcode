@@ -10,8 +10,13 @@ import java.util.stream.Collectors;
 /**
  * Utility class to handle Strings with different Minecraft options, like center text or colorize.<br>
  * So legacy, RGB and special colors are supported like 'rainbow' and 'gradient'.
+ * <br>
+ * <br>
  * <h2>Minecraft chat text</h2>
- * The default Minecraft font
+ * The default Minecraft font length is counted by the number of pixels that chars are using, the in-game
+ * chat by default has a maximum width of 300px, so it only can display a maximum number of words per line
+ * depending on total px length, this may be different on Bedrock clients that adjust font size to allow more
+ * words per line. Take in count that legacy and RGB colors are ignored in text length count.
  *
  * @author Rubenicos
  */
@@ -213,7 +218,50 @@ public class MStrings {
 
     @NotNull
     public static List<String> justifyText(@NotNull String text, int width, char colorChar) {
-
+        final List<String> list = new ArrayList<>();
+        if (text.isBlank()) {
+            return list;
+        }
+        final String[] words = text.split(" ");
+        if (words.length < 2) {
+            return list;
+        }
+        final List<String> pending = new ArrayList<>();
+        int px = 0;
+        for (int i = 0; i < words.length; i++) {
+            final String word = words[i];
+            if (word.isBlank()) {
+                continue;
+            }
+            final int length = getFontLength(word, colorChar);
+            if ((px + length + pending.size() * 4) >= width || i + 1 >= words.length) {
+                if (px == 0) {
+                    list.add(word);
+                    continue;
+                }
+                final int size = pending.size() - 1;
+                if (size == 0) {
+                    list.add(pending.get(0));
+                } else {
+                    final StringBuilder builder = new StringBuilder();
+                    int spaces = (width - px) / 4;
+                    for (int i1 = 0; i1 < size; i1++) {
+                        // Round up remaining spaces with current size
+                        final int count = (spaces - 1) / (size - i1) + 1;
+                        builder.append(pending.get(i1)).append(" ".repeat(count));
+                        // Subtract appended spaces
+                        spaces -= count;
+                    }
+                    builder.append(pending.get(size));
+                    list.add(builder.toString());
+                }
+                px = 0;
+                pending.clear();
+            }
+            px = px + length;
+            pending.add(word);
+        }
+        return list;
     }
 
     @NotNull
@@ -237,6 +285,7 @@ public class MStrings {
     @NotNull
     public static String spacesToCenter(int length, int width) {
         int px = width - length;
+        // 3 px for space + 1 px separator between spaces
         if (px < 4) {
             return "";
         }
@@ -275,6 +324,7 @@ public class MStrings {
 
                 if (isColorCode(colorType)) { // Legacy color
                     builder.append(COLOR_CHAR).append(colorType);
+                    i++;
                     continue;
                 }
 
@@ -311,7 +361,6 @@ public class MStrings {
             builder.append(toRgb(color.toString()));
             return color.length() + 1;
         } else {
-            builder.append(chars[i]);
             return 0;
         }
     }
