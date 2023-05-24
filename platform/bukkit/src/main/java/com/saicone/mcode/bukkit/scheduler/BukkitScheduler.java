@@ -62,6 +62,11 @@ public class BukkitScheduler implements Scheduler<Integer> {
         return new BukkitTimer(id);
     }
 
+    @Override
+    public boolean isMainThread() {
+        return Bukkit.isPrimaryThread();
+    }
+
     public class BukkitTimer extends TaskTimer<Integer> {
 
         private BukkitRunnable bukkitRunnable;

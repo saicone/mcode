@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 public class Task {
 
     private static Scheduler<Object> scheduler = null;
-    private static final Map<String, TaskTimer> timers = new HashMap<>();
+    private static final Map<String, TaskTimer<Object>> timers = new HashMap<>();
 
     Task() {
     }
@@ -118,8 +118,12 @@ public class Task {
     }
 
     @NotNull
-    public static TaskTimer timer(@NotNull String id) {
+    public static TaskTimer<Object> timer(@NotNull String id) {
         return scheduler.timer(id).onClear(timer -> timers.remove(timer.getId()));
+    }
+
+    public static boolean isMainThread() {
+        return scheduler.isMainThread();
     }
 
     public static void stop(Object id) {

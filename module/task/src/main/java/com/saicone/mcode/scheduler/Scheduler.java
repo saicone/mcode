@@ -45,4 +45,8 @@ public interface Scheduler<T> {
             }
         };
     }
+
+    default boolean isMainThread() {
+        return false;
+    }
 }
