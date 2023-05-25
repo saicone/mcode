@@ -4,6 +4,7 @@ import com.google.common.base.Enums;
 import com.saicone.mcode.bukkit.util.ServerInstance;
 import com.saicone.mcode.module.lang.LangLoader;
 import com.saicone.mcode.module.lang.display.ActionbarDisplay;
+import com.saicone.mcode.module.lang.display.Display;
 import com.saicone.mcode.module.lang.display.SoundDisplay;
 import com.saicone.mcode.module.lang.display.TextDisplay;
 import com.saicone.mcode.module.lang.display.TitleDisplay;
@@ -191,6 +192,23 @@ public class BukkitLang extends LangLoader<CommandSender, Player> {
     }
 
     public static class TextLoader extends TextDisplay.Loader<CommandSender> {
+        @Override
+        @SuppressWarnings("unchecked")
+        public @Nullable Display<CommandSender> load(@NotNull Map<String, Object> map) {
+            if (ServerInstance.isSpigot) {
+                return super.load(map);
+            }
+            final Object obj = get(map, "text");
+            if (obj == null) {
+                return null;
+            }
+            if (obj instanceof List) {
+                return load((List<Object>) obj);
+            } else {
+                return load(String.valueOf(obj));
+            }
+        }
+
         @Override
         protected @Nullable Object parseAction(@NotNull String s) {
             Object object = Enums.getIfPresent(HoverEvent.Action.class, s.toUpperCase()).orNull();
