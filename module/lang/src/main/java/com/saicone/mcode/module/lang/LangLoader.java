@@ -1,6 +1,7 @@
 package com.saicone.mcode.module.lang;
 
 import com.saicone.mcode.module.lang.display.Display;
+import com.saicone.mcode.platform.Text;
 import com.saicone.mcode.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -429,7 +430,7 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
 
     @NotNull
     public String parse(@NotNull SenderT sender, @Nullable String text) {
-        return text == null ? "null" : text;
+        return text == null ? "null" : Text.of(text).parse(sender).getString();
     }
 
     @NotNull
@@ -439,7 +440,7 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
 
     @NotNull
     public String parseAgent(@NotNull SenderT agent, @Nullable String text) {
-        return text == null ? "null" : text;
+        return text == null ? "null" : Text.of(text).parseAgent(agent).getString();
     }
 
     @NotNull

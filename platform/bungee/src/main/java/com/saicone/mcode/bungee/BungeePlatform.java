@@ -1,4 +1,10 @@
 package com.saicone.mcode.bungee;
 
-public class BungeePlatform {
+import com.saicone.mcode.Platform;
+
+public class BungeePlatform extends Platform {
+
+    public BungeePlatform() {
+        setInstance(this);
+    }
 }

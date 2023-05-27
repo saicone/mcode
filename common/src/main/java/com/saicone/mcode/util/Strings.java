@@ -8,8 +8,10 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiConsumer;
-import java.util.function.Function;
+import java.util.function.BiFunction;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -238,8 +240,47 @@ public class Strings {
     }
 
     @NotNull
-    public static String replacePlaceholder(@NotNull String s, char start, @NotNull String id, char end, @NotNull Function<String, String> function) {
-        if (s.isBlank() || !s.contains("" + start) || s.length() < (id.length() + 4)) {
+    public static String replaceArgs(@NotNull String s, @NotNull Map<String, Object> args) {
+        if (args.size() < 1 || s.isBlank()) {
+            return s;
+        }
+        final StringBuilder builder = new StringBuilder(s.length());
+        int start = 0;
+        int end;
+        int index = 0;
+        while ((start = s.indexOf('{', start)) >= 0 && (end = s.indexOf('}', start)) >= 0) {
+            if (index < start) {
+                builder.append(s, index, start);
+            }
+            if (end - start > 1) {
+                final String key = s.substring(start + 1, end);
+                if (args.containsKey(key)) {
+                    builder.append(args.get(key));
+                } else {
+                    builder.append('{').append(key).append('}');
+                }
+            }
+            index = end + 1;
+        }
+        if (index < s.length()) {
+            builder.append(s, index, s.length());
+        }
+        return builder.toString();
+    }
+
+    @NotNull
+    public static <T> String replaceBracketPlaceholder(@Nullable T type, @NotNull String s, @NotNull Predicate<String> predicate, @NotNull BiFunction<T, String, Object> function) {
+        return replacePlaceholder(type, s, '{', '}', predicate, function);
+    }
+
+    @NotNull
+    public static <T> String replacePlaceholder(@Nullable T type, @NotNull String s, @NotNull Predicate<String> predicate, @NotNull BiFunction<T, String, Object> function) {
+        return replacePlaceholder(type, s, '%', '%', predicate, function);
+    }
+
+    @NotNull
+    public static <T> String replacePlaceholder(@Nullable T type, @NotNull String s, char start, char end, @NotNull Predicate<String> predicate, @NotNull BiFunction<T, String, Object> function) {
+        if (s.isBlank() || !s.contains("" + start) || s.length() < 4) {
             return s;
         }
 
@@ -261,20 +302,23 @@ public class Strings {
             while (++i < chars.length) {
                 final char c1 = chars[i];
                 if (c1 == '_') {
-                    if (i > mark1 && i + 2 < chars.length && s.substring(mark1, i).equalsIgnoreCase(id)) {
-                        final int mark2 = i + 1;
-                        while (++i < chars.length) {
-                            final char c2 = chars[i];
-                            if (c2 == end) {
-                                builder.replace(mark, i, function.apply(s.substring(mark2, i)));
-                                break;
-                            } else {
-                                builder.append(c2);
+                    if (i > mark1 && i + 2 < chars.length) {
+                        final String id = s.substring(mark1, i);
+                        if (predicate.test(id)) {
+                            final int mark2 = i + 1;
+                            while (++i < chars.length) {
+                                final char c2 = chars[i];
+                                if (c2 == end) {
+                                    builder.replace(mark, i, String.valueOf(function.apply(type, s.substring(mark2, i))));
+                                    break;
+                                } else {
+                                    builder.append(c2);
+                                }
                             }
+                            break;
                         }
-                    } else {
-                        builder.append(c1);
                     }
+                    builder.append(c1);
                     break;
                 } else {
                     builder.append(c1);
