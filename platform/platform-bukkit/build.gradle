@@ -9,12 +9,11 @@ repositories {
 dependencies {
     compileOnly 'org.spigotmc:spigot-api:1.19.4-R0.1-SNAPSHOT'
     compileOnly 'com.mojang:authlib:1.5.26' // 3.11.50
-    compileOnly project(':module:task')
-    compileOnly project(':module:settings')
-    compileOnly project(':module:lang')
-    compileOnly project(':module:gui')
-    compileOnly project(':module:delivery')
-    compileOnly project(':extension:lookup')
+    compileOnly project(':module:module-task')
+    compileOnly project(':module:module-settings')
+    compileOnly project(':module:module-lang')
+    compileOnly project(':module:module-delivery')
+    compileOnly project(':extension:extension-lookup')
 
     compileOnly ('me.clip:placeholderapi:2.11.3') { transitive = false }
 }

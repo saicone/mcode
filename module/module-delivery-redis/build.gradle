@@ -1,4 +1,4 @@
 dependencies {
-    api project(':module:delivery')
+    api project(':module:module-delivery')
     api 'redis.clients:jedis:4.4.1'
 }

@@ -1,4 +1,4 @@
 dependencies {
-    api project(':module:delivery')
+    api project(':module:module-delivery')
     api 'com.rabbitmq:amqp-client:5.17.0'
 }

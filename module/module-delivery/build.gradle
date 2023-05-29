@@ -1,4 +1,4 @@
 dependencies {
     api 'com.google.guava:guava:31.1-jre'
-    compileOnly project(':extension:cache-set')
+    compileOnly project(':extension:extension-cache-set')
 }

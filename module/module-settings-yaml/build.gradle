@@ -1,4 +1,4 @@
 dependencies {
-    api project(':module:settings')
+    api project(':module:module-settings')
     api 'org.yaml:snakeyaml:2.0'
 }

@@ -1,4 +1,4 @@
 dependencies {
     api project(':common')
-    compileOnly project(':module:settings')
+    compileOnly project(':module:module-settings')
 }

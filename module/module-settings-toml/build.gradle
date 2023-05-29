@@ -1,5 +1,5 @@
 dependencies {
-    api project(':module:settings')
+    api project(':module:module-settings')
     //api 'org.tomlj:tomlj:1.1.0'
     api 'com.electronwill.night-config:toml:3.6.0'
 }
