@@ -6,10 +6,12 @@ include 'common'
 // Modules
 include(
 	'module:module-delivery',
-	'module:module-delivery-sql',
-	'module:module-delivery-redis',
 	'module:module-delivery-rabbitmq',
+	'module:module-delivery-redis',
+	'module:module-delivery-sql',
 	'module:module-lang',
+	'module:module-script',
+	'module:module-script-js',
 	'module:module-settings',
 	'module:module-settings-yaml',
 	'module:module-settings-hocon',
