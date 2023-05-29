@@ -23,6 +23,10 @@ import java.util.stream.Collectors;
 public class MStrings {
 
     /**
+     * Use or not Bungeecord HEX color format, false by default.
+     */
+    public static boolean BUNGEE_HEX = false;
+    /**
      * Default Minecraft chat width, this may be different on client-side
      */
     public static final int CHAT_WIDTH = 300;
@@ -96,8 +100,10 @@ public class MStrings {
             if (i + 1 < chars.length && ((mcChar = (c == COLOR_CHAR)) || c == colorChar)) {
                 final char c1 = chars[i + 1];
                 // Skip RGB color
-                if (c1 == 'x' && isHexFormat(chars, i + 2, mcChar ? COLOR_CHAR : colorChar)) {
+                if (BUNGEE_HEX && c1 == 'x' && isHexFormat(chars, i + 2, 2, mcChar ? COLOR_CHAR : colorChar)) {
                     i = i + 12;
+                } else if (c1 == '#' && isHexFormat(chars, i + 2, 1, mcChar ? COLOR_CHAR : colorChar)) {
+                    i = i + 6;
                 } else if (isColorCode(c1)) { // Skip legacy color code, so (un)mark text as bold depending on color char
                     switch (c1) {
                         case 'l':
@@ -148,6 +154,10 @@ public class MStrings {
         return COLOR_CODES.contains(c) || c == '#' || c == '$';
     }
 
+    public static boolean isAnyColorCode(char c) {
+        return COLOR_CODES.contains(c) || (BUNGEE_HEX && c == 'x');
+    }
+
     public static boolean isValidHex(@NotNull String s) {
         try {
             Integer.parseInt(s, 16);
@@ -157,25 +167,13 @@ public class MStrings {
         }
     }
 
-    public static boolean isHexFormat(char[] chars) {
-        return isHexFormat(chars, 2, COLOR_CHAR);
-    }
-
-    public static boolean isHexFormat(char[] chars, char colorChar) {
-        return isHexFormat(chars, 2, colorChar);
-    }
-
-    public static boolean isHexFormat(char[] chars, int start) {
-        return isHexFormat(chars, start, COLOR_CHAR);
-    }
-
-    public static boolean isHexFormat(char[] chars, int start, char colorChar) {
+    public static boolean isHexFormat(char[] chars, int start, int sum, char colorChar) {
         final int max = start + 12;
         if (max > chars.length) {
             return false;
         }
         final StringBuilder builder = new StringBuilder();
-        for (int i = start; i < max; i = i + 2) {
+        for (int i = start; i < max; i = i + sum) {
             if (chars[i] != colorChar) {
                 return false;
             }
@@ -330,7 +328,7 @@ public class MStrings {
 
                 final int total;
                 if (colorType == '#') { // Hex / RGB
-                    total = colorHex(builder, chars, i);
+                    total = colorHex(colorChar, builder, chars, i);
                 } else if (colorType == '$') { // Special type
                     total = colorSpecial(colorChar, s, builder, chars, i);
                 } else {
@@ -348,7 +346,7 @@ public class MStrings {
         return builder.toString();
     }
 
-    private static int colorHex(@NotNull StringBuilder builder, char[] chars, int i) {
+    private static int colorHex(char colorChar, @NotNull StringBuilder builder, char[] chars, int i) {
         if (i + 7 >= chars.length) {
             return 0;
         }
@@ -358,7 +356,7 @@ public class MStrings {
         }
         if (color.length() == 6) {
             // Format: <char>#RRGGBB
-            builder.append(toRgb(color.toString()));
+            builder.append(toRgb(colorChar, color.toString()));
             return color.length() + 1;
         } else {
             return 0;
@@ -440,21 +438,28 @@ public class MStrings {
             return colorChar + "#" + color;
         }
 
-        final StringBuilder hex = new StringBuilder(COLOR_CHAR + "x");
-        for (char c : color.toCharArray()) {
-            hex.append(COLOR_CHAR).append(c);
+        if (BUNGEE_HEX) {
+            final StringBuilder hex = new StringBuilder(COLOR_CHAR + "x");
+            for (char c : color.toCharArray()) {
+                hex.append(COLOR_CHAR).append(c);
+            }
+            return hex.toString();
+        } else {
+            return COLOR_CHAR + '#' + color;
         }
-
-        return hex.toString();
     }
 
     @NotNull
     public static String toRgb(@NotNull Color color) {
-        final StringBuilder hex = new StringBuilder(COLOR_CHAR + "x");
-        for (char c : String.format("%08x", color.getRGB()).substring(2).toCharArray()) {
-            hex.append(COLOR_CHAR).append(c);
+        if (BUNGEE_HEX) {
+            final StringBuilder hex = new StringBuilder(COLOR_CHAR + "x");
+            for (char c : String.format("%08x", color.getRGB()).substring(2).toCharArray()) {
+                hex.append(COLOR_CHAR).append(c);
+            }
+            return hex.toString();
+        } else {
+            return COLOR_CHAR + '#' + String.format("%08x", color.getRGB()).substring(2);
         }
-        return hex.toString();
     }
 
     @NotNull
@@ -492,7 +497,7 @@ public class MStrings {
         int length = text.length();
         final char[] chars = text.toCharArray();
         for (int i = 0; i < chars.length - 1; i++) {
-            if (chars[i] == COLOR_CHAR && (isColorCode(chars[i + 1]) || chars[i + 1] == 'x')) {
+            if (chars[i] == COLOR_CHAR && isAnyColorCode(chars[i + 1])) {
                 length -= 2;
             }
         }
@@ -506,7 +511,7 @@ public class MStrings {
             final char c = chars[i];
             if (c == COLOR_CHAR && i + 1 < chars.length) {
                 final char c1 = chars[i + 1];
-                if (isColorCode(c1) || c1 == 'x') {
+                if (isAnyColorCode(c1)) {
                     i++;
                     builder.append(c).append(c1);
                     continue;
@@ -544,7 +549,7 @@ public class MStrings {
         int length = text.length();
         final char[] chars = text.toCharArray();
         for (int i = 0; i < chars.length - 1; i++) {
-            if (chars[i] == COLOR_CHAR && (isColorCode(chars[i + 1]) || chars[i + 1] == 'x')) {
+            if (chars[i] == COLOR_CHAR && isAnyColorCode(chars[i + 1])) {
                 length -= 2;
             }
         }
@@ -560,7 +565,7 @@ public class MStrings {
             final char c = chars[i];
             if (c == COLOR_CHAR && i + 1 < chars.length) {
                 final char c1 = chars[i + 1];
-                if (isColorCode(c1) || c1 == 'x') {
+                if (isAnyColorCode(c1)) {
                     i++;
                     builder.append(c).append(c1);
                     continue;
