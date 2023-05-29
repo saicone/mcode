@@ -471,6 +471,7 @@ public class MStrings {
             case "rainbow":
             case "r":
             case "lgbt":
+            case "lgtv":
                 return toRainbow(text, speed, args);
             case "gradient":
             case "g":
@@ -498,7 +499,7 @@ public class MStrings {
         final int totalColors = Math.max(looping ? Math.min(length, 30) : length, 1);
         final float hueStep = 1.0F / totalColors;
 
-        float hue = speed != -1 ? (float) ((((Math.floor(System.currentTimeMillis() / 50.0)) / 360) * speed) % 1) : 0;
+        float hue = speed != 0 ? (float) ((((Math.floor(System.currentTimeMillis() / 50.0)) / 360) * speed) % 1) : 0;
 
         final StringBuilder builder = new StringBuilder();
         for (int i = 0; i < chars.length; i++) {
@@ -528,6 +529,7 @@ public class MStrings {
         final boolean looping = COLOR_SPECIAL_LOOP.contains(args[args.length - 1].toLowerCase());
         final List<Color> colors = Arrays.stream(args)
                 .filter(MStrings::isValidHex)
+                .map(s -> "#" + s)
                 .map(Color::decode)
                 .collect(Collectors.toList());
 
@@ -548,7 +550,7 @@ public class MStrings {
         }
         final int totalSteps = (looping ? Math.min(length, 30) : length) - 1;
 
-        long hexStep = speed != -1 ? System.currentTimeMillis() / speed : 0;
+        long hexStep = speed != 0 ? System.currentTimeMillis() / speed : 0;
         final int roundSize = (colors.size() - 1) / 2 + 1;
         final float segment = (float) totalSteps / roundSize;
         final float increment = (float) totalSteps / (colors.size() - 1);
