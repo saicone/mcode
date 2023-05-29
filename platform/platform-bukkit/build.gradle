@@ -12,6 +12,7 @@ dependencies {
     compileOnly project(':module:task')
     compileOnly project(':module:settings')
     compileOnly project(':module:lang')
+    compileOnly project(':module:gui')
     compileOnly project(':module:delivery')
     compileOnly project(':extension:lookup')
 

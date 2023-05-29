@@ -5,21 +5,27 @@ include 'common'
 
 // Modules
 include(
-	'module:task',
-	'module:settings',
-	'module:settings-yaml',
-	'module:settings-hocon',
-	'module:settings-toml',
-	'module:lang'
+	'module:module-delivery',
+	'module:module-delivery-sql',
+	'module:module-delivery-redis',
+	'module:module-delivery-rabbitmq',
+	'module:module-lang',
+	'module:module-settings',
+	'module:module-settings-yaml',
+	'module:module-settings-hocon',
+	'module:module-settings-toml',
+	'module:module-task'
 	)
 
 // Platforms
 include(
-	'platform:bukkit'
+	'platform:platform-bukkit',
+	'platform:platform-bungee'
 	)
 
 // Extensions
 include(
-	'extension:type',
-	'extension:lookup'
+	'extension:extension-cache-set',
+	'extension:extension-lookup',
+	'extension:extension-type'
 	)
