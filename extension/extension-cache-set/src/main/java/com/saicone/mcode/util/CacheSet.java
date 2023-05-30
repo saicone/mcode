@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public class CacheSet<E> implements Set<E> {
@@ -23,16 +24,24 @@ public class CacheSet<E> implements Set<E> {
     }
 
     public CacheSet(long cacheTime) {
-        this(cacheTime, 5000);
+        this(cacheTime, cacheTime / 2);
     }
 
     public CacheSet(long cacheTime, long checkPeriod) {
-        this(cacheTime, checkPeriod, null);
+        this(cacheTime, checkPeriod, TimeUnit.MILLISECONDS, null);
+    }
+
+    public CacheSet(long cacheTime, long checkPeriod, @NotNull TimeUnit timeUnit) {
+        this(cacheTime, checkPeriod, timeUnit, null);
     }
 
     public CacheSet(long cacheTime, long checkPeriod, @Nullable Consumer<E> removalConsumer) {
-        this.cacheTime = cacheTime;
-        this.checkPeriod = checkPeriod;
+        this(cacheTime, checkPeriod, TimeUnit.MILLISECONDS, removalConsumer);
+    }
+
+    public CacheSet(long cacheTime, long checkPeriod, @NotNull TimeUnit timeUnit, @Nullable Consumer<E> removalConsumer) {
+        this.cacheTime = timeUnit.toMillis(cacheTime);
+        this.checkPeriod = timeUnit.toMillis(checkPeriod);
         this.removalConsumer = removalConsumer;
     }
 
