@@ -1,6 +1,9 @@
 package com.saicone.mcode.module.script;
 
+import com.saicone.mcode.Platform;
+import com.saicone.mcode.module.script.action.Delay;
 import com.saicone.mcode.module.script.condition.Compare;
+import com.saicone.mcode.scheduler.Task;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -9,12 +12,17 @@ import java.util.*;
 
 public class Script {
 
+    private static final boolean USE_TASK = Platform.isAvailable("Task");
+
     private static final Map<EvalKey, EvalBuilder<? extends Action>> ACTIONS = new HashMap<>();
     private static final Map<EvalKey, EvalBuilder<? extends Condition>> CONDITIONS = new HashMap<>();
     private static final Map<EvalKey, ScriptFunction<EvalUser, ActionResult>> COMPILED_ACTIONS = new HashMap<>();
     private static final Map<EvalKey, ScriptFunction<EvalUser, Boolean>> COMPILED_CONDITIONS = new HashMap<>();
 
     static {
+        if (USE_TASK) {
+            Delay.BUILDER.register();
+        }
         putCondition(EvalKey.regex("(?i)compare|eval"), object -> new Compare(String.valueOf(object)));
     }
 
@@ -166,15 +174,7 @@ public class Script {
                 }
             }
             if (!actions.isEmpty()) {
-                function = (user) -> {
-                    for (ScriptFunction<EvalUser, ActionResult> act : actions) {
-                        final ActionResult result = act.apply(user);
-                        if (result != ActionResult.DONE) {
-                            return result;
-                        }
-                    }
-                    return ActionResult.DONE;
-                };
+                function = (user) -> run(user, actions, 0);
             }
         } else if (action instanceof Object[]) {
             function = getAction(asString((Object[]) action), object);
@@ -207,10 +207,15 @@ public class Script {
 
     @Nullable
     public static ScriptFunction<EvalUser, ActionResult> getAction(@NotNull String id, @Nullable Object object) {
-        final String[] split = id.split("[:=;*]", 2);
+        final String[] split = id.split("[:=;*'\"]", 2);
         if (split.length < 2) {
             return getAction(id.trim(), null, object);
         } else {
+            final char start = id.charAt(split[0].length());
+            final char end = split[1].charAt(split[1].length() - 1);
+            if (start == end && (start == '\'' || start == '"')) {
+                split[1] = split[1].substring(0, split[1].length() - 1);
+            }
             return getAction(split[0].trim(), split[1].startsWith(" ") ? split[1].substring(1) : split[1], object);
         }
     }
@@ -218,18 +223,28 @@ public class Script {
     @Nullable
     public static ScriptFunction<EvalUser, ActionResult> getAction(@NotNull String id, @Nullable Object value, @Nullable Object object) {
         String finalId = id.replace("-", "").replace(" ", "").toLowerCase();
+        ScriptFunction<EvalUser, ActionResult> found = null;
         switch (finalId) {
             case "done":
-                return Action.DONE;
+                found = Action.DONE;
+                break;
             case "return":
                 return Action.RETURN;
             case "break":
             case "stop":
-                return Action.BREAK;
+                found = Action.BREAK;
+                break;
             case "continue":
                 return Action.CONTINUE;
             default:
                 break;
+        }
+        if (found != null) {
+            final Delay delay = Delay.BUILDER.build(value);
+            if (delay != null && delay.getTime() > 0) {
+                return found.map(result -> result.delay(delay.getTime(), delay.getUnit()));
+            }
+            return found;
         }
         final EvalBuilder<? extends Action> builder = ACTIONS.get(finalId);
         if (builder != null) {
@@ -357,6 +372,26 @@ public class Script {
         return COMPILED_CONDITIONS.put(EvalKey.of(key), condition);
     }
 
+    public static boolean removeAction(@NotNull Object key) {
+        Object result = ACTIONS.remove(key);
+        if (result != null) {
+            COMPILED_ACTIONS.remove(key);
+        } else {
+            result = COMPILED_ACTIONS.remove(key);
+        }
+        return result != null;
+    }
+
+    public static boolean removeCondition(@NotNull Object key) {
+        Object result = CONDITIONS.remove(key);
+        if (result != null) {
+            COMPILED_CONDITIONS.remove(key);
+        } else {
+            result = COMPILED_CONDITIONS.remove(key);
+        }
+        return result != null;
+    }
+
     @Nullable
     private static ScriptFunction<EvalUser, ActionResult> concat(@Nullable ScriptFunction<EvalUser, ActionResult> base, @Nullable ScriptFunction<EvalUser, ActionResult> other) {
         if (other == null) {
@@ -375,5 +410,28 @@ public class Script {
             builder.append(o);
         }
         return builder.toString();
+    }
+
+    @NotNull
+    private static ActionResult run(EvalUser user, List<ScriptFunction<EvalUser, ActionResult>> actions, int start) {
+        for (int i = start; i < actions.size(); i++) {
+            final var act = actions.get(i);
+            final ActionResult result = act.apply(user);
+            if (result == ActionResult.BREAK) {
+                if (result.hasDelay()) {
+                    return result.transfer("DONE");
+                }
+                break;
+            } else if (result != ActionResult.DONE) {
+                return result;
+            } else if (result.hasDelay()) {
+                if (USE_TASK && i + 1 < actions.size()) {
+                    final int newStart = i + 1;
+                    Task.run(result.getDelay(), result.getTimeUnit(), () -> run(user, actions, newStart));
+                }
+                return result;
+            }
+        }
+        return ActionResult.DONE;
     }
 }
