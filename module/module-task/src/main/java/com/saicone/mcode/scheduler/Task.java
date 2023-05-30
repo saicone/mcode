@@ -34,7 +34,7 @@ public class Task {
     }
 
     public static Object run(long delay, @NotNull TimeUnit unit, @NotNull Runnable runnable) {
-        return syncLater(runnable, delay, unit);
+        return run(!isMainThread(), delay, unit, runnable);
     }
 
     public static Object run(long delay, long period, @NotNull Runnable runnable) {
@@ -42,7 +42,7 @@ public class Task {
     }
 
     public static Object run(long delay, long period, @NotNull TimeUnit unit, @NotNull Runnable runnable) {
-        return syncTimer(runnable, delay, period, unit);
+        return run(!isMainThread(), delay, period, unit, runnable);
     }
 
     public static Object run(boolean async, @NotNull Runnable runnable) {
