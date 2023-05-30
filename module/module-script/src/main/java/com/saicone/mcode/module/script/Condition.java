@@ -10,6 +10,9 @@ public class Condition implements Eval<Boolean> {
 
     private final String value;
 
+    private ScriptFunction<EvalUser, Boolean> script;
+    private boolean compiled;
+
     public Condition(@Nullable String value) {
         this.value = value;
     }
@@ -21,6 +24,14 @@ public class Condition implements Eval<Boolean> {
 
     @Override
     public @Nullable ScriptFunction<EvalUser, Boolean> compile() {
+        if (!compiled) {
+            script = build();
+            compiled = true;
+        }
+        return script;
+    }
+
+    public @Nullable ScriptFunction<EvalUser, Boolean> build() {
         return (user) -> eval(user.parse(this.value));
     }
 

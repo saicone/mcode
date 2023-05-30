@@ -1,4 +1,5 @@
 dependencies {
     api project(':common')
+    compileOnly project(':extension:extension-cache-set')
     compileOnly project(':module:module-task')
 }

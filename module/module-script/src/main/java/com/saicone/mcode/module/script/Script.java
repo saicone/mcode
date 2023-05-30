@@ -3,7 +3,9 @@ package com.saicone.mcode.module.script;
 import com.saicone.mcode.Platform;
 import com.saicone.mcode.module.script.action.Delay;
 import com.saicone.mcode.module.script.condition.Compare;
+import com.saicone.mcode.module.script.condition.Cooldown;
 import com.saicone.mcode.scheduler.Task;
+import com.saicone.mcode.util.Strings;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -24,6 +26,9 @@ public class Script {
             Delay.BUILDER.register();
         }
         putCondition(EvalKey.regex("(?i)compare|eval"), object -> new Compare(String.valueOf(object)));
+        if (Platform.isAvailable("CacheSet")) {
+            putCondition(EvalKey.regex("(?i)cooldown"), object -> new Cooldown(String.valueOf(object)));
+        }
     }
 
     private Object loaded;
@@ -324,11 +329,7 @@ public class Script {
         }
 
         if (!CONDITIONS.containsKey(finalId) && !COMPILED_CONDITIONS.containsKey(finalId)) {
-            if (finalId.startsWith("has") || finalId.startsWith("are")) {
-                finalId = finalId.substring(3);
-            } else if (finalId.startsWith("is")) {
-                finalId = finalId.substring(2);
-            }
+            finalId = Strings.replacePrefix(finalId, "", "has", "are", "is", "meet");
         }
 
         final ScriptFunction<EvalUser, Boolean> function;

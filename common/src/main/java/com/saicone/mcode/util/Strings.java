@@ -178,6 +178,20 @@ public class Strings {
         return MStrings.color(colorChar, builder.toString());
     }
 
+    @Nullable
+    @Contract("!null, _, _ -> !null")
+    public static String replacePrefix(@Nullable String s, @NotNull String replacement, @NotNull String... prefixes) {
+        if (s == null) {
+            return null;
+        }
+        for (String prefix : prefixes) {
+            if (s.startsWith(prefix)) {
+                return replacement + s.substring(prefix.length());
+            }
+        }
+        return s;
+    }
+
     @NotNull
     public static String replaceArgs(@NotNull String s, @Nullable Object... args) {
         if (args.length < 1 || s.isBlank()) {

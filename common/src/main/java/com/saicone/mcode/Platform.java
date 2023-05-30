@@ -2,6 +2,7 @@ package com.saicone.mcode;
 
 import com.saicone.mcode.platform.Text;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -53,6 +54,11 @@ public abstract class Platform {
         } catch (ClassNotFoundException e) {
             return false;
         }
+    }
+
+    @Nullable
+    public String getUserId(@Nullable Object user) {
+        return null;
     }
 
     @NotNull

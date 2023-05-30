@@ -15,7 +15,7 @@ public class Compare extends Condition {
     }
 
     @Override
-    public @Nullable ScriptFunction<EvalUser, Boolean> compile() {
+    public @Nullable ScriptFunction<EvalUser, Boolean> build() {
         if (getValue() == null) {
             return null;
         }

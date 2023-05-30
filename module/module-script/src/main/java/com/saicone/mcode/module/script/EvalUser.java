@@ -1,5 +1,6 @@
 package com.saicone.mcode.module.script;
 
+import com.saicone.mcode.Platform;
 import com.saicone.mcode.platform.Text;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -11,10 +12,18 @@ import java.util.function.Function;
 
 public class EvalUser {
 
+    private String id;
     private Object subject;
     private Object agent;
     private Object[] indexedArgs;
     private Map<String, Object> mappedArgs;
+
+    @NotNull
+    @Contract("_ -> this")
+    public EvalUser id(@NotNull String id) {
+        this.id = id;
+        return this;
+    }
 
     @NotNull
     @Contract("_ -> this")
@@ -39,6 +48,14 @@ public class EvalUser {
     public EvalUser args(@Nullable Map<String, Object> args) {
         this.mappedArgs = args;
         return this;
+    }
+
+    @Nullable
+    public String getId() {
+        if (id != null) {
+            return id;
+        }
+        return Platform.getInstance().getUserId(getAgent());
     }
 
     @Nullable
