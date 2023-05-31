@@ -1,6 +1,9 @@
 package com.saicone.mcode.module.lang;
 
+import com.saicone.mcode.Platform;
 import com.saicone.mcode.module.lang.display.Display;
+import com.saicone.mcode.module.settings.Settings;
+import com.saicone.mcode.module.settings.SettingsFile;
 import com.saicone.mcode.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -30,6 +33,8 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
             "es_uy", "es_es",
             "es_ve", "es_es"
     );
+
+    private static final boolean USE_SETTINGS = Platform.isAvailable("Settings");
 
 
     private final Class<?>[] langProviders;
@@ -79,7 +84,7 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
     }
 
     protected void loadDisplays(@NotNull String name, @NotNull File file) {
-        for (var entry : getFileObjects(file).entrySet()) {
+        for (var entry : getObjects(file).entrySet()) {
             final Display<SenderT> display = loadDisplay(entry.getValue());
             if (display != null) {
                 if (!displays.containsKey(name)) {
@@ -188,6 +193,21 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
                 final String name = index >= 1 ? file.getName().substring(0, index) : file.getName();
                 map.computeIfAbsent(name.toLowerCase(), s -> new ArrayList<>()).add(file);
             }
+        }
+        return map;
+    }
+
+    @NotNull
+    private Map<String, Object> getObjects(@NotNull File file) {
+        if (!USE_SETTINGS) {
+            return getFileObjects(file);
+        }
+        final SettingsFile settings = new SettingsFile("file", file.getName()).setParent(file.getParentFile());
+        settings.load();
+        final Map<String, Object> map = new HashMap<>();
+        for (String[] path : settings.getDeepKeys()) {
+            final var node = settings.get(path);
+            map.put(String.join(".", path), node instanceof Settings ? ((Settings) node).asMap() : node.getValue());
         }
         return map;
     }
