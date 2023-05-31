@@ -7,4 +7,5 @@ dependencies {
     compileOnly project(':module:module-task')
     compileOnly project(':module:module-settings')
     compileOnly project(':module:module-lang')
+    compileOnly project(':module:module-delivery')
 }
