@@ -1,11 +1,11 @@
 package com.saicone.mcode.module.lang.display;
 
 import com.saicone.mcode.module.lang.DisplayLoader;
-import com.saicone.mcode.module.lang.LangLoader;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
+import java.util.function.Function;
 
 public abstract class SoundDisplay<SenderT, SoundT> extends Display<SenderT> {
 
@@ -33,36 +33,18 @@ public abstract class SoundDisplay<SenderT, SoundT> extends Display<SenderT> {
     }
 
     @Override
-    public void sendTo(@NotNull LangLoader<SenderT, ? extends SenderT> loader, @NotNull SenderT type, @Nullable Object... args) {
-        final SoundT parsedSound = parseSound(loader.parse(type, args(sound, args)));
+    public void sendTo(@NotNull SenderT type, @NotNull Function<String, String> parser) {
+        final SoundT parsedSound = parseSound(parser.apply(sound));
         if (parsedSound != null) {
             playSound(type, parsedSound, volume, pitch);
         }
     }
 
     @Override
-    public void sendTo(@NotNull LangLoader<SenderT, ? extends SenderT> loader, @NotNull SenderT agent, @NotNull SenderT type, @Nullable Object... args) {
-        final SoundT parsedSound = parseSound(loader.parse(agent, type, args(sound, args)));
+    public void sendToAll(@NotNull Function<String, String> parser) {
+        final SoundT parsedSound = parseSound(parser.apply(sound));
         if (parsedSound != null) {
-            playSound(type, parsedSound, volume, pitch);
-        }
-    }
-
-    @Override
-    public void sendToAll(@NotNull LangLoader<SenderT, ? extends SenderT> loader, @Nullable Object... args) {
-        final SoundT parsedSound = parseSound(args(sound, args));
-        if (parsedSound != null) {
-            for (SenderT player : loader.getPlayers()) {
-                playSound(player, parsedSound, volume, pitch);
-            }
-        }
-    }
-
-    @Override
-    public void sendToAll(@NotNull LangLoader<SenderT, ? extends SenderT> loader, @NotNull SenderT agent, @Nullable Object... args) {
-        final SoundT parsedSound = parseSound(loader.parseAgent(agent, args(sound, args)));
-        if (parsedSound != null) {
-            for (SenderT player : loader.getPlayers()) {
+            for (SenderT player : players()) {
                 playSound(player, parsedSound, volume, pitch);
             }
         }

@@ -8,12 +8,15 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 public class DisplayLoader<SenderT> {
 
+    private static final Set<DisplayLoader<Object>> LOADERS = new HashSet<>();
     private static final DisplayLoader<?> EMPTY = new DisplayLoader<>("", Map.of()) {
         @Override
         public @Nullable Display<Object> load(@Nullable Object object) {
@@ -36,6 +39,8 @@ public class DisplayLoader<SenderT> {
         }
     };
 
+    @Language("RegExp")
+    private final String regex;
     private final Pattern pattern;
     private final Map<String, Object> defaults;
 
@@ -45,13 +50,28 @@ public class DisplayLoader<SenderT> {
         return (DisplayLoader<T>) EMPTY;
     }
 
-    public DisplayLoader(@NotNull @Language("RegExp") String regex, @NotNull Map<String, Object> defaults) {
-        this(Pattern.compile(regex), defaults);
+    @Nullable
+    public static Display<Object> loadDisplay(@Nullable Object object) {
+        return LangLoader.loadDisplay(LOADERS, object);
     }
 
-    public DisplayLoader(@NotNull Pattern pattern, @NotNull Map<String, Object> defaults) {
-        this.pattern = pattern;
+    public DisplayLoader(@NotNull @Language("RegExp") String regex, @NotNull Map<String, Object> defaults) {
+        this(regex, defaults, true);
+    }
+
+    @SuppressWarnings("unchecked")
+    public DisplayLoader(@NotNull @Language("RegExp") String regex, @NotNull Map<String, Object> defaults, boolean register) {
+        this.regex = regex;
+        this.pattern = Pattern.compile(regex);
         this.defaults = defaults;
+        if (register) {
+            LOADERS.add((DisplayLoader<Object>) this);
+        }
+    }
+
+    @NotNull
+    public @Language("RegExp") String getRegex() {
+        return regex;
     }
 
     @NotNull
@@ -93,6 +113,24 @@ public class DisplayLoader<SenderT> {
     protected boolean getBoolean(@NotNull Map<String, Object> data, @NotNull String key, boolean def) {
         final Object obj = get(data, key);
         return obj instanceof Boolean ? (Boolean) obj : (Boolean) defaults.getOrDefault(key, def);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        DisplayLoader<?> that = (DisplayLoader<?>) o;
+
+        if (!regex.equals(that.regex)) return false;
+        return defaults.equals(that.defaults);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = regex.hashCode();
+        result = 31 * result + defaults.hashCode();
+        return result;
     }
 
     @Contract("null, _ -> param2")

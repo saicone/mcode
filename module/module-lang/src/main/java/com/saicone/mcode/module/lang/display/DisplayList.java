@@ -1,10 +1,10 @@
 package com.saicone.mcode.module.lang.display;
 
-import com.saicone.mcode.module.lang.LangLoader;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.function.Function;
 
 public class DisplayList<SenderT> extends Display<SenderT> {
 
@@ -19,30 +19,44 @@ public class DisplayList<SenderT> extends Display<SenderT> {
     }
 
     @Override
-    public void sendTo(@NotNull LangLoader<SenderT, ? extends SenderT> loader, @NotNull SenderT sender, @Nullable Object... args) {
+    public void sendTo(@NotNull SenderT sender, @Nullable Object... args) {
         for (Display<SenderT> display : list) {
-            display.sendTo(loader, sender, args);
+            display.sendTo(sender, args);
         }
     }
 
     @Override
-    public void sendTo(@NotNull LangLoader<SenderT, ? extends SenderT> loader, @NotNull SenderT agent, @NotNull SenderT sender, @Nullable Object... args) {
+    public void sendTo(@NotNull SenderT agent, @NotNull SenderT sender, @Nullable Object... args) {
         for (Display<SenderT> display : list) {
-            display.sendTo(loader, agent, sender, args);
+            display.sendTo(agent, sender, args);
         }
     }
 
     @Override
-    public void sendToAll(@NotNull LangLoader<SenderT, ? extends SenderT> loader, @Nullable Object... args) {
+    public void sendTo(@NotNull SenderT type, @NotNull Function<String, String> parser) {
         for (Display<SenderT> display : list) {
-            display.sendToAll(loader, args);
+            display.sendTo(type, parser);
         }
     }
 
     @Override
-    public void sendToAll(@NotNull LangLoader<SenderT, ? extends SenderT> loader, @NotNull SenderT agent, @Nullable Object... args) {
+    public void sendToAll(@Nullable Object... args) {
         for (Display<SenderT> display : list) {
-            display.sendToAll(loader, agent, args);
+            display.sendToAll(args);
+        }
+    }
+
+    @Override
+    public void sendToAll(@NotNull SenderT agent, @Nullable Object... args) {
+        for (Display<SenderT> display : list) {
+            display.sendToAll(agent, args);
+        }
+    }
+
+    @Override
+    public void sendToAll(@NotNull Function<String, String> parser) {
+        for (Display<SenderT> display : list) {
+            display.sendToAll(parser);
         }
     }
 }

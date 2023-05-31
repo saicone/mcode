@@ -1,7 +1,6 @@
 package com.saicone.mcode.module.lang;
 
 import com.saicone.mcode.module.lang.display.Display;
-import com.saicone.mcode.platform.Text;
 import com.saicone.mcode.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -10,6 +9,7 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
@@ -93,14 +93,19 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
 
     @Nullable
     protected Display<SenderT> loadDisplay(@Nullable Object object) {
+        return loadDisplay(getDisplayLoaders(), object);
+    }
+
+    @Nullable
+    public static <T> Display<T> loadDisplay(@NotNull Iterable<DisplayLoader<T>> loaders, @Nullable Object object) {
         if (object == null) {
             return null;
         }
 
-        if (object instanceof List) {
-            final List<Display<SenderT>> list = new ArrayList<>();
-            for (Object o : (List<?>) object) {
-                final Display<SenderT> display = loadDisplay(o);
+        if (object instanceof Iterable) {
+            final List<Display<T>> list = new ArrayList<>();
+            for (Object o : (Iterable<?>) object) {
+                final Display<T> display = loadDisplay(loaders, o);
                 if (display != null) {
                     list.add(display);
                 }
@@ -114,11 +119,11 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
         if (object instanceof Map) {
             for (var entry : ((Map<?, ?>) object).entrySet()) {
                 if (String.valueOf(entry.getKey()).equalsIgnoreCase("type")) {
-                    return getDisplayLoader(String.valueOf(entry.getValue())).load(object);
+                    return getDisplayLoader(loaders, String.valueOf(entry.getValue())).load(object);
                 }
             }
         }
-        return getDisplayLoader("text").load(object);
+        return getDisplayLoader(loaders, "text").load(object);
     }
 
     private void computePaths() {
@@ -143,9 +148,9 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
         if (!displayLoaders.isEmpty()) {
             return;
         }
-        getFieldsFrom(getLangProviders(), field -> field.canAccess(null) && DisplayLoader.class.isAssignableFrom(field.getType()), field -> {
+        getFieldsFrom(getLangProviders(), field -> (field.canAccess(null) || field.canAccess(this)) && DisplayLoader.class.isAssignableFrom(field.getType()), field -> {
             try {
-                final DisplayLoader<SenderT> loader = (DisplayLoader<SenderT>) field.get(null);
+                final DisplayLoader<SenderT> loader = (DisplayLoader<SenderT>) field.get(this);
                 displayLoaders.add(loader);
             } catch (IllegalAccessException | ClassCastException e) {
                 e.printStackTrace();
@@ -197,7 +202,12 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
 
     @NotNull
     public DisplayLoader<SenderT> getDisplayLoader(@NotNull String id) {
-        for (DisplayLoader<SenderT> loader : getDisplayLoaders()) {
+        return getDisplayLoader(getDisplayLoaders(), id);
+    }
+
+    @NotNull
+    public static <T> DisplayLoader<T> getDisplayLoader(@NotNull Iterable<DisplayLoader<T>> loaders, @NotNull String id) {
+        for (DisplayLoader<T> loader : loaders) {
             if (loader.matches(id)) {
                 return loader;
             }
@@ -393,7 +403,7 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
     }
 
     protected void sendTo(@NotNull SenderT sender, @NotNull String language, @NotNull String path, @Nullable Object... args) {
-        getDisplay(language, path).sendTo(this, sender, args);
+        getDisplay(language, path).sendTo(sender, args);
     }
 
     public void sendTo(@NotNull SenderT agent, @NotNull SenderT sender, @NotNull String path, @Nullable Object... args) {
@@ -401,7 +411,15 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
     }
 
     protected void sendTo(@NotNull SenderT agent, @NotNull SenderT sender, @NotNull String language, @NotNull String path, @Nullable Object... args) {
-        getDisplay(language, path).sendTo(this, agent, sender, args);
+        getDisplay(language, path).sendTo(agent, sender, args);
+    }
+
+    public void sendTo(@NotNull SenderT sender, @NotNull String path, @NotNull Function<String, String> parser) {
+        sendTo(sender, getLanguage(sender), path, parser);
+    }
+
+    protected void sendTo(@NotNull SenderT sender, @NotNull String language, @NotNull String path, @NotNull Function<String, String> parser) {
+        getDisplay(language, path).sendTo(sender, parser);
     }
 
     public void sendToConsole(@NotNull String path, @Nullable Object... args) {
@@ -412,12 +430,16 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
         sendTo(agent, getConsoleSender(), path, args);
     }
 
+    public void sendToConsole(@NotNull String path, @NotNull Function<String, String> parser) {
+        sendTo(getConsoleSender(), path, parser);
+    }
+
     public void sendToAll(@NotNull String path, @Nullable Object... args) {
         sendToAll(defaultLanguage, path, args);
     }
 
     public void sendToAll(@NotNull String language, @NotNull String path, @Nullable Object... args) {
-        getDisplay(language, path).sendToAll(this, args);
+        getDisplay(language, path).sendToAll(args);
     }
 
     public void sendToAll(@NotNull SenderT agent, @NotNull String path, @Nullable Object... args) {
@@ -425,22 +447,15 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
     }
 
     public void sendToAll(@NotNull SenderT agent, @NotNull String language, @NotNull String path, @Nullable Object... args) {
-        getDisplay(language, path).sendToAll(this, agent, args);
+        getDisplay(language, path).sendToAll(agent, args);
     }
 
-    @NotNull
-    public String parse(@NotNull SenderT sender, @Nullable String text) {
-        return text == null ? "null" : Text.of(text).parse(sender).getString();
+    public void sendToAll(@NotNull String path, @NotNull Function<String, String> parser) {
+        sendToAll(defaultLanguage, path, parser);
     }
 
-    @NotNull
-    public String parse(@NotNull SenderT agent, @NotNull SenderT sender, @Nullable String text) {
-        return text == null ? "null" : parse(sender, parseAgent(agent, text));
-    }
-
-    @NotNull
-    public String parseAgent(@NotNull SenderT agent, @Nullable String text) {
-        return text == null ? "null" : Text.of(text).parseAgent(agent).getString();
+    public void sendToAll(@NotNull String language, @NotNull String path, @NotNull Function<String, String> parser) {
+        getDisplay(language, path).sendToAll(parser);
     }
 
     @NotNull
@@ -510,12 +525,20 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
             loader().sendTo(agent, sender, path, args);
         }
 
+        public <SenderT> void sendTo(@NotNull SenderT sender, @NotNull Function<String, String> parser) {
+            loader().sendTo(sender, path, parser);
+        }
+
         public void sendToConsole(@Nullable Object... args) {
             loader.sendToConsole(path, args);
         }
 
         public <SenderT> void sendToConsole(@NotNull SenderT agent, @Nullable Object... args) {
             loader().sendToConsole(agent, path, args);
+        }
+
+        public void sendToConsole(@NotNull Function<String, String> parser) {
+            loader.sendToConsole(path, parser);
         }
 
         public void sendToAll(@Nullable Object... args) {
@@ -532,6 +555,14 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
 
         public <SenderT> void sendToAll(@NotNull SenderT agent, @NotNull String language, @Nullable Object... args) {
             loader().sendToAll(agent, language, path, args);
+        }
+
+        public void sendToAll(@NotNull Function<String, String> parser) {
+            loader.sendToAll(path, parser);
+        }
+
+        public void sendToAll(@NotNull String language, @NotNull Function<String, String> parser) {
+            loader.sendToAll(language, path, parser);
         }
     }
 }

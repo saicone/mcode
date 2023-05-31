@@ -1,11 +1,12 @@
 package com.saicone.mcode.module.lang.display;
 
 import com.saicone.mcode.module.lang.DisplayLoader;
-import com.saicone.mcode.module.lang.LangLoader;
+import com.saicone.mcode.platform.Text;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
+import java.util.function.Function;
 
 public abstract class TitleDisplay<SenderT> extends Display<SenderT> {
 
@@ -51,30 +52,16 @@ public abstract class TitleDisplay<SenderT> extends Display<SenderT> {
     }
 
     @Override
-    public void sendTo(@NotNull LangLoader<SenderT, ? extends SenderT> loader, @NotNull SenderT type, @Nullable Object... args) {
-        sendTitle(type, loader.parse(type, args(title, args)), loader.parse(type, args(subtitle, args)));
+    public void sendTo(@NotNull SenderT type, @NotNull Function<String, String> parser) {
+        sendTitle(type, parser.apply(title), parser.apply(subtitle));
     }
 
     @Override
-    public void sendTo(@NotNull LangLoader<SenderT, ? extends SenderT> loader, @NotNull SenderT agent, @NotNull SenderT type, @Nullable Object... args) {
-        sendTitle(type, loader.parse(agent, type, args(title, args)), loader.parse(agent, type, args(subtitle, args)));
-    }
-
-    @Override
-    public void sendToAll(@NotNull LangLoader<SenderT, ? extends SenderT> loader, @Nullable Object... args) {
-        final String parsedTitle = args(title, args);
-        final String parsedSubtitle = args(subtitle, args);
-        for (SenderT player : loader.getPlayers()) {
-            sendTitle(player, loader.parse(player, parsedTitle), loader.parse(player, parsedSubtitle));
-        }
-    }
-
-    @Override
-    public void sendToAll(@NotNull LangLoader<SenderT, ? extends SenderT> loader, @NotNull SenderT agent, @Nullable Object... args) {
-        final String parsedTitle = loader.parseAgent(agent, args(title, args));
-        final String parsedSubtitle = loader.parseAgent(agent, args(subtitle, args));
-        for (SenderT player : loader.getPlayers()) {
-            sendTitle(player, loader.parse(player, parsedTitle), loader.parse(player, parsedSubtitle));
+    public void sendToAll(@NotNull Function<String, String> parser) {
+        final String title = parser.apply(this.title);
+        final String subtitle = parser.apply(this.subtitle);
+        for (SenderT player : players()) {
+            sendTitle(player, Text.of(title).parse(player).toString(), Text.of(subtitle).parse(player).toString());
         }
     }
 

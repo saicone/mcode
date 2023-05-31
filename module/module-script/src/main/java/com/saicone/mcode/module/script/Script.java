@@ -1,7 +1,9 @@
 package com.saicone.mcode.module.script;
 
 import com.saicone.mcode.Platform;
+import com.saicone.mcode.module.script.action.BroadcastDisplay;
 import com.saicone.mcode.module.script.action.Delay;
+import com.saicone.mcode.module.script.action.SendDisplay;
 import com.saicone.mcode.module.script.condition.Compare;
 import com.saicone.mcode.module.script.condition.Cooldown;
 import com.saicone.mcode.scheduler.Task;
@@ -24,6 +26,10 @@ public class Script {
     static {
         if (USE_TASK) {
             Delay.BUILDER.register();
+        }
+        if (Platform.isAvailable("Lang")) {
+            SendDisplay.BUILDER.register();
+            BroadcastDisplay.BUILDER.register();
         }
         putCondition(EvalKey.regex("(?i)compare|eval"), object -> new Compare(String.valueOf(object)));
         if (Platform.isAvailable("CacheSet")) {

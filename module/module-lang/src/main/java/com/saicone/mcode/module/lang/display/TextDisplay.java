@@ -1,7 +1,7 @@
 package com.saicone.mcode.module.lang.display;
 
 import com.saicone.mcode.module.lang.DisplayLoader;
-import com.saicone.mcode.module.lang.LangLoader;
+import com.saicone.mcode.platform.Text;
 import com.saicone.mcode.util.MStrings;
 import com.saicone.mcode.util.Strings;
 import org.jetbrains.annotations.NotNull;
@@ -56,49 +56,25 @@ public abstract class TextDisplay<SenderT> extends Display<SenderT> {
     }
 
     @Override
-    public void sendTo(@NotNull LangLoader<SenderT, ? extends SenderT> loader, @NotNull SenderT type, @Nullable Object... args) {
+    public void sendTo(@NotNull SenderT type, @NotNull Function<String, String> parser) {
         if (actions.isEmpty()) {
-            sendParsed(type, loader.parse(type, args(text, args)));
+            sendParsed(type, parser.apply(text));
         } else {
-            sendParsed(type, loader.parse(type, args(text, args)), getParsedActions(s -> loader.parse(type, args(s, args))));
+            sendParsed(type, parser.apply(text), getParsedActions(parser));
         }
     }
 
     @Override
-    public void sendTo(@NotNull LangLoader<SenderT, ? extends SenderT> loader, @NotNull SenderT agent, @NotNull SenderT type, @Nullable Object... args) {
+    public void sendToAll(@NotNull Function<String, String> parser) {
+        final String text = parser.apply(this.text);
         if (actions.isEmpty()) {
-            sendParsed(type, loader.parse(agent, type, args(text, args)));
-        } else {
-            sendParsed(type, loader.parse(type, args(text, args)), getParsedActions(s -> loader.parse(agent, type, args(s, args))));
-        }
-    }
-
-    @Override
-    public void sendToAll(@NotNull LangLoader<SenderT, ? extends SenderT> loader, @Nullable Object... args) {
-        final String text = args(this.text, args);
-        if (actions.isEmpty()) {
-            for (SenderT player : loader.getPlayers()) {
-                sendParsed(player, loader.parse(player, text));
+            for (SenderT player : players()) {
+                sendParsed(player, Text.of(text).parse(player).toString());
             }
         } else {
-            final Map<String, Map<Object, String>> actions = getParsedActions(s -> args(s, args));
-            for (SenderT player : loader.getPlayers()) {
-                sendParsed(player, loader.parse(player, text), actions);
-            }
-        }
-    }
-
-    @Override
-    public void sendToAll(@NotNull LangLoader<SenderT, ? extends SenderT> loader, @NotNull SenderT agent, @Nullable Object... args) {
-        final String text = args(this.text, args);
-        if (actions.isEmpty()) {
-            for (SenderT player : loader.getPlayers()) {
-                sendParsed(player, loader.parse(player, text));
-            }
-        } else {
-            final Map<String, Map<Object, String>> actions = getParsedActions(s -> loader.parseAgent(agent, args(s, args)));
-            for (SenderT player : loader.getPlayers()) {
-                sendParsed(player, loader.parse(player, text), actions);
+            final Map<String, Map<Object, String>> actions = getParsedActions(parser);
+            for (SenderT player : players()) {
+                sendParsed(player, Text.of(text).parse(player).toString(), actions);
             }
         }
     }

@@ -4,6 +4,7 @@ import com.saicone.mcode.platform.Text;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -65,4 +66,7 @@ public abstract class Platform {
     public Text getText(@NotNull String s) {
         return new Text(s);
     }
+
+    @NotNull
+    public abstract Collection<?> getOnlinePlayers();
 }

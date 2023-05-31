@@ -1,16 +1,15 @@
 package com.saicone.mcode.module.lang.display;
 
-import com.saicone.mcode.module.lang.LangLoader;
+import com.saicone.mcode.Platform;
+import com.saicone.mcode.platform.Text;
 import com.saicone.mcode.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Function;
 
 public abstract class Display<SenderT> {
 
@@ -28,18 +27,26 @@ public abstract class Display<SenderT> {
         return new DisplayList<>(list);
     }
 
-    public void sendTo(@NotNull LangLoader<SenderT, ? extends SenderT> loader, @NotNull SenderT type, @Nullable Object... args) {
+    public void sendTo(@NotNull SenderT type, @Nullable Object... args) {
+        sendTo(type, s -> Text.of(s).args(args).parse(type).toString());
     }
 
-    public void sendTo(@NotNull LangLoader<SenderT, ? extends SenderT> loader, @NotNull SenderT agent, @NotNull SenderT type, @Nullable Object... args) {
-        sendTo(loader, type, args);
+    public void sendTo(@NotNull SenderT agent, @NotNull SenderT type, @Nullable Object... args) {
+        sendTo(type, s -> Text.of(s).args(args).parseAgent(type, agent).toString());
     }
 
-    public void sendToAll(@NotNull LangLoader<SenderT, ? extends SenderT> loader, @Nullable Object... args) {
+    public void sendTo(@NotNull SenderT type, @NotNull Function<String, String> parser) {
     }
 
-    public void sendToAll(@NotNull LangLoader<SenderT, ? extends SenderT> loader, @NotNull SenderT agent, @Nullable Object... args) {
-        sendToAll(loader, args);
+    public void sendToAll(@Nullable Object... args) {
+        sendToAll(s -> args(s, args));
+    }
+
+    public void sendToAll(@NotNull SenderT agent, @Nullable Object... args) {
+        sendToAll(s -> Text.of(s).args(args).parseAgent(agent).toString());
+    }
+
+    public void sendToAll(@NotNull Function<String, String> parser) {
     }
 
     @NotNull
@@ -75,6 +82,16 @@ public abstract class Display<SenderT> {
             INSTANCE_FIELDS.put(objClass, list);
         }
         return INSTANCE_FIELDS.get(objClass);
+    }
+
+    @NotNull
+    @SuppressWarnings("unchecked")
+    protected Collection<SenderT> players() {
+        try {
+            return (Collection<SenderT>) Platform.getInstance().getOnlinePlayers();
+        } catch (ClassCastException e) {
+            return List.of();
+        }
     }
 
     @NotNull

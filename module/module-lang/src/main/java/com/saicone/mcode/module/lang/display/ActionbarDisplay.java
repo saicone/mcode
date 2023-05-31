@@ -1,12 +1,13 @@
 package com.saicone.mcode.module.lang.display;
 
 import com.saicone.mcode.module.lang.DisplayLoader;
-import com.saicone.mcode.module.lang.LangLoader;
+import com.saicone.mcode.platform.Text;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 public abstract class ActionbarDisplay<SenderT> extends Display<SenderT> {
 
@@ -23,28 +24,15 @@ public abstract class ActionbarDisplay<SenderT> extends Display<SenderT> {
     }
 
     @Override
-    public void sendTo(@NotNull LangLoader<SenderT, ? extends SenderT> loader, @NotNull SenderT type, @Nullable Object... args) {
-        sendActionbar(type, loader.parse(type, args(text, args)));
+    public void sendTo(@NotNull SenderT type, @NotNull Function<String, String> parser) {
+        sendActionbar(type, parser.apply(text));
     }
 
     @Override
-    public void sendTo(@NotNull LangLoader<SenderT, ? extends SenderT> loader, @NotNull SenderT agent, @NotNull SenderT type, @Nullable Object... args) {
-        sendActionbar(type, loader.parse(agent, type, args(text, args)));
-    }
-
-    @Override
-    public void sendToAll(@NotNull LangLoader<SenderT, ? extends SenderT> loader, @Nullable Object... args) {
-        String actionbar = args(text, args);
-        for (SenderT player : loader.getPlayers()) {
-            sendActionbar(player, loader.parse(player, actionbar));
-        }
-    }
-
-    @Override
-    public void sendToAll(@NotNull LangLoader<SenderT, ? extends SenderT> loader, @NotNull SenderT agent, @Nullable Object... args) {
-        String actionbar = loader.parseAgent(agent, args(text, args));
-        for (SenderT player : loader.getPlayers()) {
-            sendActionbar(player, loader.parse(player, actionbar));
+    public void sendToAll(@NotNull Function<String, String> parser) {
+        String actionbar = parser.apply(text);
+        for (SenderT player : players()) {
+            sendActionbar(player, Text.of(actionbar).parse(player).toString());
         }
     }
 
