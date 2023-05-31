@@ -202,7 +202,7 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
         if (!USE_SETTINGS) {
             return getFileObjects(file);
         }
-        final SettingsFile settings = new SettingsFile("file", file.getName()).setParent(file.getParentFile());
+        final SettingsFile settings = new SettingsFile(file);
         settings.load();
         final Map<String, Object> map = new HashMap<>();
         for (String[] path : settings.getDeepKeys()) {

@@ -31,6 +31,11 @@ public class SettingsFile extends Settings {
     private ClassLoader parentClassLoader;
     private SettingsUpdater updater;
 
+    public SettingsFile(@NotNull File file) {
+        this("file", file.getName());
+        setParent(file.getParentFile());
+    }
+
     public SettingsFile(@NotNull String pathName) {
         this(pathName, pathName);
     }
