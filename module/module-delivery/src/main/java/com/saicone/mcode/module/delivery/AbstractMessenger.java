@@ -13,11 +13,20 @@ import java.util.function.Consumer;
 
 public abstract class AbstractMessenger {
 
+    private static final boolean USE_CACHE_SET;
+
+    static {
+        boolean bool = false;
+        try {
+            Class.forName("com.saicone.mcode.util.CacheSet");
+            bool = true;
+        } catch (ClassNotFoundException ignored) { }
+        USE_CACHE_SET = bool;
+    }
+
     protected DeliveryClient deliveryClient;
-
     protected final Map<String, Set<Consumer<String>>> incomingConsumers = new HashMap<>();
-
-    private final Set<Integer> cachedIds = new CacheSet<>();
+    protected Set<Integer> cachedIds;
 
     @Nullable
     public DeliveryClient getDeliveryClient() {
@@ -36,6 +45,14 @@ public abstract class AbstractMessenger {
 
     @NotNull
     protected abstract DeliveryClient loadDeliveryClient();
+
+    protected void loadCacheProvider() {
+        if (USE_CACHE_SET) {
+            cachedIds = new CacheSet<>();
+        } else {
+            cachedIds = new HashSet<>();
+        }
+    }
 
     public void start() {
         start(loadDeliveryClient());
@@ -63,7 +80,7 @@ public abstract class AbstractMessenger {
             deliveryClient.clear();
         }
         incomingConsumers.clear();
-        cachedIds.clear();
+        cacheClear();
     }
 
     public void subscribe(@NotNull String channel, @NotNull Consumer<String> incomingConsumer) {
@@ -81,8 +98,8 @@ public abstract class AbstractMessenger {
             return false;
         }
 
-        final int id = genId();
-        cachedIds.add(id);
+        final int id = cacheId();
+        cacheAdd(id);
 
         final ByteArrayDataOutput out = ByteStreams.newDataOutput();
         out.writeInt(id);
@@ -99,7 +116,7 @@ public abstract class AbstractMessenger {
 
         final ByteArrayDataInput in = ByteStreams.newDataInput(bytes);
         try {
-            if (cachedIds.contains(in.readInt())) {
+            if (cacheContains(in.readInt())) {
                 return false;
             }
 
@@ -116,7 +133,27 @@ public abstract class AbstractMessenger {
     protected void log(int level, @NotNull String msg) {
     }
 
-    protected int genId() {
+    protected int cacheId() {
         return ThreadLocalRandom.current().nextInt(0, 999999 + 1);
+    }
+
+    protected void cacheAdd(int id) {
+        cachedIds.add(id);
+    }
+
+    protected boolean cacheContains(int id) {
+        if (USE_CACHE_SET) {
+            return cachedIds.contains(id);
+        } else {
+            if (cachedIds.contains(id)) {
+                cachedIds.remove(id);
+                return true;
+            }
+            return false;
+        }
+    }
+
+    protected void cacheClear() {
+        cachedIds.clear();
     }
 }
