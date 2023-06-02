@@ -9,6 +9,7 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public abstract class Display<SenderT> {
@@ -39,14 +40,18 @@ public abstract class Display<SenderT> {
     }
 
     public void sendToAll(@Nullable Object... args) {
-        sendToAll(s -> args(s, args));
+        sendToAll(s -> args(s, args), (player, s) -> Text.of(s).parse(player).color().getString());
     }
 
     public void sendToAll(@NotNull SenderT agent, @Nullable Object... args) {
-        sendToAll(s -> Text.of(s).args(args).parseAgent(agent).toString());
+        sendToAll(s -> Text.of(s).args(args).parseAgent(agent).toString(), (player, s) -> Text.of(s).parse(player).color().getString());
     }
 
     public void sendToAll(@NotNull Function<String, String> parser) {
+        sendToAll(parser, (player, s) -> Text.of(s).parse(player).color().getString());
+    }
+
+    public void sendToAll(@NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
     }
 
     @NotNull

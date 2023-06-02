@@ -1,10 +1,12 @@
 package com.saicone.mcode.module.lang.display;
 
 import com.saicone.mcode.module.lang.DisplayLoader;
+import com.saicone.mcode.util.DMap;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public abstract class SoundDisplay<SenderT, SoundT> extends Display<SenderT> {
@@ -41,7 +43,7 @@ public abstract class SoundDisplay<SenderT, SoundT> extends Display<SenderT> {
     }
 
     @Override
-    public void sendToAll(@NotNull Function<String, String> parser) {
+    public void sendToAll(@NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
         final SoundT parsedSound = parseSound(parser.apply(sound));
         if (parsedSound != null) {
             for (SenderT player : players()) {
@@ -58,17 +60,17 @@ public abstract class SoundDisplay<SenderT, SoundT> extends Display<SenderT> {
     public static abstract class Loader<SenderT, SoundT> extends DisplayLoader<SenderT> {
 
         public Loader() {
-            super("(?i)(play-?)?sound?", Map.of("sound", "", "volume", (float) 1.0, "pitch", (float) 1.0));
+            super("(?i)(play-?)?sound?", Map.of("sound", "", "volume", 1.0f, "pitch", 1.0f));
         }
 
         @Override
-        public @Nullable Display<SenderT> load(@NotNull Map<String, Object> map) {
-            final String sound = getString(map, "sound", "");
+        public @Nullable Display<SenderT> load(@NotNull DMap map) {
+            final String sound = map.getBy(String::valueOf, m -> m.getRegex("(?i)value|text|sound"), "");
             if (sound.isEmpty()) {
                 return null;
             }
-            final float volume = getFloat(map, "volume", (float) 1.0);
-            final float pitch = getFloat(map, "pitch", (float) 1.0);
+            final float volume = map.getBy(o -> Float.parseFloat(String.valueOf(o)), m -> m.getIgnoreCase("volume"), 1.0f);
+            final float pitch = map.getBy(o -> Float.parseFloat(String.valueOf(o)), m -> m.getIgnoreCase("pitch"), 1.0f);
 
             return new SoundDisplay<SenderT, SoundT>(sound, volume, pitch) {
                 @Override

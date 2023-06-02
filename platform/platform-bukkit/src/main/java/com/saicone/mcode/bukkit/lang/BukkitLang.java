@@ -3,17 +3,17 @@ package com.saicone.mcode.bukkit.lang;
 import com.google.common.base.Enums;
 import com.saicone.mcode.bukkit.util.ServerInstance;
 import com.saicone.mcode.module.lang.LangLoader;
-import com.saicone.mcode.module.lang.display.ActionbarDisplay;
-import com.saicone.mcode.module.lang.display.Display;
-import com.saicone.mcode.module.lang.display.SoundDisplay;
-import com.saicone.mcode.module.lang.display.TextDisplay;
-import com.saicone.mcode.module.lang.display.TitleDisplay;
+import com.saicone.mcode.module.lang.display.*;
+import com.saicone.mcode.util.DMap;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarStyle;
+import org.bukkit.boss.BossBar;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -41,6 +41,8 @@ public class BukkitLang extends LangLoader<CommandSender, Player> {
     private final Plugin plugin;
     private final boolean useConfig;
 
+    private final BossbarLoader bossbar = new BossbarLoader();
+
     public BukkitLang(@NotNull Plugin plugin,  @NotNull Class<?>... langProviders) {
         this(plugin, false, langProviders);
     }
@@ -49,6 +51,11 @@ public class BukkitLang extends LangLoader<CommandSender, Player> {
         super(langProviders);
         this.plugin = plugin;
         this.useConfig = useConfig;
+    }
+
+    @NotNull
+    public BossbarLoader bossbar() {
+        return bossbar;
     }
 
     @Override
@@ -194,11 +201,11 @@ public class BukkitLang extends LangLoader<CommandSender, Player> {
     public static class TextLoader extends TextDisplay.Loader<CommandSender> {
         @Override
         @SuppressWarnings("unchecked")
-        public @Nullable Display<CommandSender> load(@NotNull Map<String, Object> map) {
+        public @Nullable Display<CommandSender> load(@NotNull DMap map) {
             if (ServerInstance.isSpigot) {
                 return super.load(map);
             }
-            final Object obj = get(map, "text");
+            final Object obj = map.getRegex("(?i)value|text");
             if (obj == null) {
                 return null;
             }
@@ -306,6 +313,41 @@ public class BukkitLang extends LangLoader<CommandSender, Player> {
         protected void playSound(@NotNull CommandSender sender, @NotNull Sound sound, float volume, float pitch) {
             if (sender instanceof Player) {
                 ((Player) sender).playSound(((Player) sender).getLocation(), sound, volume, pitch);
+            }
+        }
+    }
+
+    public class BossbarLoader extends BossbarDisplay.Loader<CommandSender> {
+        public BossbarLoader() {
+            super(false);
+        }
+
+        @Override
+        protected BossbarDisplay.Builder<CommandSender> newBuilder(float progress, @NotNull String color, @NotNull String style, long stay) {
+            final BarColor barColor = Enums.getIfPresent(BarColor.class, color).or(BarColor.RED);
+            final BarStyle barStyle = Enums.getIfPresent(BarStyle.class, style).or(BarStyle.SOLID);
+            return new BossbarBuilder(progress, barColor, barStyle, stay);
+        }
+    }
+
+    public class BossbarBuilder extends BossbarDisplay.Builder<CommandSender> {
+
+        private final BarColor color;
+        private final BarStyle style;
+
+        public BossbarBuilder(float progress, BarColor color, BarStyle style, long stay) {
+            super(progress, stay);
+            this.color = color;
+            this.style = style;
+        }
+
+        @Override
+        public void sendTo(@NotNull CommandSender sender, @NotNull String text) {
+            if (sender instanceof Player) {
+                final BossBar bossBar = Bukkit.createBossBar(text, color, style);
+                bossBar.setProgress(progress);
+                bossBar.addPlayer((Player) sender);
+                Bukkit.getScheduler().runTaskLater(plugin, () -> bossBar.removePlayer((Player) sender), stay);
             }
         }
     }

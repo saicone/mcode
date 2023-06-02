@@ -18,6 +18,24 @@ public class DMap implements Map<String, Object> {
 
     private final Map<String, Object> map;
 
+    @NotNull
+    @SuppressWarnings("unchecked")
+    public static DMap of(@NotNull Map<?, ?> map) {
+        if (map instanceof DMap) {
+            return (DMap) map;
+        } else {
+            try {
+                return new DMap((Map<String, Object>) map);
+            } catch (ClassCastException e) {
+                final Map<String, Object> finalMap = new HashMap<>();
+                for (Entry<?, ?> entry : map.entrySet()) {
+                    finalMap.put(String.valueOf(entry.getKey()), entry.getValue());
+                }
+                return new DMap(finalMap);
+            }
+        }
+    }
+
     public DMap() {
         this(new HashMap<>());
     }
@@ -49,6 +67,15 @@ public class DMap implements Map<String, Object> {
     @Nullable
     public Object getRegex(@NotNull Pattern pattern) {
         return getIf(str -> pattern.matcher(str).matches());
+    }
+
+    @Nullable
+    public DMap getChild(@NotNull Function<DMap, Object> getter) {
+        final Object result = getter.apply(this);
+        if (result instanceof Map) {
+            return DMap.of((Map<?, ?>) result);
+        }
+        return null;
     }
 
     @Nullable

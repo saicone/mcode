@@ -1,13 +1,14 @@
 package com.saicone.mcode.module.lang.display;
 
 import com.saicone.mcode.module.lang.DisplayLoader;
-import com.saicone.mcode.platform.Text;
+import com.saicone.mcode.util.DMap;
 import com.saicone.mcode.util.MStrings;
 import com.saicone.mcode.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public abstract class TextDisplay<SenderT> extends Display<SenderT> {
@@ -65,16 +66,16 @@ public abstract class TextDisplay<SenderT> extends Display<SenderT> {
     }
 
     @Override
-    public void sendToAll(@NotNull Function<String, String> parser) {
+    public void sendToAll(@NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
         final String text = parser.apply(this.text);
         if (actions.isEmpty()) {
             for (SenderT player : players()) {
-                sendParsed(player, Text.of(text).parse(player).toString());
+                sendParsed(player, playerParser.apply(player, text));
             }
         } else {
             final Map<String, Map<Object, String>> actions = getParsedActions(parser);
             for (SenderT player : players()) {
-                sendParsed(player, Text.of(text).parse(player).toString(), actions);
+                sendParsed(player, playerParser.apply(player, text), actions);
             }
         }
     }
@@ -152,23 +153,23 @@ public abstract class TextDisplay<SenderT> extends Display<SenderT> {
 
         @Override
         public @Nullable Display<SenderT> load(@NotNull List<Object> list) {
-            return newTextDisplay(joinList(list), -1, Map.of());
+            return newTextDisplay(joinIterable(list), -1, Map.of());
         }
 
         @Override
-        public @Nullable Display<SenderT> load(@NotNull Map<String, Object> map) {
-            final Object obj = get(map, "text");
+        public @Nullable Display<SenderT> load(@NotNull DMap map) {
+            final Object obj = map.getRegex("(?i)value|text");
             if (obj == null) {
                 return null;
             }
             final String text;
-            if (obj instanceof List) {
-                text = joinList((List<?>) obj);
+            if (obj instanceof Iterable) {
+                text = joinIterable((Iterable<?>) obj);
             } else {
                 text = String.valueOf(obj);
             }
 
-            final Object centered = get(map, "centered");
+            final Object centered = map.getRegex("(?i)(chat-?)?width|centered");
             final int centerWidth;
             if (centered instanceof Boolean) {
                 if ((Boolean) centered) {
@@ -182,45 +183,46 @@ public abstract class TextDisplay<SenderT> extends Display<SenderT> {
                 centerWidth = asInt(centered, -1);
             }
 
-            final Object actionsObject = get(map, "actions");
-            if (actionsObject instanceof Map) {
-                final Map<String, Map<Object, String>> actions = new HashMap<>();
-                ((Map<?, ?>) actionsObject).forEach((id, list) -> {
-                    if (list instanceof List) {
-                        final Map<Object, String> types = new HashMap<>();
-                        for (Object o : (List<?>) list) {
-                            if (o instanceof Map) {
-                                Object type = get((Map<?, ?>) o, "type");
-                                if (type == null) continue;
-
-                                type = parseAction(String.valueOf(type));
-                                if (type == null) continue;
-
-                                Object value = get((Map<?, ?>) o, "value");
-                                if (value == null) continue;
-
-                                if (value instanceof List) {
-                                    List<String> strings = new ArrayList<>();
-                                    for (Object s : (List<?>) value) {
-                                        strings.add(String.valueOf(s).replace("\\n", "\n"));
-                                    }
-                                    value = String.join("\n", strings);
-                                } else {
-                                    value = String.valueOf(value).replace("\\n", "\n");
-                                }
-
-                                types.put(type, (String) value);
-                            }
-                        }
-                        actions.put(String.valueOf(id), types);
-                    } else {
-                        actions.put(String.valueOf(id), Map.of());
-                    }
-                });
-                return newTextDisplay(text, centerWidth, actions);
-            } else {
+            final DMap actionsMap = map.getChild(m -> m.getRegex("(?i)(chat-?)?actions?"));
+            if (actionsMap == null) {
                 return newTextDisplay(text, centerWidth, Map.of());
             }
+            final Map<String, Map<Object, String>> actions = new HashMap<>();
+            for (Map.Entry<String, Object> entry : actionsMap.entrySet()) {
+                if (!(entry.getValue() instanceof Iterable)) {
+                    actions.put(entry.getKey(), Map.of());
+                    continue;
+                }
+                final Map<Object, String> types = new HashMap<>();
+                for (Object o : (Iterable<?>) entry.getValue()) {
+                    if (!(o instanceof Map)) {
+                        continue;
+                    }
+                    final DMap action = DMap.of((Map<?, ?>) o);
+                    Object type = action.getIgnoreCase("type");
+                    if (type == null) continue;
+
+                    type = parseAction(String.valueOf(type));
+                    if (type == null) continue;
+
+                    Object value = action.getIgnoreCase("value");
+                    if (value == null) continue;
+
+                    if (value instanceof Iterable) {
+                        List<String> strings = new ArrayList<>();
+                        for (Object s : (List<?>) value) {
+                            strings.add(String.valueOf(s).replace("\\n", "\n"));
+                        }
+                        value = String.join("\n", strings);
+                    } else {
+                        value = String.valueOf(value).replace("\\n", "\n");
+                    }
+
+                    types.put(type, (String) value);
+                }
+                actions.put(entry.getKey(), types);
+            }
+            return newTextDisplay(text, centerWidth, actions);
         }
 
         @Nullable
@@ -231,7 +233,7 @@ public abstract class TextDisplay<SenderT> extends Display<SenderT> {
         protected abstract Builder<SenderT> newBuilder();
 
         @NotNull
-        private String joinList(@NotNull List<?> list) {
+        private String joinIterable(@NotNull Iterable<?> list) {
             final List<String> text = new ArrayList<>();
             for (Object o : list) {
                 text.add(String.valueOf(o));

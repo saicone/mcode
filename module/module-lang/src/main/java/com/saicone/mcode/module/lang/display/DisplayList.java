@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public class DisplayList<SenderT> extends Display<SenderT> {
@@ -57,6 +58,13 @@ public class DisplayList<SenderT> extends Display<SenderT> {
     public void sendToAll(@NotNull Function<String, String> parser) {
         for (Display<SenderT> display : list) {
             display.sendToAll(parser);
+        }
+    }
+
+    @Override
+    public void sendToAll(@NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
+        for (Display<SenderT> display : list) {
+            display.sendToAll(parser, playerParser);
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.saicone.mcode.module.lang;
 
 import com.saicone.mcode.module.lang.display.Display;
+import com.saicone.mcode.util.DMap;
 import com.saicone.mcode.util.Strings;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.Contract;
@@ -34,7 +35,7 @@ public class DisplayLoader<SenderT> {
         }
 
         @Override
-        public @Nullable Display<Object> load(@NotNull Map<String, Object> map) {
+        public @Nullable Display<Object> load(@NotNull DMap map) {
             return null;
         }
     };
@@ -82,37 +83,6 @@ public class DisplayLoader<SenderT> {
     @NotNull
     public Map<String, Object> getDefaults() {
         return defaults;
-    }
-
-    @Nullable
-    protected Object get(@NotNull Map<?, ?> data, @NotNull String key) {
-        for (var entry : data.entrySet()) {
-            if (String.valueOf(entry.getKey()).equalsIgnoreCase(key)) {
-                return entry.getKey();
-            }
-        }
-        return null;
-    }
-
-    @NotNull
-    protected String getString(@NotNull Map<String, Object> data, @NotNull String key, @NotNull String def) {
-        final Object obj = get(data, key);
-        return obj != null ? String.valueOf(obj) : String.valueOf(defaults.getOrDefault(key, def));
-    }
-
-    protected int getInteger(@NotNull Map<String, Object> data, @NotNull String key, int def) {
-        final Object obj = get(data, key);
-        return obj instanceof Integer ? (Integer) obj : (Integer) defaults.getOrDefault(key, def);
-    }
-
-    protected float getFloat(@NotNull Map<String, Object> data, @NotNull String key, float def) {
-        final Object obj = get(data, key);
-        return obj instanceof Float ? (Float) obj : (Float) defaults.getOrDefault(key, def);
-    }
-
-    protected boolean getBoolean(@NotNull Map<String, Object> data, @NotNull String key, boolean def) {
-        final Object obj = get(data, key);
-        return obj instanceof Boolean ? (Boolean) obj : (Boolean) defaults.getOrDefault(key, def);
     }
 
     @Override
@@ -175,7 +145,7 @@ public class DisplayLoader<SenderT> {
             return null;
         }
         if (object instanceof Map) {
-            return load((Map<String, Object>) object);
+            return load(DMap.of((Map<?, ?>) object));
         } else if (object instanceof List) {
             return load((List<Object>) object);
         } else {
@@ -199,7 +169,7 @@ public class DisplayLoader<SenderT> {
                 break;
             }
         }
-        return load(map);
+        return load(new DMap(map));
     }
 
     @Nullable
@@ -217,11 +187,11 @@ public class DisplayLoader<SenderT> {
                 break;
             }
         }
-        return load(map);
+        return load(new DMap(map));
     }
 
     @Nullable
-    public Display<SenderT> load(@NotNull Map<String, Object> map) {
+    public Display<SenderT> load(@NotNull DMap map) {
         return null;
     }
 

@@ -1,12 +1,13 @@
 package com.saicone.mcode.module.lang.display;
 
 import com.saicone.mcode.module.lang.DisplayLoader;
-import com.saicone.mcode.platform.Text;
+import com.saicone.mcode.util.DMap;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public abstract class ActionbarDisplay<SenderT> extends Display<SenderT> {
@@ -29,10 +30,10 @@ public abstract class ActionbarDisplay<SenderT> extends Display<SenderT> {
     }
 
     @Override
-    public void sendToAll(@NotNull Function<String, String> parser) {
+    public void sendToAll(@NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
         String actionbar = parser.apply(text);
         for (SenderT player : players()) {
-            sendActionbar(player, Text.of(actionbar).parse(player).toString());
+            sendActionbar(player, playerParser.apply(player, actionbar));
         }
     }
 
@@ -67,8 +68,8 @@ public abstract class ActionbarDisplay<SenderT> extends Display<SenderT> {
         }
 
         @Override
-        public @Nullable Display<SenderT> load(@NotNull Map<String, Object> map) {
-            return load(getString(map, "actionbar", ""));
+        public @Nullable Display<SenderT> load(@NotNull DMap map) {
+            return load(map.getBy(String::valueOf, m -> m.getRegex("(?i)value|text|actionbar"), ""));
         }
 
         protected abstract void sendActionbar(@NotNull SenderT type, @NotNull String actionbar);

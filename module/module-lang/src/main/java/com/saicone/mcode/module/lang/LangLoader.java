@@ -11,6 +11,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -478,6 +479,14 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
         getDisplay(language, path).sendToAll(parser);
     }
 
+    public void sendToAll(@NotNull String path, @NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
+        sendToAll(defaultLanguage, path, parser, playerParser);
+    }
+
+    public void sendToAll(@NotNull String language, @NotNull String path, @NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
+        getDisplay(language, path).sendToAll(parser, playerParser);
+    }
+
     @NotNull
     protected String[] splitPath(@NotNull String path) {
         return path.split("\\.");
@@ -583,6 +592,14 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
 
         public void sendToAll(@NotNull String language, @NotNull Function<String, String> parser) {
             loader.sendToAll(language, path, parser);
+        }
+
+        public <SenderT> void sendToAll(@NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
+            loader().sendToAll(path, parser, playerParser);
+        }
+
+        public <SenderT> void sendToAll(@NotNull String language, @NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
+            loader().sendToAll(language, path, parser, playerParser);
         }
     }
 }

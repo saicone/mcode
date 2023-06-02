@@ -1,11 +1,12 @@
 package com.saicone.mcode.module.lang.display;
 
 import com.saicone.mcode.module.lang.DisplayLoader;
-import com.saicone.mcode.platform.Text;
+import com.saicone.mcode.util.DMap;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public abstract class TitleDisplay<SenderT> extends Display<SenderT> {
@@ -57,11 +58,11 @@ public abstract class TitleDisplay<SenderT> extends Display<SenderT> {
     }
 
     @Override
-    public void sendToAll(@NotNull Function<String, String> parser) {
+    public void sendToAll(@NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
         final String title = parser.apply(this.title);
         final String subtitle = parser.apply(this.subtitle);
         for (SenderT player : players()) {
-            sendTitle(player, Text.of(title).parse(player).toString(), Text.of(subtitle).parse(player).toString());
+            sendTitle(player, playerParser.apply(player, title), playerParser.apply(player, subtitle));
         }
     }
 
@@ -78,15 +79,15 @@ public abstract class TitleDisplay<SenderT> extends Display<SenderT> {
         }
 
         @Override
-        public @Nullable Display<SenderT> load(@NotNull Map<String, Object> map) {
-            final String title = getString(map, "title", "");
-            final String subtitle = getString(map, "subtitle", "");
-            if (title.isEmpty() && subtitle.isEmpty()) {
+        public @Nullable Display<SenderT> load(@NotNull DMap map) {
+            final String title = map.getBy(String::valueOf, m -> m.getRegex("(?i)value|text|title"), "");
+            final String subtitle = map.getBy(String::valueOf, m -> m.getIgnoreCase("subtitle"), "");
+            if (title.isBlank() && subtitle.isBlank()) {
                 return null;
             }
-            final int fadeIn = getInteger(map, "fadein", 10);
-            final int stay = getInteger(map, "stay", 70);
-            final int fadeOut = getInteger(map, "fadeout", 20);
+            final int fadeIn = map.getBy(o -> Integer.parseInt(String.valueOf(o)), m -> m.getIgnoreCase("fadeIn"), 10);
+            final int stay = map.getBy(o -> Integer.parseInt(String.valueOf(o)), m -> m.getIgnoreCase("stay"), 70);
+            final int fadeOut = map.getBy(o -> Integer.parseInt(String.valueOf(o)), m -> m.getIgnoreCase("fadeOut"), 20);
 
             return new TitleDisplay<>(title, subtitle, fadeIn, stay, fadeOut) {
                 @Override
