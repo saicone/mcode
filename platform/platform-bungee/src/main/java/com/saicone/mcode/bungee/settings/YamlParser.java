@@ -14,6 +14,15 @@ import java.util.List;
 
 public class YamlParser extends SettingsParser {
 
+    public static void register() {
+        if (!SettingsParser.contains("yml")) {
+            SettingsParser.register("yml", YamlParser::new);
+        }
+        if (!SettingsParser.contains("yaml")) {
+            SettingsParser.register("yaml", YamlParser::new);
+        }
+    }
+
     @Override
     public Settings read(@NotNull Reader reader) {
         final Configuration config = ConfigurationProvider.getProvider(YamlConfiguration.class).load(reader);

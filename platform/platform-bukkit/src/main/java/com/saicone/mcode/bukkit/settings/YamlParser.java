@@ -14,6 +14,15 @@ public class YamlParser extends SettingsParser {
 
     private static final boolean ALLOW_COMMENTS = ServerInstance.verNumber >= 19;
 
+    public static void register() {
+        if (!SettingsParser.contains("yml")) {
+            SettingsParser.register("yml", YamlParser::new);
+        }
+        if (!SettingsParser.contains("yaml")) {
+            SettingsParser.register("yaml", YamlParser::new);
+        }
+    }
+
     @Override
     public Settings read(@NotNull Reader reader) throws Throwable {
         final YamlConfiguration config = new YamlConfiguration();

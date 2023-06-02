@@ -10,8 +10,8 @@ import java.util.Map;
 
 public abstract class Platform {
 
-    private static Platform INSTANCE;
-    private static final Map<String, String> NAMES = new HashMap<>();
+    protected static Platform INSTANCE;
+    protected static final Map<String, String> NAMES = new HashMap<>();
 
     static {
         // Extension
@@ -24,6 +24,24 @@ public abstract class Platform {
         NAMES.put("script", "com.saicone.mcode.script.Script");
         NAMES.put("settings", "com.saicone.mcode.settings.Settings");
         NAMES.put("task", "com.saicone.mcode.scheduler.Task");
+    }
+
+    protected Platform() {
+        initModules();
+    }
+
+    protected void initModules() {
+    }
+
+    protected void initModule(@NotNull String name, @NotNull String... methods) {
+        try {
+            final Class<?> clazz = Class.forName(name);
+            for (String method : methods) {
+                clazz.getDeclaredMethod(method).invoke(null);
+            }
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
     }
 
     @NotNull

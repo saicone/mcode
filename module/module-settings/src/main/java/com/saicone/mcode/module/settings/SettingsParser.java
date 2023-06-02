@@ -90,6 +90,10 @@ public abstract class SettingsParser {
         return null;
     }
 
+    public static boolean contains(@NotNull String type) {
+        return SETTINGS_PARSER.containsKey(type);
+    }
+
     public static void register(@NotNull String type, @NotNull Supplier<SettingsParser> supplier) {
         SETTINGS_PARSER.put(type.toLowerCase(), supplier);
     }
