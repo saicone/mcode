@@ -33,7 +33,7 @@ public class BroadcastDisplay extends Action {
     }
 
     @Override
-    public @NotNull <T extends EvalUser> ActionResult run(@NotNull T user) {
+    public @NotNull ActionResult run(@NotNull EvalUser user) {
         display.sendToAll(user::parse);
         return ActionResult.DONE;
     }

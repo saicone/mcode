@@ -33,7 +33,7 @@ public class SendDisplay extends Action {
     }
 
     @Override
-    public @NotNull <T extends EvalUser> ActionResult run(@NotNull T user) {
+    public @NotNull ActionResult run(@NotNull EvalUser user) {
         try {
             if (user.getSubject() != null) {
                 display.sendTo(user.getSubject(), user::parse);

@@ -1,6 +1,7 @@
 package com.saicone.mcode.module.script;
 
 import com.saicone.mcode.util.DMap;
+import com.saicone.mcode.util.function.ThrowableFunction;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -10,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -21,24 +23,42 @@ public class Action implements Eval<ActionResult> {
     public static final ScriptFunction<EvalUser, ActionResult> BREAK = (user) -> ActionResult.BREAK;
     public static final ScriptFunction<EvalUser, ActionResult> CONTINUE = (user) -> ActionResult.CONTINUE;
 
+    private BiConsumer<EvalUser, Action> consumer;
+
+    public void setConsumer(@Nullable BiConsumer<EvalUser, Action> consumer) {
+        this.consumer = consumer;
+    }
+
+    @Nullable
+    public BiConsumer<EvalUser, Action> getConsumer() {
+        return consumer;
+    }
+
     @Override
     public @Nullable ScriptFunction<EvalUser, ActionResult> compile() {
-        return this::run;
+        return (user) -> {
+            if (consumer != null) {
+                consumer.accept(user, this);
+            }
+            return run(user);
+        };
     }
 
     @NotNull
-    public <T extends EvalUser> ActionResult run(@NotNull T user) {
+    public ActionResult run(@NotNull EvalUser user) {
         return ActionResult.DONE;
     }
 
-    public static class Builder<A extends Action> implements EvalBuilder<A> {
+    public static class Builder<ActionT extends Action> implements EvalBuilder<ActionT> {
 
         private final @Language("RegExp") String regex;
         private final Pattern pattern;
 
-        private Function<DMap, A> mapFunction;
-        private Function<List<Object>, A> listFunction;
-        private Function<String, A> textFunction;
+        protected ThrowableFunction<DMap, ActionT> mapFunction;
+        protected ThrowableFunction<List<Object>, ActionT> listFunction;
+        protected ThrowableFunction<String, ActionT> textFunction;
+
+        protected BiConsumer<EvalUser, ActionT> consumer;
 
         public Builder(@NotNull @Language("RegExp") String regex) {
             this.regex = regex;
@@ -56,40 +76,74 @@ public class Action implements Eval<ActionResult> {
         }
 
         public void register() {
-            Script.putAction(EvalKey.regex(regex), this);
+            register(Script.REGISTRY);
+        }
+
+        public void register(@NotNull ScriptRegistry registry) {
+            registry.putAction(EvalKey.regex(regex), this);
         }
 
         @NotNull
         @Contract("_ -> this")
-        public Builder<A> map(@NotNull Function<DMap, A> mapFunction) {
+        public Builder<ActionT> map(@NotNull ThrowableFunction<DMap, ActionT> mapFunction) {
             this.mapFunction = mapFunction;
             return this;
         }
 
         @NotNull
         @Contract("_ -> this")
-        public Builder<A> list(@NotNull Function<List<Object>, A> listFunction) {
+        public Builder<ActionT> list(@NotNull ThrowableFunction<List<Object>, ActionT> listFunction) {
             this.listFunction = listFunction;
             return this;
         }
 
         @NotNull
         @Contract("_, _ -> this")
-        public <T> Builder<A> list(@NotNull Function<Object, T> mapper, @NotNull Function<List<T>, A> listFunction) {
+        public <T> Builder<ActionT> list(@NotNull Function<Object, T> mapper, @NotNull ThrowableFunction<List<T>, ActionT> listFunction) {
             this.listFunction = list -> listFunction.apply(list.stream().map(mapper).collect(Collectors.toList()));
             return this;
         }
 
         @NotNull
         @Contract("_ -> this")
-        public Builder<A> text(@NotNull Function<String, A> textFunction) {
+        public Builder<ActionT> text(@NotNull ThrowableFunction<String, ActionT> textFunction) {
             this.textFunction = textFunction;
+            return this;
+        }
+
+        @NotNull
+        @Contract("_, _ -> this")
+        public Builder<ActionT> textList(@NotNull ThrowableFunction<String, String[]> mapper, @NotNull ThrowableFunction<List<String>, ActionT> listFunction) {
+            list(String::valueOf, listFunction);
+            this.textFunction = s -> listFunction.apply(List.of(mapper.apply(s)));
+            return this;
+        }
+
+        @NotNull
+        @Contract("_ -> this")
+        public Builder<ActionT> consumer(@NotNull BiConsumer<EvalUser, ActionT> consumer) {
+            this.consumer = consumer;
+            return this;
+        }
+
+        @NotNull
+        @Contract("_, _ -> this")
+        public <A> Builder<ActionT> consumer(@NotNull ThrowableFunction<EvalUser, A> userMapper, @NotNull BiConsumer<A, ActionT> consumer) {
+            this.consumer = (user, action) -> {
+                final A a;
+                try {
+                    a = userMapper.apply(user);
+                } catch (Throwable t) {
+                    return;
+                }
+                consumer.accept(a, action);
+            };
             return this;
         }
 
         @Override
         @SuppressWarnings("unchecked")
-        public @Nullable A build(@Nullable Object object) {
+        public @Nullable ActionT build(@Nullable Object object) {
             if (object == null) {
                 return null;
             }
@@ -119,31 +173,37 @@ public class Action implements Eval<ActionResult> {
 
         @Nullable
         @SuppressWarnings("unchecked")
-        public A build(@NotNull Map<String, Object> map) {
+        public ActionT build(@NotNull Map<String, Object> map) {
             final DMap dmap = new DMap(map);
-            if (mapFunction != null) {
-                return mapFunction.apply(dmap);
-            }
-            final Object value = dmap.getRegex("(?i)value|text|list");
-            if (value == null) {
-                return null;
-            }
-            if (value instanceof List) {
-                if (listFunction != null) {
-                    return listFunction.apply((List<Object>) value);
-                } else if (textFunction != null) {
-                    return textFunction.apply(((List<Object>) value).stream().map(String::valueOf).collect(Collectors.joining("\n")));
+            try {
+                if (mapFunction != null) {
+                    return mapFunction.apply(dmap);
                 }
-            } else if (textFunction != null) {
-                return textFunction.apply(String.valueOf(value));
-            }
+                final Object value = dmap.getRegex("(?i)value|text|list");
+                if (value == null) {
+                    return null;
+                }
+                if (value instanceof List) {
+                    if (listFunction != null) {
+                        return listFunction.apply((List<Object>) value);
+                    } else if (textFunction != null) {
+                        return textFunction.apply(((List<Object>) value).stream().map(String::valueOf).collect(Collectors.joining("\n")));
+                    }
+                } else if (textFunction != null) {
+                    return textFunction.apply(String.valueOf(value));
+                }
+            } catch (Throwable ignored) { }
             return null;
         }
 
         @Nullable
-        public A build(@NotNull List<Object> list) {
+        public ActionT build(@NotNull List<Object> list) {
             if (listFunction != null) {
-                return listFunction.apply(list);
+                try {
+                    return listFunction.apply(list);
+                } catch (Throwable t) {
+                    return null;
+                }
             }
             final Map<String, Object> map = new HashMap<>();
             for (Object o : list) {
@@ -158,9 +218,13 @@ public class Action implements Eval<ActionResult> {
         }
 
         @Nullable
-        public A build(@NotNull String text) {
+        public ActionT build(@NotNull String text) {
             if (textFunction != null) {
-                return textFunction.apply(text);
+                try {
+                    return textFunction.apply(text);
+                } catch (Throwable t) {
+                    return null;
+                }
             }
             final Map<String, Object> map = new HashMap<>();
             map.put("value", text);

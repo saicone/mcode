@@ -45,7 +45,7 @@ public class Delay extends Action {
     }
 
     @Override
-    public @NotNull <T extends EvalUser> ActionResult run(@NotNull T user) {
+    public @NotNull ActionResult run(@NotNull EvalUser user) {
         if (time > 0) {
             return ActionResult.DONE.delay(time, unit);
         }
