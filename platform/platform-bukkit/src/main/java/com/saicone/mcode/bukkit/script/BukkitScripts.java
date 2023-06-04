@@ -1,19 +1,15 @@
 package com.saicone.mcode.bukkit.script;
 
-import com.google.common.base.Suppliers;
+import com.saicone.mcode.bukkit.script.action.Money;
 import com.saicone.mcode.module.script.*;
 import com.saicone.mcode.module.script.action.ListAction;
-import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.ServerOperator;
-import org.bukkit.plugin.RegisteredServiceProvider;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.function.Supplier;
 
 public class BukkitScripts {
 
@@ -39,16 +35,6 @@ public class BukkitScripts {
         }
     };
 
-    private static final Supplier<Object> economy = Suppliers.memoize(() -> {
-        if (Bukkit.getPluginManager().getPlugin("Vault") != null) {
-            final RegisteredServiceProvider<Economy> rsp = Bukkit.getServer().getServicesManager().getRegistration(Economy.class);
-            if (rsp != null) {
-                return rsp.getProvider();
-            }
-        }
-        return null;
-    });
-
     public static void registerActions() {
         ListAction.builder("(?i)console(command|cmd)?", String::valueOf).consumer((user, action) -> {
             for (String cmd : action.getList()) {
@@ -56,36 +42,20 @@ public class BukkitScripts {
             }
         }).register();
         ListAction.builder("(?i)(player|sender)?(command|cmd)", String::valueOf).consumer((user, action) -> {
-            for (String cmd : action.getList()) {
-                Bukkit.dispatchCommand((CommandSender) user.getSubject(), user.parse(cmd));
+            if (user.getSubject() instanceof CommandSender) {
+                for (String cmd : action.getList()) {
+                    Bukkit.dispatchCommand((CommandSender) user.getSubject(), user.parse(cmd));
+                }
             }
         }).register();
         ListAction.builder("(?i)(force)?(player)?(chat|say)", String::valueOf).consumer((user, action) -> {
-            for (String msg : action.getList()) {
-                ((Player) user.getSubject()).chat(user.parse(msg));
-            }
-        }).register();
-        ListAction.builder("(?i)money|balance|eco", String::valueOf).consumer((user, action) -> {
-            for (String s : action.getList()) {
-                final String[] split = user.parse(s).split(" ", 2);
-                if (split.length < 2) {
-                    continue;
-                }
-                final double amount = Double.parseDouble(split[1].replace(" ", "").replace(",", ""));
-                switch (split[0].trim().toLowerCase()) {
-                    case "add":
-                    case "deposit":
-                        ((Economy) economy.get()).depositPlayer((OfflinePlayer) user.getSubject(), amount);
-                        break;
-                    case "remove":
-                    case "withdraw":
-                        ((Economy) economy.get()).withdrawPlayer((OfflinePlayer) user.getSubject(), amount);
-                        break;
-                    default:
-                        break;
+            if (user.getSubject() instanceof Player) {
+                for (String msg : action.getList()) {
+                    ((Player) user.getSubject()).chat(user.parse(msg));
                 }
             }
         }).register();
+        Money.BUILDER.register();
     }
 
     public static void registerConditions() {
@@ -103,11 +73,6 @@ public class BukkitScripts {
         REGISTRY.putUserCondition("online", user -> (OfflinePlayer) user.getAgent(), OfflinePlayer::isOnline);
         REGISTRY.putUserCondition("whitelisted", user -> (OfflinePlayer) user.getAgent(), OfflinePlayer::isWhitelisted);
         REGISTRY.putConditionPredicate("level", user -> (Player) user.getAgent(), Integer::parseInt, (player, level) -> player.getLevel() >= level);
-        REGISTRY.putConditionPredicate(
-                EvalKey.regex("(?i)money|balance|eco"),
-                user -> (OfflinePlayer) user.getAgent(),
-                Double::parseDouble,
-                (player, balance) -> ((Economy) economy.get()).getBalance(player) >= balance
-        );
+        REGISTRY.putConditionPredicate(EvalKey.regex("(?i)money|balance|eco"), user -> (OfflinePlayer) user.getAgent(), Double::parseDouble, Money::contains);
     }
 }

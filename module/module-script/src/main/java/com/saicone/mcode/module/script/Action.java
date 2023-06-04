@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -37,9 +38,7 @@ public class Action implements Eval<ActionResult> {
     @Override
     public @Nullable ScriptFunction<EvalUser, ActionResult> compile() {
         return (user) -> {
-            if (consumer != null) {
-                consumer.accept(user, this);
-            }
+            accept(user);
             return run(user);
         };
     }
@@ -47,6 +46,12 @@ public class Action implements Eval<ActionResult> {
     @NotNull
     public ActionResult run(@NotNull EvalUser user) {
         return ActionResult.DONE;
+    }
+
+    public void accept(@NotNull EvalUser user) {
+        if (consumer != null) {
+            consumer.accept(user, this);
+        }
     }
 
     public static class Builder<ActionT extends Action> implements EvalBuilder<ActionT> {
@@ -58,7 +63,8 @@ public class Action implements Eval<ActionResult> {
         protected ThrowableFunction<List<Object>, ActionT> listFunction;
         protected ThrowableFunction<String, ActionT> textFunction;
 
-        protected BiConsumer<EvalUser, ActionT> consumer;
+        protected Consumer<ActionT> buildConsumer;
+        protected BiConsumer<EvalUser, ActionT> actionConsumer;
 
         public Builder(@NotNull @Language("RegExp") String regex) {
             this.regex = regex;
@@ -113,6 +119,18 @@ public class Action implements Eval<ActionResult> {
 
         @NotNull
         @Contract("_, _ -> this")
+        public Builder<ActionT> textSingle(@NotNull ThrowableFunction<DMap, Object> mapFunction, @NotNull ThrowableFunction<String, ActionT> textFunction) {
+            map(map -> {
+                final Object o = mapFunction.apply(map);
+                return o == null ? null : textFunction.apply(String.valueOf(o));
+            });
+            list(list -> list.isEmpty() ? null : textFunction.apply(String.valueOf(list.get(0))));
+            this.textFunction = textFunction;
+            return this;
+        }
+
+        @NotNull
+        @Contract("_, _ -> this")
         public Builder<ActionT> textList(@NotNull ThrowableFunction<String, String[]> mapper, @NotNull ThrowableFunction<List<String>, ActionT> listFunction) {
             list(String::valueOf, listFunction);
             this.textFunction = s -> listFunction.apply(List.of(mapper.apply(s)));
@@ -122,14 +140,14 @@ public class Action implements Eval<ActionResult> {
         @NotNull
         @Contract("_ -> this")
         public Builder<ActionT> consumer(@NotNull BiConsumer<EvalUser, ActionT> consumer) {
-            this.consumer = consumer;
+            this.actionConsumer = consumer;
             return this;
         }
 
         @NotNull
         @Contract("_, _ -> this")
         public <A> Builder<ActionT> consumer(@NotNull ThrowableFunction<EvalUser, A> userMapper, @NotNull BiConsumer<A, ActionT> consumer) {
-            this.consumer = (user, action) -> {
+            this.actionConsumer = (user, action) -> {
                 final A a;
                 try {
                     a = userMapper.apply(user);
@@ -141,12 +159,20 @@ public class Action implements Eval<ActionResult> {
             return this;
         }
 
+        @NotNull
+        @Contract("_ -> this")
+        public Builder<ActionT> build(@NotNull Consumer<ActionT> consumer) {
+            this.buildConsumer = consumer;
+            return this;
+        }
+
         @Override
         @SuppressWarnings("unchecked")
         public @Nullable ActionT build(@Nullable Object object) {
             if (object == null) {
                 return null;
             }
+            final ActionT result;
             if (object instanceof Map) {
                 Map<String, Object> map;
                 try {
@@ -157,18 +183,26 @@ public class Action implements Eval<ActionResult> {
                         map.put(String.valueOf(entry.getKey()), entry.getValue());
                     }
                 }
-                return build(map);
+                result = build(map);
             } else if (object instanceof List) {
-                return build((List<Object>) object);
+                result = build((List<Object>) object);
             } else if (object instanceof Iterable) {
                 final List<Object> list = new ArrayList<>();
                 for (Object o : (Iterable<?>) object) {
                     list.add(o);
                 }
-                return build(list);
+                result = build(list);
             } else {
-                return build(String.valueOf(object));
+                result = build(String.valueOf(object));
             }
+            if (result == null) {
+                return null;
+            }
+            result.setConsumer((BiConsumer<EvalUser, Action>) actionConsumer);
+            if (buildConsumer != null) {
+                buildConsumer.accept(result);
+            }
+            return result;
         }
 
         @Nullable

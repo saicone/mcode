@@ -1,11 +1,11 @@
 package com.saicone.mcode.bukkit.script;
 
+import com.saicone.mcode.bukkit.script.action.Connect;
 import com.saicone.mcode.module.script.*;
 import com.saicone.mcode.module.script.action.ListAction;
 import com.saicone.mcode.util.function.ThrowableFunction;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -34,16 +34,19 @@ public class BukkitScriptCompiler extends ScriptCompiler {
     }
 
     protected void registerActions() {
-        ListAction.builder("(?i)(player|sender)?(command|cmd)", String::valueOf).consumer((user, action) -> {
+        ListAction.builder("(?i)console(command|cmd)?", String::valueOf).consumer((user, action) -> {
             for (String cmd : action.getList()) {
-                Bukkit.dispatchCommand((CommandSender) user.getSubject(), user.parse(cmd));
+                dispatchCommand(Bukkit.getConsoleSender(), user.parse(cmd));
             }
-        }).register();
-        ListAction.builder("(?i)(force)?(player)?(chat|say)", String::valueOf).consumer((user, action) -> {
-            for (String msg : action.getList()) {
-                ((Player) user.getSubject()).chat(user.parse(msg));
+        }).register(this);
+        ListAction.builder("(?i)(player|sender)?(command|cmd)", String::valueOf).consumer((user, action) -> {
+            if (user.getSubject() instanceof CommandSender) {
+                for (String cmd : action.getList()) {
+                    dispatchCommand((CommandSender) user.getSubject(), user.parse(cmd));
+                }
             }
-        }).register();
+        }).register(this);
+        Connect.BUILDER.build(action -> action.setPlugin(plugin)).register(this);
     }
 
     protected void registerConditions() {

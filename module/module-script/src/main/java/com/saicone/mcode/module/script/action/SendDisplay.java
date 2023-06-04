@@ -3,7 +3,6 @@ package com.saicone.mcode.module.script.action;
 import com.saicone.mcode.module.lang.DisplayLoader;
 import com.saicone.mcode.module.lang.display.Display;
 import com.saicone.mcode.module.script.Action;
-import com.saicone.mcode.module.script.ActionResult;
 import com.saicone.mcode.module.script.EvalUser;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -33,12 +32,11 @@ public class SendDisplay extends Action {
     }
 
     @Override
-    public @NotNull ActionResult run(@NotNull EvalUser user) {
+    public void accept(@NotNull EvalUser user) {
         try {
             if (user.getSubject() != null) {
                 display.sendTo(user.getSubject(), user::parse);
             }
         } catch (ClassCastException ignored) { }
-        return ActionResult.DONE;
     }
 }
