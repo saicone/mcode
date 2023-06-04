@@ -26,6 +26,9 @@ public class BukkitPlatform extends Platform {
 
     @Override
     protected void initModules() {
+        if (isAvailable("Script")) {
+            initModule("com.saicone.mcode.bukkit.script.BukkitScripts", "registerActions", "registerConditions");
+        }
         if (isAvailable("Settings")) {
             initModule("com.saicone.mcode.bukkit.settings.YamlParser", "register");
         }
