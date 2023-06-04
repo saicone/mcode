@@ -118,13 +118,23 @@ public class Action implements Eval<ActionResult> {
         }
 
         @NotNull
+        @Contract("_ -> this")
+        public Builder<ActionT> textSingle(@NotNull ThrowableFunction<String, ActionT> textFunction) {
+            return textSingle(null, textFunction);
+        }
+
+        @NotNull
         @Contract("_, _ -> this")
-        public Builder<ActionT> textSingle(@NotNull ThrowableFunction<DMap, Object> mapFunction, @NotNull ThrowableFunction<String, ActionT> textFunction) {
-            map(map -> {
-                final Object o = mapFunction.apply(map);
-                return o == null ? null : textFunction.apply(String.valueOf(o));
-            });
-            list(list -> list.isEmpty() ? null : textFunction.apply(String.valueOf(list.get(0))));
+        public Builder<ActionT> textSingle(@Nullable ThrowableFunction<DMap, Object> mapFunction, @NotNull ThrowableFunction<String, ActionT> textFunction) {
+            if (mapFunction != null && this.mapFunction == null) {
+                map(map -> {
+                    final Object o = mapFunction.apply(map);
+                    return o == null ? null : textFunction.apply(String.valueOf(o));
+                });
+            }
+            if (this.listFunction == null) {
+                list(list -> list.isEmpty() ? null : textFunction.apply(String.valueOf(list.get(0))));
+            }
             this.textFunction = textFunction;
             return this;
         }
@@ -132,7 +142,9 @@ public class Action implements Eval<ActionResult> {
         @NotNull
         @Contract("_, _ -> this")
         public Builder<ActionT> textList(@NotNull ThrowableFunction<String, String[]> mapper, @NotNull ThrowableFunction<List<String>, ActionT> listFunction) {
-            list(String::valueOf, listFunction);
+            if (this.listFunction == null) {
+                list(String::valueOf, listFunction);
+            }
             this.textFunction = s -> listFunction.apply(List.of(mapper.apply(s)));
             return this;
         }

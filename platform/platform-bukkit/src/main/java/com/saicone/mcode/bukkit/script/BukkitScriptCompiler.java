@@ -33,6 +33,11 @@ public class BukkitScriptCompiler extends ScriptCompiler {
         }
     }
 
+    @NotNull
+    public Plugin getPlugin() {
+        return plugin;
+    }
+
     protected void registerActions() {
         ListAction.builder("(?i)console(command|cmd)?", String::valueOf).consumer((user, action) -> {
             for (String cmd : action.getList()) {
@@ -50,10 +55,6 @@ public class BukkitScriptCompiler extends ScriptCompiler {
     }
 
     protected void registerConditions() {
-
-    }
-
-    public void putSenderAction(@NotNull Object key, @NotNull Predicate<CommandSender> predicate) {
 
     }
 
