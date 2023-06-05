@@ -36,13 +36,13 @@ public class BungeeScripts {
     public static void registerActions() {
         ListAction.builder("(?i)console(command|cmd)?", String::valueOf).consumer((user, action) -> {
             for (String cmd : action.getList()) {
-                ProxyServer.getInstance().getPluginManager().dispatchCommand(ProxyServer.getInstance().getConsole(), cmd);
+                ProxyServer.getInstance().getPluginManager().dispatchCommand(ProxyServer.getInstance().getConsole(), user.parse(cmd));
             }
         }).register();
         ListAction.builder("(?i)(player|sender)?(command|cmd)", String::valueOf).consumer((user, action) -> {
             if (user.getSubject() instanceof CommandSender) {
                 for (String cmd : action.getList()) {
-                    ProxyServer.getInstance().getPluginManager().dispatchCommand((CommandSender) user.getSubject(), cmd);
+                    ProxyServer.getInstance().getPluginManager().dispatchCommand((CommandSender) user.getSubject(), user.parse(cmd));
                 }
             }
         }).register();
