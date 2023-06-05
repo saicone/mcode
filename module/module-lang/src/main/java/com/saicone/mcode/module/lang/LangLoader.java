@@ -154,10 +154,15 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
         if (!displayLoaders.isEmpty()) {
             return;
         }
+        final Set<String> loaded = new HashSet<>();
         getFieldsFrom(getLangProviders(), field -> (field.canAccess(null) || field.canAccess(this)) && DisplayLoader.class.isAssignableFrom(field.getType()), field -> {
+            if (loaded.contains(field.getName().toLowerCase())) {
+                return;
+            }
             try {
                 final DisplayLoader<SenderT> loader = (DisplayLoader<SenderT>) field.get(this);
                 displayLoaders.add(loader);
+                loaded.add(field.getName().toLowerCase());
             } catch (IllegalAccessException | ClassCastException e) {
                 e.printStackTrace();
             }

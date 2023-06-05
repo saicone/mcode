@@ -43,6 +43,19 @@ public class BukkitLang extends LangLoader<CommandSender, Player> {
 
     private final BossbarLoader bossbar = new BossbarLoader();
 
+    @NotNull
+    public static BukkitLang of(@NotNull Plugin plugin, @NotNull Class<?>... langProviders) {
+        return of(plugin, false, langProviders);
+    }
+
+    @NotNull
+    public static BukkitLang of(@NotNull Plugin plugin, boolean useConfig, @NotNull Class<?>... langProviders) {
+        if (ServerInstance.isPaper && ServerInstance.verNumber >= 16 && ServerInstance.release >= 3) {
+            return new PaperLang(plugin, useConfig, langProviders);
+        }
+        return new BukkitLang(plugin, useConfig, langProviders);
+    }
+
     public BukkitLang(@NotNull Plugin plugin,  @NotNull Class<?>... langProviders) {
         this(plugin, false, langProviders);
     }
@@ -283,7 +296,8 @@ public class BukkitLang extends LangLoader<CommandSender, Player> {
                     ((Player) sender).sendTitle(title, subtitle);
                 }
             } else {
-                sender.sendMessage(title, subtitle);
+                sender.sendMessage(title);
+                sender.sendMessage(subtitle);
             }
         }
     }
