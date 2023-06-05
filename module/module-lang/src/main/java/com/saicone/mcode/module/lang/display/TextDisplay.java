@@ -256,4 +256,24 @@ public abstract class TextDisplay<SenderT> extends Display<SenderT> {
             };
         }
     }
+
+    public enum Event {
+        SHOW_TEXT,
+        OPEN_URL,
+        OPEN_FILE,
+        RUN_COMMAND,
+        SUGGEST_COMMAND,
+        CHANGE_PAGE,
+        COPY_TO_CLIPBOARD;
+
+        @Nullable
+        public static Event of(@NotNull String name) {
+            for (Event value : values()) {
+                if (value.name().equalsIgnoreCase(name)) {
+                    return value;
+                }
+            }
+            return null;
+        }
+    }
 }

@@ -12,12 +12,12 @@ dependencies {
     compileOnly project(':module:module-task')
     compileOnly project(':module:module-settings')
     compileOnly project(':module:module-lang')
+    compileOnly project(':module:module-lang-adventure')
     compileOnly project(':module:module-delivery')
     compileOnly project(':module:module-script')
     compileOnly project(':extension:extension-lookup')
 
     compileOnly 'net.kyori:adventure-api:4.13.1'
-    compileOnly 'net.kyori:adventure-text-serializer-legacy:4.13.1'
     compileOnly ('com.github.MilkBowl:VaultAPI:1.7.1') { transitive = false }
     compileOnly ('me.clip:placeholderapi:2.11.3') { transitive = false }
 }

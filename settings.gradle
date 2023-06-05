@@ -10,6 +10,7 @@ include(
 	'module:module-delivery-redis',
 	'module:module-delivery-sql',
 	'module:module-lang',
+	'module:module-lang-adventure',
 	'module:module-script',
 	'module:module-script-js',
 	'module:module-settings',

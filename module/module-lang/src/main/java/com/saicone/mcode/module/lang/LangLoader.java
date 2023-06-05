@@ -47,6 +47,7 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
     protected final Map<String, String> languageAliases = new HashMap<>();
     protected final Map<String, String> playerLanguages = new HashMap<>();
 
+    protected String filePrefix = ".yml";
     protected final Map<String, Map<String, Display<SenderT>>> displays = new HashMap<>();
 
     public LangLoader(@NotNull Class<?>... langProviders) {
@@ -180,6 +181,10 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
 
     @Nullable
     protected abstract File saveDefaultLang(@NotNull File folder, @NotNull String name);
+
+    public void setFilePrefix(@NotNull String filePrefix) {
+        this.filePrefix = filePrefix;
+    }
 
     @NotNull
     public abstract File getLangFolder();
@@ -319,6 +324,11 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
 
     @NotNull
     protected abstract SenderT getConsoleSender();
+
+    @NotNull
+    public String getFilePrefix() {
+        return filePrefix;
+    }
 
     @NotNull
     public Map<String, Map<String, Display<SenderT>>> getDisplays() {

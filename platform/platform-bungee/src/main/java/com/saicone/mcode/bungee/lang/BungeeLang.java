@@ -42,11 +42,12 @@ public class BungeeLang extends LangLoader<CommandSender, ProxiedPlayer> {
 
     @Override
     protected @Nullable File saveDefaultLang(@NotNull File folder, @NotNull String name) {
-        final InputStream in = plugin.getResourceAsStream("lang/" + name + ".yml");
+        final String fileName = name + filePrefix;
+        final InputStream in = plugin.getResourceAsStream("lang/" + fileName);
         if (in == null) {
             return null;
         }
-        final File file = new File(folder, name + ".yml");
+        final File file = new File(folder, fileName);
         try (OutputStream out = new FileOutputStream(file, false)) {
             in.transferTo(out);
             in.close();

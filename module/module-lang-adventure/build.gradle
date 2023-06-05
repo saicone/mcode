@@ -1,0 +1,6 @@
+dependencies {
+    api project(':module:module-lang')
+
+    compileOnly 'net.kyori:adventure-api:4.13.1'
+    compileOnly 'net.kyori:adventure-text-serializer-legacy:4.13.1'
+}

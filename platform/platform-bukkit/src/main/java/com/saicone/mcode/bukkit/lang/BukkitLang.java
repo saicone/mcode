@@ -73,11 +73,12 @@ public class BukkitLang extends LangLoader<CommandSender, Player> {
 
     @Override
     protected @Nullable File saveDefaultLang(@NotNull File folder, @NotNull String name) {
-        final InputStream in = plugin.getResource("lang/" + name + ".yml");
+        final String fileName = name + filePrefix;
+        final InputStream in = plugin.getResource("lang/" + fileName);
         if (in == null) {
             return null;
         }
-        final File file = new File(folder, name + ".yml");
+        final File file = new File(folder, fileName);
         try (OutputStream out = new FileOutputStream(file, false)) {
             in.transferTo(out);
         } catch (IOException e) {
