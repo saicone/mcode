@@ -9,6 +9,7 @@ import net.md_5.bungee.api.event.PluginMessageEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.event.EventHandler;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
@@ -20,10 +21,14 @@ public class BungeeDelivery extends DeliveryClient implements Listener {
     private final Plugin plugin;
     private final Set<String> forward;
 
+    @NotNull
+    @Contract("_ -> new")
     public static BungeeDelivery of(@NotNull Plugin plugin) {
         return new BungeeDelivery(plugin, new HashSet<>());
     }
 
+    @NotNull
+    @Contract("_, _ -> new")
     public static BungeeDelivery of(@NotNull Plugin plugin, String... forward) {
         final Set<String> set = new HashSet<>();
         for (String s : forward) {
@@ -48,10 +53,12 @@ public class BungeeDelivery extends DeliveryClient implements Listener {
         for (String channel : subscribedChannels) {
             registerChannel(channel);
         }
+        plugin.getProxy().getPluginManager().registerListener(plugin, this);
     }
 
     @Override
     public void onClose() {
+        plugin.getProxy().getPluginManager().unregisterListener(this);
         for (String channel : subscribedChannels) {
             unregisterChannel(channel);
         }
