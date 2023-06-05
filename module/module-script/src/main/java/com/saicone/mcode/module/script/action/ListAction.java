@@ -22,6 +22,15 @@ public class ListAction<E> extends Action {
         return list;
     }
 
+    @NotNull
+    public E getValue() {
+        return list.get(0);
+    }
+
+    public boolean isEmpty() {
+        return list.isEmpty();
+    }
+
     public static <E> Builder<E> builder(@NotNull @Language("RegExp") String regex, @NotNull ThrowableFunction<Object, E> mapper) {
         return builder(regex, s -> s.split("\n"), mapper);
     }

@@ -1,0 +1,13 @@
+repositories {
+    maven { url 'https://repo.papermc.io/repository/maven-public/' }
+}
+
+dependencies {
+    compileOnly 'com.velocitypowered:velocity-api:3.2.0-SNAPSHOT'
+    compileOnly project(':module:module-task')
+    compileOnly project(':module:module-settings')
+    compileOnly project(':module:module-lang')
+    implementation project(':module:module-lang-adventure')
+    compileOnly project(':module:module-delivery')
+    compileOnly project(':module:module-script')
+}

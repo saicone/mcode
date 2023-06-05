@@ -23,7 +23,8 @@ include(
 // Platforms
 include(
 	'platform:platform-bukkit',
-	'platform:platform-bungee'
+	'platform:platform-bungee',
+	'platform:platform-velocity'
 	)
 
 // Extensions

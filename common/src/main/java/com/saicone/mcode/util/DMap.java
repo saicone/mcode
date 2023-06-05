@@ -19,19 +19,28 @@ public class DMap implements Map<String, Object> {
     private final Map<String, Object> map;
 
     @NotNull
-    @SuppressWarnings("unchecked")
     public static DMap of(@NotNull Map<?, ?> map) {
+        return of(map, true);
+    }
+
+    @Nullable
+    @Contract("_, true -> !null")
+    @SuppressWarnings("unchecked")
+    public static DMap of(@NotNull Map<?, ?> map, boolean convert) {
         if (map instanceof DMap) {
             return (DMap) map;
         } else {
             try {
                 return new DMap((Map<String, Object>) map);
             } catch (ClassCastException e) {
-                final Map<String, Object> finalMap = new HashMap<>();
-                for (Entry<?, ?> entry : map.entrySet()) {
-                    finalMap.put(String.valueOf(entry.getKey()), entry.getValue());
+                if (convert) {
+                    final Map<String, Object> finalMap = new HashMap<>();
+                    for (Entry<?, ?> entry : map.entrySet()) {
+                        finalMap.put(String.valueOf(entry.getKey()), entry.getValue());
+                    }
+                    return new DMap(finalMap);
                 }
-                return new DMap(finalMap);
+                return null;
             }
         }
     }
@@ -100,6 +109,22 @@ public class DMap implements Map<String, Object> {
     @NotNull
     public Map<String, Object> getMap() {
         return this.map;
+    }
+
+    @NotNull
+    public Map<String, Object> asDeepPath(@NotNull String separator) {
+        final Map<String, Object> finalMap = new HashMap<>();
+        for (Entry<String, Object> entry : map.entrySet()) {
+            if (entry.getValue() instanceof Map) {
+                final DMap child = of((Map<?, ?>) entry.getValue(), false);
+                if (child != null) {
+                    child.asDeepPath(separator).forEach((key, value) -> finalMap.put(entry.getKey() + separator + key, value));
+                    continue;
+                }
+            }
+            finalMap.put(entry.getKey(), entry.getValue());
+        }
+        return finalMap;
     }
 
     // Vanilla methods
