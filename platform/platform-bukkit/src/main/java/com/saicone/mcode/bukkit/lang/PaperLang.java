@@ -13,6 +13,7 @@ public class PaperLang extends BukkitLang {
     public static final AdventureLang.TitleLoader<CommandSender> TITLE = new AdventureLang.TitleLoader<>();
     public static final AdventureLang.ActionbarLoader<CommandSender> ACTIONBAR = new AdventureLang.ActionbarLoader<>();
     public static final AdventureLang.SoundLoader<CommandSender> SOUND = new AdventureLang.SoundLoader<>();
+    public static final AdventureLang.MiniMessageLoader<CommandSender> MINIMESSAGE = new AdventureLang.MiniMessageLoader<>();
 
     private final AdventureLang.BossbarLoader<CommandSender> bossbar = new AdventureLang.BossbarLoader<>() {
         @Override

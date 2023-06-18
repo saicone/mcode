@@ -30,6 +30,7 @@ public class VelocityLang extends LangLoader<CommandSource, Player> {
     public static final AdventureLang.TitleLoader<CommandSource> TITLE = new AdventureLang.TitleLoader<>();
     public static final AdventureLang.ActionbarLoader<CommandSource> ACTIONBAR = new AdventureLang.ActionbarLoader<>();
     public static final AdventureLang.SoundLoader<CommandSource> SOUND = new AdventureLang.SoundLoader<>();
+    public static final AdventureLang.MiniMessageLoader<CommandSource> MINIMESSAGE = new AdventureLang.MiniMessageLoader<>();
 
     private final Object plugin;
 

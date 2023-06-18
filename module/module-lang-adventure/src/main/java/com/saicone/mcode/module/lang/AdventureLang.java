@@ -208,4 +208,11 @@ public class AdventureLang {
 
         protected abstract void later(@NotNull Runnable runnable, long ticks);
     }
+
+    public static class MiniMessageLoader<T> extends MiniMessageDisplay.Loader<T> {
+        @Override
+        protected void sendMiniMessage(@NotNull T type, @NotNull Component miniMessage) {
+            ((Audience) type).sendMessage(miniMessage);
+        }
+    }
 }
