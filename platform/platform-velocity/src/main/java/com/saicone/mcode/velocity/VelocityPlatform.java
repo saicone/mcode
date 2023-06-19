@@ -55,4 +55,14 @@ public class VelocityPlatform extends Platform {
     public @NotNull Collection<?> getOnlinePlayers() {
         return proxy.getAllPlayers();
     }
+
+    @NotNull
+    public ProxyServer getProxy() {
+        return proxy;
+    }
+
+    @NotNull
+    public Injector getInjector() {
+        return injector;
+    }
 }

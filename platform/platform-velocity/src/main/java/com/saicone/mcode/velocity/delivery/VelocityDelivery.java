@@ -2,8 +2,8 @@ package com.saicone.mcode.velocity.delivery;
 
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteStreams;
-import com.google.inject.Inject;
 import com.saicone.mcode.module.delivery.DeliveryClient;
+import com.saicone.mcode.velocity.VelocityPlatform;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.proxy.Player;
@@ -18,11 +18,9 @@ import java.util.Set;
 
 public class VelocityDelivery extends DeliveryClient {
 
+    private final ProxyServer proxy;
     private final Object plugin;
     private final Set<String> forward;
-
-    @Inject
-    private ProxyServer proxy;
 
     @NotNull
     @Contract("_ -> new")
@@ -47,6 +45,11 @@ public class VelocityDelivery extends DeliveryClient {
     }
 
     public VelocityDelivery(@NotNull Object plugin, @NotNull Set<String> forward) {
+        this(VelocityPlatform.get().getProxy(), plugin, forward);
+    }
+
+    public VelocityDelivery(@NotNull ProxyServer proxy, @NotNull Object plugin, @NotNull Set<String> forward) {
+        this.proxy = proxy;
         this.plugin = plugin;
         this.forward = forward;
     }

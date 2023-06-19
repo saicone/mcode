@@ -1,10 +1,10 @@
 package com.saicone.mcode.velocity.lang;
 
-import com.google.inject.Inject;
 import com.moandjiezana.toml.Toml;
 import com.saicone.mcode.module.lang.AdventureLang;
 import com.saicone.mcode.module.lang.LangLoader;
 import com.saicone.mcode.util.DMap;
+import com.saicone.mcode.velocity.VelocityPlatform;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
@@ -32,12 +32,9 @@ public class VelocityLang extends LangLoader<CommandSource, Player> {
     public static final AdventureLang.SoundLoader<CommandSource> SOUND = new AdventureLang.SoundLoader<>();
     public static final AdventureLang.MiniMessageLoader<CommandSource> MINIMESSAGE = new AdventureLang.MiniMessageLoader<>();
 
+    private final ProxyServer proxy;
     private final Object plugin;
-
-    @Inject
-    private ProxyServer proxy;
-    @Inject
-    private Logger logger;
+    private final Logger logger;
 
     private final AdventureLang.BossbarLoader<CommandSource> bossbar = new AdventureLang.BossbarLoader<>() {
         @Override
@@ -47,9 +44,15 @@ public class VelocityLang extends LangLoader<CommandSource, Player> {
         }
     };
 
-    public VelocityLang(@NotNull Object plugin, @NotNull Class<?>... langProviders) {
+    public VelocityLang(@NotNull Object plugin, @NotNull Logger logger, @NotNull Class<?>... langProviders) {
+        this(VelocityPlatform.get().getProxy(), plugin, logger, langProviders);
+    }
+
+    public VelocityLang(@NotNull ProxyServer proxy, @NotNull Object plugin, @NotNull Logger logger, @NotNull Class<?>... langProviders) {
         super(langProviders);
+        this.proxy = proxy;
         this.plugin = plugin;
+        this.logger = logger;
     }
 
     @Override
@@ -110,6 +113,11 @@ public class VelocityLang extends LangLoader<CommandSource, Player> {
     @NotNull
     public Object getPlugin() {
         return plugin;
+    }
+
+    @NotNull
+    public Logger getLogger() {
+        return logger;
     }
 
     @Override

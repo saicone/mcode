@@ -1,9 +1,9 @@
 package com.saicone.mcode.velocity.script;
 
-import com.google.inject.Inject;
 import com.saicone.mcode.module.script.ScriptCompiler;
 import com.saicone.mcode.module.script.action.ListAction;
 import com.saicone.mcode.util.function.ThrowableFunction;
+import com.saicone.mcode.velocity.VelocityPlatform;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
@@ -15,17 +15,34 @@ import java.util.function.Predicate;
 
 public class VelocityScriptCompiler extends ScriptCompiler {
 
-    @Inject
-    private ProxyServer proxy;
+    private final @NotNull ProxyServer proxy;
     private final @NotNull Object plugin;
 
     @SuppressWarnings("all")
     VelocityScriptCompiler() {
+        this.proxy = null;
         this.plugin = null;
     }
 
     public VelocityScriptCompiler(@NotNull Object plugin) {
+        this(VelocityPlatform.get().getProxy(), plugin, true);
+    }
+
+    public VelocityScriptCompiler(@NotNull Object plugin, boolean register) {
+        this(VelocityPlatform.get().getProxy(), plugin, register);
+    }
+
+    public VelocityScriptCompiler(@NotNull ProxyServer proxy, @NotNull Object plugin) {
+        this(proxy, plugin, true);
+    }
+
+    public VelocityScriptCompiler(@NotNull ProxyServer proxy, @NotNull Object plugin, boolean register) {
+        this.proxy = proxy;
         this.plugin = plugin;
+        if (register) {
+            registerActions();
+            registerConditions();
+        }
     }
 
     @NotNull

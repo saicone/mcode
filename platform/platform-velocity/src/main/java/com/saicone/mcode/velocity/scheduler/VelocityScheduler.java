@@ -1,7 +1,7 @@
 package com.saicone.mcode.velocity.scheduler;
 
-import com.google.inject.Inject;
 import com.saicone.mcode.scheduler.Scheduler;
+import com.saicone.mcode.velocity.VelocityPlatform;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.scheduler.ScheduledTask;
 import org.jetbrains.annotations.NotNull;
@@ -10,11 +10,15 @@ import java.util.concurrent.TimeUnit;
 
 public class VelocityScheduler implements Scheduler<ScheduledTask> {
 
-    @Inject
-    private ProxyServer proxy;
+    private final ProxyServer proxy;
     private final Object plugin;
 
     public VelocityScheduler(@NotNull Object plugin) {
+        this(VelocityPlatform.get().getProxy(), plugin);
+    }
+
+    public VelocityScheduler(@NotNull ProxyServer proxy, @NotNull Object plugin) {
+        this.proxy = proxy;
         this.plugin = plugin;
     }
 
