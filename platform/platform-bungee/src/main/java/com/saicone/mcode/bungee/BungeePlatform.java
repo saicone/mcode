@@ -18,6 +18,11 @@ public class BungeePlatform extends Platform {
         }
     }
 
+    @NotNull
+    public static BungeePlatform get() {
+        return Platform.get();
+    }
+
     BungeePlatform() {
         super();
         setInstance(this);

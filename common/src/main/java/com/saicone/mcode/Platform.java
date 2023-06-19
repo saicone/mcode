@@ -27,7 +27,9 @@ public abstract class Platform {
     }
 
     protected Platform() {
-        initModules();
+        if (INSTANCE == null) {
+            initModules();
+        }
     }
 
     protected void initModules() {

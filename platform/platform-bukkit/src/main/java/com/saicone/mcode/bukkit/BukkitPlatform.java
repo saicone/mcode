@@ -18,6 +18,11 @@ public class BukkitPlatform extends Platform {
         }
     }
 
+    @NotNull
+    public static BukkitPlatform get() {
+        return Platform.get();
+    }
+
     BukkitPlatform() {
         super();
         setInstance(this);
