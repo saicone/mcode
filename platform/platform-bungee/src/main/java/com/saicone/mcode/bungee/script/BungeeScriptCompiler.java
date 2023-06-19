@@ -20,7 +20,15 @@ public class BungeeScriptCompiler extends ScriptCompiler {
     }
 
     public BungeeScriptCompiler(@NotNull Plugin plugin) {
+        this(plugin, true);
+    }
+
+    public BungeeScriptCompiler(@NotNull Plugin plugin, boolean register) {
         this.plugin = plugin;
+        if (register) {
+            registerActions();
+            registerConditions();
+        }
     }
 
     @NotNull
