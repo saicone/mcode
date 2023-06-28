@@ -50,6 +50,11 @@ public class ServerInstance {
      * <a href="https://papermc.io/">https://papermc.io/</a>
      */
     public static final boolean isPaper;
+    /**
+     * Return true if server instance is a PurpurMC server.<br>
+     * <a href="https://purpur.org/">https://purpur.org/</a>
+     */
+    public static final boolean isPurpur;
 
     static {
         version = Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3];
@@ -60,6 +65,7 @@ public class ServerInstance {
         isUniversal = verNumber >= 17;
         boolean spigot = false;
         boolean paper = false;
+        boolean purpur = false;
         try {
             Class.forName("org.spigotmc.SpigotConfig");
             spigot = true;
@@ -68,8 +74,13 @@ public class ServerInstance {
             Class.forName("com.destroystokyo.paper.Title");
             paper = true;
         } catch (ClassNotFoundException ignored) { }
+        try {
+            Class.forName("org.purpurmc.purpur.event.ExecuteCommandEvent");
+            purpur = true;
+        } catch (ClassNotFoundException ignored) { }
         isSpigot = spigot;
         isPaper = paper;
+        isPurpur = purpur;
     }
 
     ServerInstance() {
