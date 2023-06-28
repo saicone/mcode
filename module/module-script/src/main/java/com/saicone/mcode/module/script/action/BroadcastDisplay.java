@@ -33,6 +33,6 @@ public class BroadcastDisplay extends Action {
 
     @Override
     public void accept(@NotNull EvalUser user) {
-        display.sendToAll(user::parse);
+        display.sendToAll(s -> user.parse(s, true));
     }
 }
