@@ -26,9 +26,13 @@ public class Compare extends Condition {
 
         switch (split[1].replace("-" , "").replace(" ", "")) {
             case "==":
+            case "=":
             case "is":
             case "equals":
                 return (user) -> user.parse(split[0]).equals(user.parse(split[2]));
+            case "-eq":
+            case "numberequals":
+                return user -> user.parseBy(Double::parseDouble, split[0], 0D).equals(user.parseBy(Double::parseDouble, split[2], 0));
             case "!=":
             case "isnot":
             case "isnotequals":
@@ -37,6 +41,7 @@ public class Compare extends Condition {
             case "equalsignorecase":
                 return (user) -> user.parse(split[0]).equalsIgnoreCase(user.parse(split[2]));
             case ">":
+            case "-gt":
             case "upperthan":
             case "morethan":
                 return (user) -> user.parseInt(split[0], 0) > user.parseInt(split[2], 0);
@@ -45,6 +50,7 @@ public class Compare extends Condition {
             case "morethanorequal":
                 return (user) -> user.parseInt(split[0], 0) >= user.parseInt(split[2], 0);
             case "<":
+            case "-lt":
             case "lowerthan":
             case "lessthan":
                 return (user) -> user.parseInt(split[0], 0) < user.parseInt(split[2], 0);
@@ -53,6 +59,7 @@ public class Compare extends Condition {
             case "lessthanorequal":
                 return (user) -> user.parseInt(split[0], 0) <= user.parseInt(split[2], 0);
             case "$=":
+            case "=~":
             case "matches":
                 final Pattern pattern = Pattern.compile(split[0]);
                 return (user) -> pattern.matcher(user.parse(split[2])).matches();

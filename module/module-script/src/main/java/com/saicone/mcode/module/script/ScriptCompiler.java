@@ -31,13 +31,20 @@ public class ScriptCompiler extends ScriptRegistry {
             ScriptFunction<EvalUser, ActionResult> orElse = null;
             for (var entry : ((Map<?, ?>) action).entrySet()) {
                 final String key = String.valueOf(entry.getKey());
-                switch (key.replace("-", "").replace(" ", "").toLowerCase()) {
+                switch (getCleanId(key)) {
                     case "if":
+                    case "ifall":
                     case "condition":
                     case "conditions":
                         condition = compileCondition(entry.getValue());
                         break;
+                    case "ifany":
+                    case "anycondition":
+                    case "anyconditions":
+                        condition = compileCondition(entry.getValue(), false);
+                        break;
                     case "run":
+                    case "then":
                     case "action":
                     case "actions":
                         run = compileAction(entry.getValue(), object);
@@ -86,23 +93,44 @@ public class ScriptCompiler extends ScriptRegistry {
 
     @Nullable
     public ScriptFunction<EvalUser, Boolean> compileCondition(@Nullable Object condition) {
-        return compileCondition(condition, null);
+        return compileCondition(condition, true, null);
+    }
+
+    @Nullable
+    public ScriptFunction<EvalUser, Boolean> compileCondition(@Nullable Object condition, boolean all) {
+        return compileCondition(condition, all, null);
     }
 
     @Nullable
     public ScriptFunction<EvalUser, Boolean> compileCondition(@Nullable Object condition, @Nullable Object object) {
+        return compileCondition(condition, true, object);
+    }
+
+    @Nullable
+    public ScriptFunction<EvalUser, Boolean> compileCondition(@Nullable Object condition, boolean all, @Nullable Object object) {
         final List<ScriptFunction<EvalUser, Boolean>> conditions = getConditions(condition, object);
         if (conditions.isEmpty()) {
             return null;
         }
-        return (user) -> {
-            for (ScriptFunction<EvalUser, Boolean> function : conditions) {
-                if (!function.apply(user)) {
-                    return false;
+        if (all) {
+            return (user) -> { // Compare by &&
+                for (ScriptFunction<EvalUser, Boolean> function : conditions) {
+                    if (!function.apply(user)) {
+                        return false;
+                    }
                 }
-            }
-            return true;
-        };
+                return true;
+            };
+        } else {
+            return (user) -> { // Compare by ||
+                for (ScriptFunction<EvalUser, Boolean> function : conditions) {
+                    if (function.apply(user)) {
+                        return true;
+                    }
+                }
+                return false;
+            };
+        }
     }
 
     @Override
@@ -113,6 +141,11 @@ public class ScriptCompiler extends ScriptRegistry {
     @Override
     public boolean containsAnyCondition(@NotNull Object key) {
         return super.containsAnyCondition(key) || Script.REGISTRY.containsAnyCondition(key);
+    }
+
+    @NotNull
+    public String getCleanId(@NotNull String id) {
+        return id.replace("-", "").replace(" ", "").toLowerCase();
     }
 
     @Override
@@ -156,7 +189,7 @@ public class ScriptCompiler extends ScriptRegistry {
 
     @Nullable
     public ScriptFunction<EvalUser, ActionResult> getAction(@NotNull String id, @Nullable Object value, @Nullable Object object) {
-        String finalId = id.replace("-", "").replace(" ", "").toLowerCase();
+        String finalId = getCleanId(id);
         ScriptFunction<EvalUser, ActionResult> found = null;
         switch (finalId) {
             case "done":
@@ -197,13 +230,26 @@ public class ScriptCompiler extends ScriptRegistry {
         final List<ScriptFunction<EvalUser, Boolean>> conditions = new ArrayList<>();
         if (condition instanceof Map) {
             for (Map.Entry<?, ?> entry : ((Map<?, ?>) condition).entrySet()) {
-                if (entry.getValue() instanceof Iterable) {
-                    final String id = String.valueOf(entry.getKey());
-                    for (Object o : (Iterable<?>) entry.getValue()) {
-                        conditions.add(getCondition(id, String.valueOf(o), object));
-                    }
-                } else {
-                    conditions.add(getCondition(String.valueOf(entry.getKey()), String.valueOf(entry.getValue()), object));
+                final String id = String.valueOf(entry.getKey());
+                switch (getCleanId(id)) {
+                    case "all":
+                    case "if":
+                    case "ifall":
+                        conditions.add(compileCondition(entry.getValue(), object));
+                        break;
+                    case "any":
+                    case "ifany":
+                        conditions.add(compileCondition(entry.getValue(), false, object));
+                        break;
+                    default:
+                        if (entry.getValue() instanceof Iterable) {
+                            for (Object o : (Iterable<?>) entry.getValue()) {
+                                conditions.add(getCondition(id, String.valueOf(o), object));
+                            }
+                        } else {
+                            conditions.add(getCondition(id, String.valueOf(entry.getValue()), object));
+                        }
+                        break;
                 }
             }
         } else if (condition instanceof Iterable) {
@@ -231,7 +277,7 @@ public class ScriptCompiler extends ScriptRegistry {
 
     @Nullable
     public ScriptFunction<EvalUser, Boolean> getCondition(@NotNull String id, @Nullable String value, @Nullable Object object) {
-        String finalId = id.replace("-", "").replace(" ", "").toLowerCase();
+        String finalId = getCleanId(id);
         switch (finalId) {
             case "true":
             case "yes":
