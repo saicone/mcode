@@ -1,7 +1,5 @@
 package com.saicone.mcode.velocity;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
 import com.saicone.mcode.Platform;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
@@ -12,9 +10,9 @@ import java.util.Collection;
 
 public class VelocityPlatform extends Platform {
 
-    public static void init(@NotNull Injector injector) {
+    public static void init(@NotNull ProxyServer proxy) {
         if (INSTANCE == null) {
-            injector.getInstance(VelocityPlatform.class);
+            new VelocityPlatform(proxy);
         }
     }
 
@@ -23,14 +21,12 @@ public class VelocityPlatform extends Platform {
         return Platform.get();
     }
 
-    @Inject
-    private ProxyServer proxy;
-    @Inject
-    private Injector injector;
+    private final ProxyServer proxy;
 
-    VelocityPlatform() {
+    VelocityPlatform(@NotNull ProxyServer proxy) {
         super();
         setInstance(this);
+        this.proxy = proxy;
     }
 
     @Override
@@ -59,10 +55,5 @@ public class VelocityPlatform extends Platform {
     @NotNull
     public ProxyServer getProxy() {
         return proxy;
-    }
-
-    @NotNull
-    public Injector getInjector() {
-        return injector;
     }
 }
