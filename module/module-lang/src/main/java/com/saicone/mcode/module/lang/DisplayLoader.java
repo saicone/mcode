@@ -56,6 +56,11 @@ public class DisplayLoader<SenderT> {
         return LangLoader.loadDisplay(LOADERS, object);
     }
 
+    @Nullable
+    public static Display<Object> loadDisplay(@Nullable Object object, @NotNull String defaultDisplay) {
+        return LangLoader.loadDisplay(LOADERS, object, defaultDisplay);
+    }
+
     public DisplayLoader(@NotNull @Language("RegExp") String regex, @NotNull Map<String, Object> defaults) {
         this(regex, defaults, true);
     }

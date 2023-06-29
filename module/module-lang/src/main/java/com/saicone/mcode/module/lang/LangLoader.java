@@ -18,6 +18,8 @@ import java.util.function.Predicate;
 
 public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
 
+    protected static final String DEFAULT_DISPLAY = "text";
+
     protected static final String DEFAULT_LANGUAGE = "en_us";
 
     protected static final List<String> DEFAULT_LANGUAGES = List.of("en_US");
@@ -100,11 +102,16 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
 
     @Nullable
     protected Display<SenderT> loadDisplay(@Nullable Object object) {
-        return loadDisplay(getDisplayLoaders(), object);
+        return loadDisplay(getDisplayLoaders(), object, getDefaultDisplay());
     }
 
     @Nullable
     public static <T> Display<T> loadDisplay(@NotNull Iterable<DisplayLoader<T>> loaders, @Nullable Object object) {
+        return loadDisplay(loaders, object, DEFAULT_DISPLAY);
+    }
+
+    @Nullable
+    public static <T> Display<T> loadDisplay(@NotNull Iterable<DisplayLoader<T>> loaders, @Nullable Object object, @NotNull String defaultDisplay) {
         if (object == null) {
             return null;
         }
@@ -130,7 +137,7 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
                 }
             }
         }
-        return getDisplayLoader(loaders, "text").load(object);
+        return getDisplayLoader(loaders, defaultDisplay).load(object);
     }
 
     private void computePaths() {
@@ -287,6 +294,11 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
     @NotNull
     public String getPluginLanguage() {
         return DEFAULT_LANGUAGE;
+    }
+
+    @NotNull
+    public String getDefaultDisplay() {
+        return DEFAULT_DISPLAY;
     }
 
     @NotNull
