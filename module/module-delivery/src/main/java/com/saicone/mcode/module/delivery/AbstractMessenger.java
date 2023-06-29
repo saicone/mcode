@@ -9,6 +9,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public abstract class AbstractMessenger {
@@ -48,7 +49,7 @@ public abstract class AbstractMessenger {
 
     protected void loadCacheProvider() {
         if (USE_CACHE_SET) {
-            cachedIds = new CacheSet<>();
+            cachedIds = CacheSet.of(10, TimeUnit.SECONDS);
         } else {
             cachedIds = new HashSet<>();
         }

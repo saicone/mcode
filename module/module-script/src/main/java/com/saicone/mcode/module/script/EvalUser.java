@@ -80,6 +80,11 @@ public class EvalUser {
 
     @NotNull
     public String parse(@Nullable String s) {
+        return parse(s, false);
+    }
+
+    @NotNull
+    public String parse(@Nullable String s, boolean color) {
         return parse(s, (text) -> {
             text.parseAgent(subject, agent);
             if (indexedArgs != null) {
@@ -87,6 +92,9 @@ public class EvalUser {
             }
             if (mappedArgs != null) {
                 text.args(mappedArgs);
+            }
+            if (color) {
+                text.color();
             }
         });
     }

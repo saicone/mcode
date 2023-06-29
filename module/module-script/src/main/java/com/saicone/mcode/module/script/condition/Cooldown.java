@@ -4,7 +4,7 @@ import com.saicone.mcode.module.script.Condition;
 import com.saicone.mcode.module.script.EvalUser;
 import com.saicone.mcode.module.script.ScriptFunction;
 import com.saicone.mcode.module.script.action.Delay;
-import com.saicone.mcode.util.CacheSet;
+import com.saicone.mcode.util.CacheSet.ThreadCacheSet;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -14,10 +14,10 @@ import java.util.concurrent.TimeUnit;
 
 public class Cooldown extends Condition {
 
-    private static final Map<String, CacheSet<String>> CACHES = new HashMap<>();
+    private static final Map<String, ThreadCacheSet<String>> CACHES = new HashMap<>();
 
     static {
-        CACHES.put("main", new CacheSet<>());
+        CACHES.put("main", new ThreadCacheSet<>(10, TimeUnit.SECONDS, null));
     }
 
     public Cooldown(@Nullable String value) {
@@ -37,7 +37,7 @@ public class Cooldown extends Condition {
         }
         final String id;
         if (split[split.length - 1].contains(":")) {
-            id = split[split.length - 1];
+            id = split[split.length - 1].trim();
         } else {
             id = "main";
         }
@@ -51,16 +51,16 @@ public class Cooldown extends Condition {
     }
 
     @NotNull
-    public static CacheSet<String> getCache(@NotNull String s) {
+    public static ThreadCacheSet<String> getCache(@NotNull String s) {
         return CACHES.getOrDefault(s, CACHES.get("main"));
     }
 
     @NotNull
-    public static CacheSet<String> getCacheOrCreate(@NotNull String s) {
-        CacheSet<String> cache = CACHES.get(s);
+    public static ThreadCacheSet<String> getCacheOrCreate(@NotNull String s) {
+        ThreadCacheSet<String> cache = CACHES.get(s);
         if (cache == null) {
             if (s.contains(":")) {
-                cache = new CacheSet<>(10000, 1000);
+                cache = new ThreadCacheSet<>(10, TimeUnit.SECONDS, null);
                 CACHES.put(s, cache);
             } else {
                 cache = CACHES.get("main");
