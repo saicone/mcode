@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
@@ -34,12 +35,25 @@ public abstract class SettingsParser {
         register("toml", "com.saicone.mcode.module.settings.parser.TomlParser");
         register("conf", "com.saicone.mcode.module.settings.parser.HoconParser");
         NODE_PARSER = Map.of(
-                "node", (settings, args) -> settings.get(args[0].split("\\.")).asString(),
+                "node", (settings, args) -> settings.get(args[0].split("\\.")).getValue(),
                 "size", (settings, args) -> settings.get(args[0].split("\\.")).asList().size(),
                 "args", (settings, args) -> Strings.replaceArgs(
                         settings.get(args[0].split("\\.")).asString("null"),
                         Arrays.copyOfRange(args, 1, args.length, Object[].class)
                 ),
+                "join", (settings, args) -> {
+                    if (args.length < 2) {
+                        return args[0];
+                    }
+                    final List<String> list = Arrays.asList(args[0].split("\n"));
+                    final int start = args.length > 2 ? Integer.parseInt(args[2]) : 0;
+                    if (start < 1) {
+                        return String.join(args[0], list);
+                    }
+                    final int end = args.length > 3 ? Integer.parseInt(args[3]) : list.size();
+                    return String.join(args[0], list.subList(start, end));
+                },
+                "split", (settings, args) -> args[0].split(args[1]),
                 "math", (settings, args) -> {
                     Double result = null;
                     String format = "#";
@@ -74,7 +88,32 @@ public abstract class SettingsParser {
                                 break;
                         }
                     }
-                    return result == null ? "null" : new DecimalFormat(format).format(result);
+                    final String type;
+                    final int index = format.indexOf('?');
+                    if (index >= 0) {
+                        format = index == 0 ? "#" : format.substring(0, index);
+                        type = format.substring(index + 1);
+                    } else {
+                        return result == null ? "null" : new DecimalFormat(format).format(result);
+                    }
+                    final String formatted = new DecimalFormat(format).format(result == null ? "-1.0" : result);
+                    switch (type.trim().toLowerCase()) {
+                        case "byte":
+                            return Byte.parseByte(formatted);
+                        case "short":
+                            return Short.parseShort(formatted);
+                        case "int":
+                        case "integer":
+                            return Integer.parseInt(formatted);
+                        case "float":
+                            return Float.parseFloat(formatted);
+                        case "long":
+                            return Long.parseLong(formatted);
+                        case "double":
+                            return Double.parseDouble(formatted);
+                        default:
+                            return "<invalid type>";
+                    }
                 }
         );
     }
@@ -101,7 +140,8 @@ public abstract class SettingsParser {
     public static boolean register(@NotNull String type, @NotNull String className) {
         try {
             return register(type, Class.forName(className));
-        } catch (ClassNotFoundException ignored) { }
+        } catch (ClassNotFoundException ignored) {
+        }
         return false;
     }
 
@@ -176,7 +216,7 @@ public abstract class SettingsParser {
     @Nullable
     @Contract("_, !null -> !null")
     @SuppressWarnings("unchecked")
-    public <T> T parse(@NotNull Settings settings, @Nullable T object) {
+    public Object parse(@NotNull Settings settings, @Nullable Object object) {
         if (object instanceof Settings) {
             for (SettingsNode node : ((Settings) object).getValue()) {
                 parse(settings, node);
@@ -192,21 +232,28 @@ public abstract class SettingsParser {
         } else if (object instanceof String[]) {
             final String[] array = (String[]) object;
             for (int i = 0; i < array.length; i++) {
-                array[i] = parse(settings, array[i]);
+                array[i] = parseText(settings, array[i]);
             }
         } else if (object instanceof String) {
             String s = (String) object;
             final Matcher matcher = NODE_VARIABLE.matcher(s);
+            boolean first = true;
             while (matcher.find()) {
+                if (first) {
+                    first = false;
+                    if (s.equals(matcher.group())) {
+                        return parse(settings, matcher.group(1));
+                    }
+                }
                 s = matcher.replaceFirst(parseText(settings, matcher.group(1)));
             }
-            return (T) s;
+            return s;
         }
         return object;
     }
 
     @NotNull
-    protected String parseText(@NotNull Settings settings, @NotNull String text) {
+    protected Object parse(@NotNull Settings settings, @NotNull String text) {
         final String key;
         final String s;
         final int index = text.indexOf(':');
@@ -224,10 +271,28 @@ public abstract class SettingsParser {
         final String[] args = Strings.splitBySpaces(s);
         for (int i = 0; i < args.length; i++) {
             final String arg = args[i];
-            if (arg.length() > 1 && arg.startsWith("@")) {
+            if (arg.length() > 1 && arg.startsWith("$")) {
                 args[i] = parseText(settings, arg.substring(1));
+            } else {
+                args[i] = arg.replace("\\$", "$");
             }
         }
-        return String.valueOf(nodeParser.apply(settings, args));
+        return nodeParser.apply(settings, args);
+    }
+
+    @NotNull
+    protected String parseText(@NotNull Settings settings, @NotNull String text) {
+        final Object parsed = parse(settings, text);
+        if (parsed instanceof String) {
+            return (String) parsed;
+        } else if (parsed instanceof Iterable) {
+            final StringJoiner joiner = new StringJoiner("\n");
+            for (Object o : (Iterable<?>) parsed) {
+                joiner.add(String.valueOf(o));
+            }
+            return joiner.toString();
+        } else {
+            return String.valueOf(parsed);
+        }
     }
 }
