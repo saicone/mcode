@@ -93,6 +93,15 @@ public abstract class CacheSet<E> implements Set<E> {
         return cachedTime - time;
     }
 
+    @SuppressWarnings("unchecked")
+    public boolean contains(Object o, long time) {
+        try {
+            return get((E) o, time) != null;
+        } catch (ClassCastException e) {
+            return false;
+        }
+    }
+
     public boolean containsOrAdd(@NotNull E e) {
         if (contains(e)) {
             return true;
@@ -102,14 +111,46 @@ public abstract class CacheSet<E> implements Set<E> {
         }
     }
 
+    public boolean containsOrAdd(@NotNull E e, long time) {
+        if (contains(e)) {
+            return true;
+        } else {
+            put(e, time);
+            return false;
+        }
+    }
+
     @NotNull
     public abstract Map<E, Long> asMap();
 
     @Nullable
-    public abstract Long get(@NotNull E e);
+    public Long get(@NotNull E e) {
+        return get(e, System.currentTimeMillis());
+    }
 
     @Nullable
-    public abstract Long put(@NotNull E e);
+    public Long get(@NotNull E e, long time) {
+        final Long value = getValue(e);
+        if (value == null) {
+            return null;
+        }
+        if (value < time) {
+            return value;
+        }
+        asMap().remove(e);
+        return null;
+    }
+
+    @Nullable
+    public abstract Long getValue(@NotNull E e);
+
+    @Nullable
+    public Long put(@NotNull E e) {
+        return put(e, System.currentTimeMillis() + expireTime);
+    }
+
+    @Nullable
+    public abstract Long put(@NotNull E e, long time);
 
     // Vanilla set methods
 
@@ -121,6 +162,16 @@ public abstract class CacheSet<E> implements Set<E> {
     @Override
     public boolean isEmpty() {
         return asMap().isEmpty();
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public boolean contains(Object o) {
+        try {
+            return get((E) o) != null;
+        } catch (ClassCastException e) {
+            return false;
+        }
     }
 
     @NotNull
@@ -154,8 +205,9 @@ public abstract class CacheSet<E> implements Set<E> {
 
     @Override
     public boolean containsAll(@NotNull Collection<?> c) {
+        final long time = System.currentTimeMillis();
         for (Object o : c) {
-            if (!contains(o)) {
+            if (!contains(o, time)) {
                 return false;
             }
         }
@@ -233,17 +285,12 @@ public abstract class CacheSet<E> implements Set<E> {
         }
 
         @Override
-        public @Nullable Long get(@NotNull E e) {
+        public @Nullable Long getValue(@NotNull E e) {
             return cache.get(e);
         }
 
         @Override
-        public @Nullable Long put(@NotNull E e) {
-            return put(e, expireTime);
-        }
-
-        @Nullable
-        public Long put(@NotNull E e, long time) {
+        public @Nullable Long put(@NotNull E e, long time) {
             final long millis = System.currentTimeMillis() + time;
             final Long mapped = cache.put(e, millis);
             if (!isRunning()) {
@@ -256,20 +303,6 @@ public abstract class CacheSet<E> implements Set<E> {
                 last = Math.max(millis, last);
             }
             return mapped;
-        }
-
-        @Override
-        public boolean contains(Object o) {
-            return cache.containsKey(o);
-        }
-
-        public boolean containsOrAdd(@NotNull E e, long time) {
-            if (contains(e)) {
-                return true;
-            } else {
-                put(e, time);
-                return false;
-            }
         }
 
         @Override
@@ -344,14 +377,18 @@ public abstract class CacheSet<E> implements Set<E> {
 
         private final Cache<E, Long> cache;
 
-        @SuppressWarnings("unchecked")
         public CaffeineCacheSet(long expireTime, @NotNull TimeUnit unit, @Nullable Consumer<E> removalListener) {
             super(expireTime, unit, removalListener);
             final Caffeine<Object, Object> builder = Caffeine.newBuilder().expireAfterWrite(expireTime, unit);
-            if (removalListener != null) {
-                builder.removalListener((e, millis, cause) -> removalListener.accept((E) e));
-            }
-            this.cache = builder.build();
+            this.cache = builder.<E, Long>removalListener((e, millis, cause) -> {
+                if (cause.wasEvicted() && millis > System.currentTimeMillis()) {
+                    getCache().put(e, millis);
+                    return;
+                }
+                if (removalListener != null) {
+                    removalListener.accept(e);
+                }
+            }).build();
         }
 
         @NotNull
@@ -365,14 +402,14 @@ public abstract class CacheSet<E> implements Set<E> {
         }
 
         @Override
-        public @Nullable Long get(@NotNull E e) {
+        public @Nullable Long getValue(@NotNull E e) {
             return cache.getIfPresent(e);
         }
 
         @Override
-        public @Nullable Long put(@NotNull E e) {
+        public @Nullable Long put(@NotNull E e, long time) {
             final Long result = cache.getIfPresent(e);
-            cache.put(e, System.currentTimeMillis() + expireTime);
+            cache.put(e, time);
             return result;
         }
 
@@ -383,16 +420,6 @@ public abstract class CacheSet<E> implements Set<E> {
                 final Long result = cache.getIfPresent((E) o);
                 cache.invalidate((E) o);
                 return result != null;
-            } catch (ClassCastException e) {
-                return false;
-            }
-        }
-
-        @Override
-        @SuppressWarnings("unchecked")
-        public boolean contains(Object o) {
-            try {
-                return cache.getIfPresent((E) o) != null;
             } catch (ClassCastException e) {
                 return false;
             }
@@ -408,14 +435,18 @@ public abstract class CacheSet<E> implements Set<E> {
 
         private final com.google.common.cache.Cache<E, Long> cache;
 
-        @SuppressWarnings("unchecked")
         public GuavaCacheSet(long expireTime, @NotNull TimeUnit unit, @Nullable Consumer<E> removalListener) {
             super(expireTime, unit, removalListener);
             final CacheBuilder<Object, Object> builder = CacheBuilder.newBuilder().expireAfterWrite(expireTime, unit);
-            if (removalListener != null) {
-                builder.removalListener(notification -> removalListener.accept((E) notification.getKey()));
-            }
-            this.cache = builder.build();
+            this.cache = builder.<E, Long>removalListener(notification -> {
+                if (notification.wasEvicted() && notification.getValue() > System.currentTimeMillis()) {
+                    getCache().put(notification.getKey(), notification.getValue());
+                    return;
+                }
+                if (removalListener != null) {
+                    removalListener.accept(notification.getKey());
+                }
+            }).build();
         }
 
         @NotNull
@@ -429,14 +460,14 @@ public abstract class CacheSet<E> implements Set<E> {
         }
 
         @Override
-        public @Nullable Long get(@NotNull E e) {
+        public @Nullable Long getValue(@NotNull E e) {
             return cache.getIfPresent(e);
         }
 
         @Override
-        public @Nullable Long put(@NotNull E e) {
+        public @Nullable Long put(@NotNull E e, long time) {
             final Long result = cache.getIfPresent(e);
-            cache.put(e, System.currentTimeMillis() + expireTime);
+            cache.put(e, time);
             return result;
         }
 
@@ -447,16 +478,6 @@ public abstract class CacheSet<E> implements Set<E> {
                 final Long result = cache.getIfPresent((E) o);
                 cache.invalidate((E) o);
                 return result != null;
-            } catch (ClassCastException e) {
-                return false;
-            }
-        }
-
-        @Override
-        @SuppressWarnings("unchecked")
-        public boolean contains(Object o) {
-            try {
-                return cache.getIfPresent((E) o) != null;
             } catch (ClassCastException e) {
                 return false;
             }
