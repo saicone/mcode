@@ -4,6 +4,7 @@ import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -14,7 +15,12 @@ public class Dual<A, B> {
     private B right;
 
     @NotNull
-    public static <A, B> Dual<A, B> of(A a, B b) {
+    public static <A, B> Dual<A, B> of(@NotNull Map.Entry<A, B> entry) {
+        return new Dual<>(entry.getKey(), entry.getValue());
+    }
+
+    @NotNull
+    public static <A, B> Dual<A, B> of(@Nullable A a, @Nullable B b) {
         return new Dual<>(a, b);
     }
 
@@ -87,12 +93,14 @@ public class Dual<A, B> {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (o == null || getClass() != o.getClass()) {
+            return Objects.equals(left, o) || Objects.equals(right, o);
+        }
 
         return equals((Dual<?, ?>) o);
     }
 
-    public boolean equals(Dual<?, ?> dual) {
+    public boolean equals(@NotNull Dual<?, ?> dual) {
         return Objects.equals(left, dual.left) && Objects.equals(right, dual.right);
     }
 

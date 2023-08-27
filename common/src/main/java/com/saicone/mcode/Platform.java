@@ -19,10 +19,11 @@ public abstract class Platform {
         NAMES.put("lookup", "com.saicone.mcode.util.EasyLookup");
         NAMES.put("type", "com.saicone.mcode.util.OptionalType");
         // Module
-        NAMES.put("delivery", "com.saicone.mcode.delivery.DeliveryClient");
-        NAMES.put("lang", "com.saicone.mcode.lang.LangLoader");
-        NAMES.put("script", "com.saicone.mcode.script.Script");
-        NAMES.put("settings", "com.saicone.mcode.settings.Settings");
+        NAMES.put("command", "com.saicone.mcode.module.command.CommandCentral");
+        NAMES.put("delivery", "com.saicone.mcode.module.delivery.DeliveryClient");
+        NAMES.put("lang", "com.saicone.mcode.module.lang.LangLoader");
+        NAMES.put("script", "com.saicone.mcode.module.script.Script");
+        NAMES.put("settings", "com.saicone.mcode.module.settings.Settings");
         NAMES.put("task", "com.saicone.mcode.scheduler.Task");
     }
 

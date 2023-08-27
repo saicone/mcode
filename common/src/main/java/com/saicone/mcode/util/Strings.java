@@ -40,14 +40,32 @@ public class Strings {
 
     @NotNull
     public static String[] splitBy(@NotNull String str, @NotNull @Language("RegExp") String regex, @NotNull String delimiter, @NotNull String out) {
-        final int outLength = out.length();
-        final String[] split = str.split(regex);
+        return splitBy(str.split(regex), 0, delimiter, out);
+    }
+
+    @NotNull
+    public static String[] splitBy(@NotNull String str, @NotNull @Language("RegExp") String regex, int limit, @NotNull String delimiter, @NotNull String out) {
+        return splitBy(str.split(regex), limit, delimiter, out);
+    }
+
+    @NotNull
+    public static String[] splitBy(@NotNull String[] split, @NotNull String delimiter, @NotNull String out) {
+        return splitBy(split, 0, delimiter, out);
+    }
+
+    @NotNull
+    public static String[] splitBy(@NotNull String[] split, int limit, @NotNull String delimiter, @NotNull String out) {
         if (split.length < 2) {
             return split;
         }
+        final boolean limited = limit >= 1;
         final List<String> list = new ArrayList<>();
-
+        final int outLength = out.length();
         for (int i = 0; i < split.length; i++) {
+            if (limited && list.size() + 1 == limit) {
+                list.add(String.join(delimiter, Arrays.copyOfRange(split, i, split.length)));
+                break;
+            }
             final String s = split[i];
 
             // Starts with "out"
@@ -87,7 +105,14 @@ public class Strings {
             }
             if (!collected.isEmpty()) {
                 list.add(s);
-                list.addAll(collected);
+                if (limited && list.size() + collected.size() >= limit) {
+                    for (int i1 = 0; i1 < collected.size() && list.size() < limit; i1++) {
+                        list.add(collected.get(i1));
+                    }
+                } else {
+                    list.addAll(collected);
+                }
+                collected.clear();
             }
         }
         return list.toArray(new String[0]);
@@ -95,12 +120,28 @@ public class Strings {
 
     @NotNull
     public static String[] splitBySpaces(@NotNull String s) {
-        return splitBySpaces(s, "`");
+        return splitBySpaces(s, 0, "`");
+    }
+
+    @NotNull
+    public static String[] splitBySpaces(@NotNull String s, int limit) {
+        return splitBySpaces(s, limit, "`");
     }
 
     @NotNull
     public static String[] splitBySpaces(@NotNull String s, @NotNull String out) {
-        return splitBy(s, " ", " ", out);
+        return splitBySpaces(s, 0, out);
+    }
+
+    @NotNull
+    public static String[] splitBySpaces(@NotNull String s, int limit, @NotNull String out) {
+        if (limit == 1) {
+            return new String[] { s };
+        }
+        if (!s.contains(out)) {
+            return s.split(" ", limit);
+        }
+        return splitBy(s, " ", limit, " ", out);
     }
 
     @Nullable

@@ -5,6 +5,7 @@ include 'common'
 
 // Modules
 include(
+	'module:module-command',
 	'module:module-delivery',
 	'module:module-delivery-rabbitmq',
 	'module:module-delivery-redis',
