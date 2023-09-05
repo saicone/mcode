@@ -9,4 +9,5 @@ dependencies {
     compileOnly project(':module:module-lang')
     compileOnly project(':module:module-delivery')
     compileOnly project(':module:module-script')
+    compileOnly project(':module:module-command')
 }

@@ -31,6 +31,9 @@ public class VelocityPlatform extends Platform {
 
     @Override
     protected void initModules() {
+        if (isAvailable("Command")) {
+            initModule("com.saicone.mcode.velocity.command.VelocityCommand", "init");
+        }
         if (isAvailable("Script")) {
             initModule("com.saicone.mcode.velocity.script.VelocityScripts", "registerActions", "registerConditions");
         }

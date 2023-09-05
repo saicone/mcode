@@ -31,6 +31,9 @@ public class BungeePlatform extends Platform {
 
     @Override
     protected void initModules() {
+        if (isAvailable("Command")) {
+            initModule("com.saicone.mcode.bungee.command.BungeeCommand", "init");
+        }
         if (isAvailable("Script")) {
             initModule("com.saicone.mcode.bungee.script.BungeeScripts", "registerActions", "registerConditions");
         }

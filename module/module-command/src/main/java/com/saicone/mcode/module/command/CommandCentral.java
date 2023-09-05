@@ -15,23 +15,38 @@ public abstract class CommandCentral<T> {
 
     @NotNull
     @SuppressWarnings("unchecked")
-    public static CommandCentral<Object> get() {
+    public static <T> CommandCentral<T> get() {
+        return (CommandCentral<T>) INSTANCE;
+    }
+
+    @NotNull
+    @SuppressWarnings("unchecked")
+    public static CommandCentral<Object> getInstance() {
         return (CommandCentral<Object>) INSTANCE;
     }
 
     @NotNull
     public CommandBuilder<T> builder(@NotNull String name, @NotNull String... aliases) {
-        return new CommandBuilder<>(new CommandKey(name).alias(aliases));
+        return builder(new CommandKey(name).alias(aliases));
     }
 
     @NotNull
     public CommandBuilder<T> builder(@NotNull CommandKey key) {
-        return new CommandBuilder<>(key);
+        return builder(new ACommand(key));
     }
 
     @NotNull
     public CommandBuilder<T> builder(@NotNull ACommand command) {
         return new CommandBuilder<>(command);
+    }
+
+    @NotNull
+    public CommandFunction<T> function(@NotNull ACommand command) {
+        final CommandFunction<T> function = commands.get(command);
+        if (function == null) {
+            throw new IllegalArgumentException("The command '" + command.getKey().getName() + "' is unregistered");
+        }
+        return function;
     }
 
     public abstract CommandResult dispatch(@NotNull T user, @NotNull String id, @NotNull String input);

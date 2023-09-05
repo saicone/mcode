@@ -43,7 +43,7 @@ public class CommandBuilder<T> {
     }
 
     @NotNull
-    protected List<Object> subCommands() {
+    public List<Object> subCommands() {
         if (subCommands == null) {
             subCommands = new ArrayList<>();
         }
@@ -51,7 +51,7 @@ public class CommandBuilder<T> {
     }
 
     @NotNull
-    protected CommandFunction<T> function() {
+    public CommandFunction<T> function() {
         if (function == null) {
             function = new CommandFunction<>();
         }
@@ -88,14 +88,14 @@ public class CommandBuilder<T> {
 
     @NotNull
     @Contract("_ -> this")
-    public CommandBuilder<T> setPermissionBound(@Nullable String permissionBound) {
+    public CommandBuilder<T> permissionBound(@Nullable String permissionBound) {
         // Not supported by default
         return this;
     }
 
     @NotNull
     @Contract("_ -> this")
-    public CommandBuilder<T> setPermissionBound(@Nullable Consumer<T> permissionBound) {
+    public CommandBuilder<T> permissionBound(@Nullable Consumer<T> permissionBound) {
         // Not supported by default
         return this;
     }
@@ -137,6 +137,13 @@ public class CommandBuilder<T> {
 
     @NotNull
     @Contract("_ -> this")
+    public CommandBuilder<T> description(@NotNull String description) {
+        this.command.setDescription(description);
+        return this;
+    }
+
+    @NotNull
+    @Contract("_ -> this")
     public CommandBuilder<T> subCommand(@NotNull String cmd) {
         if (this.subCommands == null) {
             this.subCommands = new ArrayList<>();
@@ -158,15 +165,9 @@ public class CommandBuilder<T> {
     @NotNull
     @Contract("_, _ -> this")
     public CommandBuilder<T> subCommand(@NotNull String name, @NotNull Consumer<CommandBuilder<T>> consumer) {
-        final CommandBuilder<T> sub = new CommandBuilder<>(new CommandKey(this.command.getKey(), name));
+        final CommandBuilder<T> sub = CommandCentral.<T>get().builder(new CommandKey(this.command.getKey(), name));
         consumer.accept(sub);
         return subCommand(sub);
-    }
-
-    @NotNull
-    @Contract("_ -> this")
-    public CommandBuilder<T> eval(@NotNull Predicate<InputContext<T>> eval) {
-        return eval((Function<InputContext<T>, CommandResult>) context -> eval.test(context) ? CommandResult.DONE : CommandResult.FAIL_EVAL);
     }
 
     @NotNull
@@ -174,6 +175,12 @@ public class CommandBuilder<T> {
     public CommandBuilder<T> eval(@NotNull Function<InputContext<T>, CommandResult> eval) {
         function().setEval(eval);
         return this;
+    }
+
+    @NotNull
+    @Contract("_ -> this")
+    public CommandBuilder<T> evalTest(@NotNull Predicate<InputContext<T>> eval) {
+        return eval(context -> eval.test(context) ? CommandResult.DONE : CommandResult.FAIL_EVAL);
     }
 
     @NotNull
@@ -202,15 +209,36 @@ public class CommandBuilder<T> {
 
     @NotNull
     @Contract("_ -> this")
-    public CommandBuilder<T> run(@NotNull Predicate<InputContext<T>> run) {
+    public CommandBuilder<T> run(@NotNull Function<InputContext<T>, CommandResult> run) {
+        function().addExecution(run);
+        return this;
+    }
+
+    @NotNull
+    @Contract("_ -> this")
+    public CommandBuilder<T> runTest(@NotNull Predicate<InputContext<T>> run) {
         function().addExecution(context -> run.test(context) ? CommandResult.DONE : CommandResult.FAIL_SYNTAX);
         return this;
     }
 
     @NotNull
     @Contract("_ -> this")
-    public CommandBuilder<T> run(@NotNull Function<InputContext<T>, CommandResult> run) {
-        function().addExecution(run);
+    @SuppressWarnings("unchecked")
+    public CommandBuilder<T> runAny(@NotNull Object object) throws ClassCastException {
+        if (object instanceof Consumer) {
+            return run((Consumer<InputContext<T>>) object);
+        } else if (object instanceof Predicate) {
+            return runTest((Predicate<InputContext<T>>) object);
+        } else if (object instanceof Function) {
+            return run((Function<InputContext<T>, CommandResult>) object);
+        }
+        return this;
+    }
+
+    @NotNull
+    @Contract("_ -> this")
+    public CommandBuilder<T> silentFail(boolean silentFail) {
+        function().setSilentFail(silentFail);
         return this;
     }
 

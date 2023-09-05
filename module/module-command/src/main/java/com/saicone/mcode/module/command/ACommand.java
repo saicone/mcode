@@ -6,12 +6,12 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 
 public class ACommand {
 
     private final CommandKey key;
     private CommandSyntax syntax;
+    private String description;
 
     private List<Object> subCommands;
 
@@ -19,24 +19,23 @@ public class ACommand {
         this.key = key;
     }
 
+    public boolean isMain() {
+        return key.getParent() == null;
+    }
+
     @NotNull
     public CommandKey getKey() {
         return key;
     }
 
-    @NotNull
-    public String getName() {
-        return key.getName();
-    }
-
-    @NotNull
-    public Set<String> getAliases() {
-        return key.getAliases();
-    }
-
     @Nullable
     public CommandSyntax getSyntax() {
         return syntax;
+    }
+
+    @Nullable
+    public String getDescription() {
+        return description;
     }
 
     @Nullable
@@ -46,6 +45,10 @@ public class ACommand {
 
     public void setSyntax(@Nullable CommandSyntax syntax) {
         this.syntax = syntax;
+    }
+
+    public void setDescription(@Nullable String description) {
+        this.description = description;
     }
 
     public void setSubCommands(@Nullable List<Object> subCommands) {
@@ -60,6 +63,14 @@ public class ACommand {
             this.subCommands = new ArrayList<>();
         }
         this.subCommands.addAll(Arrays.asList(subCommands));
+    }
+
+    @NotNull
+    public <T extends ACommand> T wrap(T command) {
+        command.setDescription(getDescription());
+        command.setSubCommands(getSubCommands());
+        command.setSyntax(getSyntax());
+        return command;
     }
 
     @Override

@@ -186,6 +186,11 @@ public class InputContext<T> {
     }
 
     @NotNull
+    public String[] textArgs() {
+        return arguments == null ? new String[0] : arguments.stream().map(String::valueOf).toArray(String[]::new);
+    }
+
+    @NotNull
     public Object[] allArgs() {
         if (arguments == null || arguments.isEmpty()) {
             return new Object[] { getCommand() };

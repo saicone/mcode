@@ -27,6 +27,10 @@ public enum CommandResult {
      */
     FAIL_EVAL,
     /**
+     * Command generates an error while been executed.
+     */
+    FAIL_EXECUTION,
+    /**
      * Command execution was abruptly finished.
      */
     RETURN,
@@ -48,6 +52,6 @@ public enum CommandResult {
     }
 
     public boolean isFail() {
-        return this == NO_PERMISSION || this == FAIL_SYNTAX || this == FAIL_EVAL;
+        return this == NO_PERMISSION || this == FAIL_SYNTAX || this == FAIL_EVAL || this == FAIL_EXECUTION;
     }
 }

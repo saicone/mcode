@@ -16,6 +16,8 @@ public class CommandFunction<T> {
     private Consumer<InputContext<T>> usage;
     private List<Function<InputContext<T>, CommandResult>> execution;
 
+    private boolean silentFail = false;
+
     @Nullable
     public Function<InputContext<T>, CommandResult> getEval() {
         return eval;
@@ -31,8 +33,31 @@ public class CommandFunction<T> {
         return execution;
     }
 
+    public boolean isSilentFail() {
+        return silentFail;
+    }
+
     public void setEval(@NotNull Function<InputContext<T>, CommandResult> eval) {
-        this.eval = eval;
+        setEval(eval, false);
+    }
+
+    public void setEval(@NotNull Function<InputContext<T>, CommandResult> eval, boolean before) {
+        if (this.eval == null) {
+            this.eval = eval;
+        } else {
+            final Function<InputContext<T>, CommandResult> function = this.eval;
+            if (before) {
+                this.eval = context -> {
+                    final CommandResult result = eval.apply(context);
+                    return result == CommandResult.FAIL_EVAL ? result : function.apply(context);
+                };
+            } else {
+                this.eval = context -> {
+                    final CommandResult result = function.apply(context);
+                    return result == CommandResult.FAIL_EVAL ? result : eval.apply(context);
+                };
+            }
+        }
     }
 
     public void setUsage(@NotNull Consumer<InputContext<T>> usage) {
@@ -44,6 +69,10 @@ public class CommandFunction<T> {
             this.execution = new ArrayList<>();
         }
         this.execution.add(execution);
+    }
+
+    public void setSilentFail(boolean silentFail) {
+        this.silentFail = silentFail;
     }
 
     @NotNull
@@ -110,11 +139,18 @@ public class CommandFunction<T> {
         context.setArguments(arguments);
 
         CommandResult result = CommandResult.DONE;
-        for (var execution : this.execution) {
-            result = execution.apply(context);
-            if (result.isFail()) {
-                sendUsage(context);
-                return result;
+        try {
+            for (var execution : this.execution) {
+                result = execution.apply(context);
+                if (result.isFail()) {
+                    sendUsage(context);
+                    return result;
+                }
+            }
+        } catch (Throwable t) {
+            result = CommandResult.FAIL_EXECUTION;
+            if (!silentFail) {
+                t.printStackTrace();
             }
         }
         return result;

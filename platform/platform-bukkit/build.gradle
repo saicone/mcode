@@ -7,7 +7,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'org.spigotmc:spigot-api:1.19.4-R0.1-SNAPSHOT'
+    compileOnly 'org.spigotmc:spigot-api:1.20.1-R0.1-SNAPSHOT'
     compileOnly 'com.mojang:authlib:1.5.26' // 3.11.50
     compileOnly project(':module:module-task')
     compileOnly project(':module:module-settings')
@@ -15,6 +15,7 @@ dependencies {
     compileOnly project(':module:module-lang-adventure')
     compileOnly project(':module:module-delivery')
     compileOnly project(':module:module-script')
+    compileOnly project(':module:module-command')
     compileOnly project(':extension:extension-lookup')
 
     compileOnly 'net.kyori:adventure-api:4.13.1'
