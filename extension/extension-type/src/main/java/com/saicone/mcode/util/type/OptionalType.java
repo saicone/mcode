@@ -27,6 +27,29 @@ public class OptionalType extends IterableType<Object> {
      * {@link Gson} public instance with default configuration.
      */
     public static final Gson GSON = new Gson();
+    private static final Map<Class<?>, Function<OptionalType, Object>> TYPES = new HashMap<>();
+
+    static {
+        TYPES.put(Object.class, OptionalType::asObject);
+        TYPES.put(String.class, OptionalType::asString);
+        TYPES.put(Character.class, OptionalType::asChar);
+        TYPES.put(char.class, type -> type.asChar('\0'));
+        TYPES.put(Boolean.class, OptionalType::asBoolean);
+        TYPES.put(boolean.class, type -> type.asBoolean(Boolean.FALSE));
+        TYPES.put(Byte.class, OptionalType::asByte);
+        TYPES.put(byte.class, type -> type.asByte(Byte.MIN_VALUE));
+        TYPES.put(Short.class, OptionalType::asShort);
+        TYPES.put(short.class, type -> type.asShort(Short.MIN_VALUE));
+        TYPES.put(Integer.class, OptionalType::asInt);
+        TYPES.put(int.class, type -> type.asInt(Integer.MIN_VALUE));
+        TYPES.put(Float.class, OptionalType::asFloat);
+        TYPES.put(float.class, type -> type.asFloat(Float.MIN_VALUE));
+        TYPES.put(Long.class, OptionalType::asLong);
+        TYPES.put(long.class, type -> type.asLong(Long.MIN_VALUE));
+        TYPES.put(Double.class, OptionalType::asDouble);
+        TYPES.put(double.class, type -> type.asDouble(Double.MIN_VALUE));
+        TYPES.put(UUID.class, OptionalType::asUuid);
+    }
 
     private Object value;
 
@@ -136,6 +159,38 @@ public class OptionalType extends IterableType<Object> {
     }
 
     /**
+     * Get the first value.<br>
+     * This method extract the first value if the current object is a collection or array.
+     *
+     * @return An OptionalType with object value.
+     */
+    @NotNull
+    @Contract("-> this")
+    public OptionalType first() {
+        if (isIterable()) {
+            final Iterator<Object> iterator = this.iterator();
+            return iterator.hasNext() ? OptionalType.of(iterator.next()) : OptionalType.EMPTY;
+        }
+        return this;
+    }
+
+    /**
+     * Get actual value as single object<br>
+     * This method make a recursively extract from the first value if the current object is a collection or array.
+     *
+     * @return An OptionalType with object value.
+     */
+    @NotNull
+    @Contract("-> this")
+    public OptionalType single() {
+        if (isIterable()) {
+            final Iterator<Object> iterator = this.iterator();
+            return iterator.hasNext() ? OptionalType.of(iterator.next()).single() : OptionalType.EMPTY;
+        }
+        return this;
+    }
+
+    /**
      * Get actual value converted to required type.
      *
      * @param <T> Type to cast.
@@ -159,28 +214,41 @@ public class OptionalType extends IterableType<Object> {
     }
 
     /**
-     * Clear the current object.
+     * Clear the current object, only affect {@link Collection} and {@link Map} types.
      */
     public void clear() {
+        clear(false);
+    }
+
+    /**
+     * Clear the current object, only affect {@link Collection} and {@link Map} types.
+     *
+     * @param deep true to clear the inner objects.
+     */
+    public void clear(boolean deep) {
         if (value == null) {
             return;
         }
-        clear(value);
+        clear(value, deep);
         value = null;
     }
 
-    private void clear(Object object) {
+    private void clear(@NotNull Object object, boolean deep) {
         if (object instanceof Iterable) {
-            for (Object o : (Iterable<?>) object) {
-                clear(o);
+            if (deep) {
+                for (Object o : (Iterable<?>) object) {
+                    clear(o, true);
+                }
             }
             if (object instanceof Collection) {
                 ((Collection<?>) object).clear();
             }
         } else if (object instanceof Map) {
-            for (Map.Entry<?, ?> entry : ((Map<?, ?>) object).entrySet()) {
-                clear(entry.getValue());
-                clear(entry.getKey());
+            if (deep) {
+                for (Map.Entry<?, ?> entry : ((Map<?, ?>) object).entrySet()) {
+                    clear(entry.getValue(), true);
+                    clear(entry.getKey(), true);
+                }
             }
             ((Map<?, ?>) object).clear();
         }
@@ -300,13 +368,28 @@ public class OptionalType extends IterableType<Object> {
     }
 
     /**
-     * Get actual value as required class type using Gson deserializer.
+     * Get actual value as required class type, this method use a Gson deserializer
+     * if the provided class is not a supported (primitive) type.
      *
      * @param type The class of type.
      * @return     The value as required type or null if deserialization fails.
      * @param <T>  The required type.
      */
     public <T> T as(@NotNull Class<T> type) {
+        if (value == null) {
+            return null;
+        }
+        if (value.getClass() == type) {
+            try {
+                return (T) value;
+            } catch (ClassCastException ignored) { }
+        }
+        try {
+            final Function<OptionalType, Object> function = TYPES.get(type);
+            if (function != null) {
+                return (T) function.apply(this);
+            }
+        } catch (ClassCastException ignored) { }
         return GSON.fromJson(GSON.toJsonTree(value), type);
     }
 
@@ -360,9 +443,17 @@ public class OptionalType extends IterableType<Object> {
             return (C) value;
         } catch (ClassCastException ignored) { }
         if (isIterable()) {
-            forEach(object -> collection.add(function.apply(OptionalType.of(object))));
+            forEach(object -> {
+                final T result = function.apply(OptionalType.of(object));
+                if (result != null) {
+                    collection.add(result);
+                }
+            });
         } else {
-            collection.add(function.apply(this));
+            final T result = function.apply(this);
+            if (result != null) {
+                collection.add(result);
+            }
         }
         return collection;
     }
@@ -497,7 +588,7 @@ public class OptionalType extends IterableType<Object> {
     @Nullable
     @Contract("!null -> !null")
     public Byte asByte(@Nullable Byte def) {
-        return by(Byte.class, object -> Byte.parseByte(String.valueOf(object)), def);
+        return by(Byte.class, object -> object instanceof Number ? ((Number) object).byteValue() : Byte.parseByte(String.valueOf(object)), def);
     }
 
     /**
@@ -519,7 +610,7 @@ public class OptionalType extends IterableType<Object> {
     @Nullable
     @Contract("!null -> !null")
     public Short asShort(@Nullable Short def) {
-        return by(Short.class, object -> Short.parseShort(String.valueOf(object)), def);
+        return by(Short.class, object -> object instanceof Number ? ((Number) object).shortValue() : Short.parseShort(String.valueOf(object)), def);
     }
 
     /**
@@ -541,7 +632,7 @@ public class OptionalType extends IterableType<Object> {
     @Nullable
     @Contract("!null -> !null")
     public Integer asInt(@Nullable Integer def) {
-        return by(Integer.class, object -> Integer.parseInt(String.valueOf(object)), def);
+        return by(Integer.class, object -> object instanceof Number ? ((Number) object).intValue() : Integer.parseInt(String.valueOf(object)), def);
     }
 
     /**
@@ -563,7 +654,7 @@ public class OptionalType extends IterableType<Object> {
     @Nullable
     @Contract("!null -> !null")
     public Float asFloat(@Nullable Float def) {
-        return by(Float.class, object -> Float.parseFloat(String.valueOf(object)), def);
+        return by(Float.class, object -> object instanceof Number ? ((Number) object).floatValue() : Float.parseFloat(String.valueOf(object)), def);
     }
 
     /**
@@ -585,7 +676,7 @@ public class OptionalType extends IterableType<Object> {
     @Nullable
     @Contract("!null -> !null")
     public Long asLong(@Nullable Long def) {
-        return by(Long.class, object -> Long.parseLong(String.valueOf(object)), def);
+        return by(Long.class, object -> object instanceof Number ? ((Number) object).longValue() : Long.parseLong(String.valueOf(object)), def);
     }
 
     /**
@@ -607,7 +698,7 @@ public class OptionalType extends IterableType<Object> {
     @Nullable
     @Contract("!null -> !null")
     public Double asDouble(@Nullable Double def) {
-        return by(Double.class, object -> Double.parseDouble(String.valueOf(object)), def);
+        return by(Double.class, object -> object instanceof Number ? ((Number) object).doubleValue() : Double.parseDouble(String.valueOf(object)), def);
     }
 
     /**
