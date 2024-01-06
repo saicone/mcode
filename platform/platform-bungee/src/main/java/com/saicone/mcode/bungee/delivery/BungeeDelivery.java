@@ -2,7 +2,7 @@ package com.saicone.mcode.bungee.delivery;
 
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteStreams;
-import com.saicone.mcode.module.delivery.DeliveryClient;
+import com.saicone.delivery4j.DeliveryClient;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.PluginMessageEvent;

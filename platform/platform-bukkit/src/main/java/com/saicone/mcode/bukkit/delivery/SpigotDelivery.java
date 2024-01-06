@@ -1,7 +1,7 @@
 package com.saicone.mcode.bukkit.delivery;
 
 import com.google.common.collect.Iterables;
-import com.saicone.mcode.module.delivery.DeliveryClient;
+import com.saicone.delivery4j.DeliveryClient;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;

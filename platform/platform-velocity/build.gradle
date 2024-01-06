@@ -8,7 +8,7 @@ dependencies {
     compileOnly project(':module:module-settings')
     compileOnly project(':module:module-lang')
     implementation project(':module:module-lang-adventure')
-    compileOnly project(':module:module-delivery')
     compileOnly project(':module:module-script')
     compileOnly project(':module:module-command')
+    compileOnly 'com.saicone:delivery4j:main-SNAPSHOT'
 }

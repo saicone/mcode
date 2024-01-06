@@ -2,7 +2,7 @@ package com.saicone.mcode.velocity.delivery;
 
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteStreams;
-import com.saicone.mcode.module.delivery.DeliveryClient;
+import com.saicone.delivery4j.DeliveryClient;
 import com.saicone.mcode.velocity.VelocityPlatform;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
