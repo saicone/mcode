@@ -16,7 +16,7 @@ dependencies {
     compileOnly project(':module:module-script')
     compileOnly project(':module:module-command')
     compileOnly project(':extension:extension-lookup')
-    compileOnly 'com.saicone:delivery4j:main-SNAPSHOT'
+    compileOnly 'com.saicone.delivery4j:delivery4j:main-SNAPSHOT'
 
     compileOnly 'net.kyori:adventure-api:4.13.1'
     compileOnly ('com.github.MilkBowl:VaultAPI:1.7.1') { transitive = false }

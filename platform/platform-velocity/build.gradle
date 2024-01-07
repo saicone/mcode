@@ -10,5 +10,5 @@ dependencies {
     implementation project(':module:module-lang-adventure')
     compileOnly project(':module:module-script')
     compileOnly project(':module:module-command')
-    compileOnly 'com.saicone:delivery4j:main-SNAPSHOT'
+    compileOnly 'com.saicone.delivery4j:delivery4j:main-SNAPSHOT'
 }
