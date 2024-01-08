@@ -173,12 +173,12 @@ public abstract class TextDisplay<SenderT> extends Display<SenderT> {
             final int centerWidth;
             if (centered instanceof Boolean) {
                 if ((Boolean) centered) {
-                    centerWidth = MStrings.getChatWidth();
+                    centerWidth = MStrings.CHAT_WIDTH;
                 } else {
                     centerWidth = -1;
                 }
             } else if (Boolean.TRUE.equals(asBoolean(centered, null))) {
-                centerWidth = MStrings.getChatWidth();
+                centerWidth = MStrings.CHAT_WIDTH;
             } else {
                 centerWidth = asInt(centered, -1);
             }

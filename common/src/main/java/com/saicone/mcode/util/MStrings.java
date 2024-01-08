@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
  * Utility class to handle Strings with different Minecraft options, like center text or colorize.<br>
  * So legacy, RGB and special colors are supported like 'rainbow' and 'gradient'.
  * <br>
- * <br>
  * <h2>Minecraft chat text</h2>
  * The default Minecraft font length is counted by the number of pixels that chars are using, the in-game
  * chat by default has a maximum width of 300px, so it only can display a maximum number of words per line
@@ -77,18 +76,33 @@ public class MStrings {
     MStrings() {
     }
 
-    public static int getChatWidth() {
-        return CHAT_WIDTH;
-    }
-
+    /**
+     * Get Minecraft default font length of provided character.
+     *
+     * @param c the character to check.
+     * @return  number of pixels of the character width.
+     */
     public static int getFontLength(char c) {
         return FONT_LENGTH.getOrDefault(c, 5);
     }
 
+    /**
+     * Get Minecraft default font length of provided text.
+     *
+     * @param s the text to check.
+     * @return  number of text pixels width.
+     */
     public static int getFontLength(@NotNull String s) {
         return getFontLength(s, '&');
     }
 
+    /**
+     * Get Minecraft default font length of provided text.
+     *
+     * @param s         the text to check.
+     * @param colorChar the colored text character, other than {@link #COLOR_CHAR}.
+     * @return          number of text pixels width.
+     */
     public static int getFontLength(@NotNull String s, char colorChar) {
         int px = 0;
         boolean bold = false;
@@ -146,18 +160,45 @@ public class MStrings {
         return px;
     }
 
+    /**
+     * Check legacy color code.
+     *
+     * @param c the character to check.
+     * @return  true if the character is a legacy color code, false otherwise.
+     */
     public static boolean isColorCode(char c) {
         return COLOR_CODES.contains(c);
     }
 
+    /**
+     * Check if the character is a color type supported by this class.<br>
+     * This includes any legacy color code, hex prefix and special prefix.
+     *
+     * @param c the character to check.
+     * @return  true if the character is a supported color type, false otherwise.
+     */
     public static boolean isColorType(char c) {
         return COLOR_CODES.contains(c) || c == '#' || c == '$';
     }
 
+    /**
+     * Check if the character is any legacy or newly color code.<br>
+     * Instead of {@link #isColorCode(char)}, this method check accept 'x' as
+     * a valid color code if {@link #BUNGEE_HEX} is set to true.
+     *
+     * @param c the character to check.
+     * @return  true if the character is a legacy or newly color code, false otherwise.
+     */
     public static boolean isAnyColorCode(char c) {
         return COLOR_CODES.contains(c) || (BUNGEE_HEX && c == 'x');
     }
 
+    /**
+     * Check if the provided 6-length string is valid HEX format.
+     *
+     * @param s the text to check.
+     * @return  true if the string is a valid HEX, false otherwise.
+     */
     public static boolean isValidHex(@NotNull String s) {
         try {
             Integer.parseInt(s, 16);
@@ -167,6 +208,16 @@ public class MStrings {
         }
     }
 
+    /**
+     * Check if the provided char array is a valid HEX format
+     * starting from given position and providing color char to ignore.
+     *
+     * @param chars     the char array to check.
+     * @param start     the start position to iterate array.
+     * @param sum       the amount to sum on for-loop.
+     * @param colorChar the color character to ignore.
+     * @return          true if the first 6 read are a valid HEX, false otherwise.
+     */
     public static boolean isHexFormat(char[] chars, int start, int sum, char colorChar) {
         final int max = start + 12;
         if (max > chars.length) {
@@ -182,11 +233,26 @@ public class MStrings {
         return isValidHex(builder.toString());
     }
 
+    /**
+     * Justify the provided text collection based on default Minecraft font.<br>
+     * This method calculate line pixels width using the widest text from the collection.
+     *
+     * @param collection the collection to justify.
+     * @return           a justified String list based on default Minecraft font.
+     */
     @NotNull
     public static List<String> justifyText(@NotNull Collection<String> collection) {
         return justifyText(collection, '&');
     }
 
+    /**
+     * Justify the provided text collection based on default Minecraft font.<br>
+     * This method calculate line pixels width using the widest text from the collection.
+     *
+     * @param collection the collection to justify.
+     * @param colorChar  the color char to ignore.
+     * @return           a justified String list based on default Minecraft font.
+     */
     @NotNull
     public static List<String> justifyText(@NotNull Collection<String> collection, char colorChar) {
         int width = 0;
@@ -199,21 +265,51 @@ public class MStrings {
         return justifyText(collection, width, colorChar);
     }
 
+    /**
+     * Justify the provided text collection based on default Minecraft font.
+     *
+     * @param collection the collection to justify.
+     * @param width      the line pixels width.
+     * @return           a justified String list based on default Minecraft font.
+     */
     @NotNull
     public static List<String> justifyText(@NotNull Collection<String> collection, int width) {
         return justifyText(collection, width, '&');
     }
 
+    /**
+     * Justify the provided text collection based on default Minecraft font.
+     *
+     * @param collection the collection to justify.
+     * @param width      the line pixels width.
+     * @param colorChar  the color char to ignore.
+     * @return           a justified String list based on default Minecraft font.
+     */
     @NotNull
     public static List<String> justifyText(@NotNull Collection<String> collection, int width, char colorChar) {
         return justifyText(String.join(" ", collection), width, colorChar);
     }
 
+    /**
+     * Justify the provided text based on default Minecraft font.
+     *
+     * @param text  the text to justify.
+     * @param width the line pixels width.
+     * @return      a justified text based on default Minecraft font.
+     */
     @NotNull
     public static List<String> justifyText(@NotNull String text, int width) {
         return justifyText(text, width, '&');
     }
 
+    /**
+     * Justify the provided text based on default Minecraft font.
+     *
+     * @param text      the text to justify.
+     * @param width     the line pixels width.
+     * @param colorChar the color char to ignore.
+     * @return          a justified text based on default Minecraft font.
+     */
     @NotNull
     public static List<String> justifyText(@NotNull String text, int width, char colorChar) {
         final List<String> list = new ArrayList<>();
@@ -262,16 +358,37 @@ public class MStrings {
         return list;
     }
 
+    /**
+     * Center the provided text based on default Minecraft font.
+     *
+     * @param text      the text to center.
+     * @return          a justified text based on default Minecraft font.
+     */
     @NotNull
     public static String centerText(@NotNull String text) {
         return centerText(text, CHAT_WIDTH);
     }
 
+    /**
+     * Center the provided text based on default Minecraft font.
+     *
+     * @param text      the text to center.
+     * @param width     the line pixels width.
+     * @return          a justified text based on default Minecraft font.
+     */
     @NotNull
     public static String centerText(@NotNull String text, int width) {
         return centerText(text, width, '&');
     }
 
+    /**
+     * Center the provided text based on default Minecraft font.
+     *
+     * @param text      the text to center.
+     * @param width     the line pixels width.
+     * @param colorChar the color char to ignore.
+     * @return          a justified text based on default Minecraft font.
+     */
     @NotNull
     public static String centerText(@NotNull String text, int width, char colorChar) {
         if (text.length() >= width) {
@@ -280,6 +397,14 @@ public class MStrings {
         return spacesToCenter(getFontLength(text, colorChar), width) + text;
     }
 
+    /**
+     * Get a String full of spaces with the amount of spaces needed to center a
+     * text based on provided width of pixels and used pixels.
+     *
+     * @param length the used pixels.
+     * @param width  the max width.
+     * @return       a String full of needed spaces to center text.
+     */
     @NotNull
     public static String spacesToCenter(int length, int width) {
         int px = width - length;
@@ -295,8 +420,15 @@ public class MStrings {
         return " ".repeat(count);
     }
 
+    /**
+     * Colorize the provided text collection.<br>
+     * This method accept any minecraft legacy color code, hex color and special color.
+     *
+     * @param list the collection to color.
+     * @return     a colored text list.
+     */
     @NotNull
-    public static List<String> color(@NotNull List<String> list) {
+    public static List<String> color(@NotNull Collection<String> list) {
         final List<String> finalList = new ArrayList<>();
         for (String s : list) {
             finalList.add(color(s));
@@ -304,11 +436,26 @@ public class MStrings {
         return finalList;
     }
 
+    /**
+     * Colorize the provided text.<br>
+     * This method accept any minecraft legacy color code, hex color and special color.
+     *
+     * @param s the text to color.
+     * @return  a colored text.
+     */
     @NotNull
     public static String color(@NotNull String s) {
         return color('&', s);
     }
 
+    /**
+     * Colorize the provided text.<br>
+     * This method accept any minecraft legacy color code, hex color and special color.
+     *
+     * @param colorChar the color character to parse.
+     * @param s         the text to color.
+     * @return          a colored text.
+     */
     @NotNull
     public static String color(char colorChar, @NotNull String s) {
         if (s.indexOf(colorChar) < 0) {
@@ -427,11 +574,24 @@ public class MStrings {
         return finalInt + (blockIndex - i) + 1;
     }
 
+    /**
+     * Convert provided 6-length String into rgb color format.
+     *
+     * @param color the String to convert.
+     * @return      a rgb color formatted text.
+     */
     @NotNull
     public static String toRgb(@NotNull String color) {
         return toRgb('&', color);
     }
 
+    /**
+     * Convert provided 6-length String into rgb color format.
+     *
+     * @param colorChar the color character to parse with if the provided text isn't a valid hex.
+     * @param color     the String to convert.
+     * @return          a rgb color formatted text.
+     */
     @NotNull
     public static String toRgb(char colorChar, @NotNull String color) {
         if (!isValidHex(color)) {
@@ -449,6 +609,12 @@ public class MStrings {
         }
     }
 
+    /**
+     * Convert provided color object into rgb color format.
+     *
+     * @param color the color object to parse.
+     * @return      a rgb color formatted text.
+     */
     @NotNull
     public static String toRgb(@NotNull Color color) {
         if (BUNGEE_HEX) {
@@ -462,11 +628,26 @@ public class MStrings {
         }
     }
 
+    /**
+     * Parse special colored string using the provided arguments.
+     *
+     * @param text  the text to parse.
+     * @param args  the special color arguments.
+     * @return      a colored text is any special format was detected.
+     */
     @NotNull
     public static String toSpecial(@NotNull String text, @NotNull String... args) {
         return toSpecial(text, 0, args);
     }
 
+    /**
+     * Parse special colored string using the provided arguments.
+     *
+     * @param text  the text to parse.
+     * @param speed the movement speed.
+     * @param args  the special color arguments.
+     * @return      a colored text is any special format was detected.
+     */
     @NotNull
     public static String toSpecial(@NotNull String text, int speed, @NotNull String... args) {
         if (args.length < 1) {
@@ -486,8 +667,7 @@ public class MStrings {
         }
     }
 
-    @NotNull
-    public static String toRainbow(@NotNull String text, int speed, @NotNull String... args) {
+    private static String toRainbow(@NotNull String text, int speed, @NotNull String... args) {
         // Argument base objects
         final float saturation = args.length > 1 ? floatValue(args[1], 1.0F) : 1.0F;
         final float brightness = args.length > 2 ? floatValue(args[2], 1.0F) : 1.0F;
@@ -524,8 +704,7 @@ public class MStrings {
         return builder.toString();
     }
 
-    @NotNull
-    public static String toGradient(@NotNull String text, int speed, @NotNull String... args) {
+    private static String toGradient(@NotNull String text, int speed, @NotNull String... args) {
         if (args.length < 3) {
             return text;
         }
