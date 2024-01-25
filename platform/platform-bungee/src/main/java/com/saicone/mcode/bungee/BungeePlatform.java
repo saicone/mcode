@@ -38,7 +38,7 @@ public class BungeePlatform extends Platform {
             initModule("com.saicone.mcode.bungee.script.BungeeScripts", "registerActions", "registerConditions");
         }
         if (isAvailable("Settings")) {
-            initModule("com.saicone.mcode.bungee.settings.YamlParser", "register");
+            initModule("com.saicone.mcode.bungee.settings.BungeeYamlSource", "register");
         }
     }
 

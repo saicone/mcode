@@ -1,5 +1,0 @@
-dependencies {
-    api project(':common')
-    api project(':extension:extension-type')
-    api 'com.google.code.gson:gson:2.10.1'
-}

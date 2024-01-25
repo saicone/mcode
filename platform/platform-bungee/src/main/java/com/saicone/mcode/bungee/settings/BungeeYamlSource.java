@@ -1,36 +1,32 @@
 package com.saicone.mcode.bungee.settings;
 
-import com.saicone.mcode.module.settings.Settings;
-import com.saicone.mcode.module.settings.SettingsParser;
+import com.saicone.settings.SettingsSource;
+import com.saicone.settings.data.DataFormat;
+import com.saicone.settings.node.MapNode;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 
-public class YamlParser extends SettingsParser {
+public class BungeeYamlSource implements SettingsSource {
 
     public static void register() {
-        if (!SettingsParser.contains("yml")) {
-            SettingsParser.register("yml", YamlParser::new);
-        }
-        if (!SettingsParser.contains("yaml")) {
-            SettingsParser.register("yaml", YamlParser::new);
-        }
+        DataFormat.addSource("yaml", BungeeYamlSource.class);
     }
 
     @Override
-    public Settings read(@NotNull Reader reader) {
+    public <T extends MapNode> T read(@NotNull Reader reader, @NotNull T parent) throws IOException {
         final Configuration config = ConfigurationProvider.getProvider(YamlConfiguration.class).load(reader);
-        final Settings settings = new Settings();
         for (String[] path : getPaths(config)) {
-            settings.set(path, config.get(String.join(".", path)));
+            parent.get(path).setValue(config.get(String.join(".", path)));
         }
-        return settings;
+        return parent;
     }
 
     private List<String[]> getPaths(@NotNull Configuration config) {
@@ -52,10 +48,10 @@ public class YamlParser extends SettingsParser {
     }
 
     @Override
-    public void write(@NotNull Settings settings, @NotNull Writer writer) {
+    public void write(@NotNull Writer writer, @NotNull MapNode parent) throws IOException {
         final Configuration config = new Configuration();
-        for (String[] path : settings.getDeepKeys()) {
-            config.set(String.join(".", path), settings.get(path).getValue());
+        for (String[] path : parent.paths()) {
+            config.set(String.join(".", path), parent.get(path).asLiteralObject());
         }
         ConfigurationProvider.getProvider(YamlConfiguration.class).save(config, writer);
     }

@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Class to handle reflection lookups in a easy way.
+ * Class to handle reflection lookups in an easy way.
  *
  * @author Rubenicos
  */

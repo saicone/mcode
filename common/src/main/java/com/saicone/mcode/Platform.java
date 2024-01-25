@@ -20,10 +20,10 @@ public abstract class Platform {
         NAMES.put("type", "com.saicone.mcode.util.OptionalType");
         // Module
         NAMES.put("command", "com.saicone.mcode.module.command.CommandCentral");
-        NAMES.put("delivery", "com.saicone.mcode.module.delivery.DeliveryClient");
+        NAMES.put("delivery", "com.saicone.delivery4j.DeliveryClient");
         NAMES.put("lang", "com.saicone.mcode.module.lang.LangLoader");
         NAMES.put("script", "com.saicone.mcode.module.script.Script");
-        NAMES.put("settings", "com.saicone.mcode.module.settings.Settings");
+        NAMES.put("settings", "com.saicone.settings.Settings");
         NAMES.put("task", "com.saicone.mcode.scheduler.Task");
     }
 

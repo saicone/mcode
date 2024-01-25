@@ -2,9 +2,9 @@ package com.saicone.mcode.module.lang;
 
 import com.saicone.mcode.Platform;
 import com.saicone.mcode.module.lang.display.Display;
-import com.saicone.mcode.module.settings.Settings;
-import com.saicone.mcode.module.settings.SettingsFile;
 import com.saicone.mcode.util.Strings;
+import com.saicone.settings.Settings;
+import com.saicone.settings.SettingsData;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -220,12 +220,10 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
         if (!USE_SETTINGS) {
             return getFileObjects(file);
         }
-        final SettingsFile settings = new SettingsFile(file);
-        settings.load();
+        final Settings settings = SettingsData.of(file.getName()).load(file.getParentFile());
         final Map<String, Object> map = new HashMap<>();
-        for (String[] path : settings.getDeepKeys()) {
-            final var node = settings.get(path);
-            map.put(String.join(".", path), node instanceof Settings ? ((Settings) node).asMap() : node.getValue());
+        for (String[] path : settings.paths()) {
+            map.put(String.join(".", path), settings.get(path).asLiteralObject());
         }
         return map;
     }

@@ -10,10 +10,6 @@ include(
 	'module:module-lang-adventure',
 	'module:module-script',
 	'module:module-script-js',
-	'module:module-settings',
-	'module:module-settings-yaml',
-	'module:module-settings-hocon',
-	'module:module-settings-toml',
 	'module:module-task'
 	)
 
