@@ -41,7 +41,7 @@ public class EasyLookup {
         }
     }
 
-    EasyLookup() {
+    protected EasyLookup() {
     }
 
     /**

@@ -111,7 +111,7 @@ public class BungeeLang extends LangLoader<CommandSender, ProxiedPlayer> {
     }
 
     @Override
-    public @NotNull Collection<? extends ProxiedPlayer> getPlayers() {
+    public @NotNull Collection<CommandSender> getPlayers() {
         return plugin.getProxy().getPlayers();
     }
 

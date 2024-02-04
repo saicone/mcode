@@ -200,6 +200,17 @@ public class AdventureLang {
         }
 
         @Override
+        public @Nullable Object get(@NotNull String field) {
+            if (field.equals("color")) {
+                return color.name();
+            } else if (field.equals("style") || field.equals("overlay")) {
+                return overlay.name();
+            } else {
+                return super.get(field);
+            }
+        }
+
+        @Override
         public void sendTo(@NotNull T type, @NotNull String text) {
             final BossBar bossBar = BossBar.bossBar(LegacyComponentSerializer.legacyAmpersand().deserialize(text), progress, color, overlay);
             ((Audience) type).showBossBar(bossBar);

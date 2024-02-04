@@ -1,21 +1,35 @@
 package com.saicone.mcode.module.lang.display;
 
+import com.saicone.mcode.module.lang.Display;
 import com.saicone.mcode.module.lang.DisplayLoader;
 import com.saicone.mcode.util.DMap;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public abstract class ActionbarDisplay<SenderT> extends Display<SenderT> {
+public abstract class ActionbarDisplay<SenderT> implements Display<SenderT> {
 
     private final String text;
 
     public ActionbarDisplay(@NotNull String text) {
         this.text = text;
+    }
+
+    @Override
+    public @Nullable Object get(@NotNull String field) {
+        switch (field.toLowerCase()) {
+            case "text":
+            case "actionbar":
+            case "value":
+                return text;
+            default:
+                return null;
+        }
     }
 
     @NotNull
@@ -30,9 +44,9 @@ public abstract class ActionbarDisplay<SenderT> extends Display<SenderT> {
     }
 
     @Override
-    public void sendToAll(@NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
+    public void sendTo(@NotNull Collection<SenderT> senders, @NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
         String actionbar = parser.apply(text);
-        for (SenderT player : players()) {
+        for (SenderT player : senders) {
             sendActionbar(player, playerParser.apply(player, actionbar));
         }
     }

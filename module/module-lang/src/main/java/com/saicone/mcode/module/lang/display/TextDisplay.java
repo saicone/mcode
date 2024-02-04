@@ -1,5 +1,6 @@
 package com.saicone.mcode.module.lang.display;
 
+import com.saicone.mcode.module.lang.Display;
 import com.saicone.mcode.module.lang.DisplayLoader;
 import com.saicone.mcode.util.DMap;
 import com.saicone.mcode.util.MStrings;
@@ -11,7 +12,7 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public abstract class TextDisplay<SenderT> extends Display<SenderT> {
+public abstract class TextDisplay<SenderT> implements Display<SenderT> {
 
     private final String text;
     private final int centerWidth;
@@ -21,6 +22,20 @@ public abstract class TextDisplay<SenderT> extends Display<SenderT> {
         this.text = text;
         this.centerWidth = centerWidth;
         this.actions = actions;
+    }
+
+    @Override
+    public @Nullable Object get(@NotNull String field) {
+        switch (field.toLowerCase()) {
+            case "text":
+            case "string":
+            case "value":
+                return text;
+            case "centerwidth":
+                return centerWidth;
+            default:
+                return null;
+        }
     }
 
     @NotNull
@@ -66,15 +81,15 @@ public abstract class TextDisplay<SenderT> extends Display<SenderT> {
     }
 
     @Override
-    public void sendToAll(@NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
+    public void sendTo(@NotNull Collection<SenderT> senders, @NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
         final String text = parser.apply(this.text);
         if (actions.isEmpty()) {
-            for (SenderT player : players()) {
+            for (SenderT player : senders) {
                 sendParsed(player, playerParser.apply(player, text));
             }
         } else {
             final Map<String, Map<Object, String>> actions = getParsedActions(parser);
-            for (SenderT player : players()) {
+            for (SenderT player : senders) {
                 sendParsed(player, playerParser.apply(player, text), actions);
             }
         }

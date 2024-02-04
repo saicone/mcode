@@ -1,7 +1,7 @@
 package com.saicone.mcode.module.script.action;
 
 import com.saicone.mcode.module.lang.DisplayLoader;
-import com.saicone.mcode.module.lang.display.Display;
+import com.saicone.mcode.module.lang.Display;
 import com.saicone.mcode.module.script.Action;
 import com.saicone.mcode.module.script.EvalUser;
 import org.jetbrains.annotations.NotNull;
@@ -33,6 +33,6 @@ public class BroadcastDisplay extends Action {
 
     @Override
     public void accept(@NotNull EvalUser user) {
-        display.sendToAll(s -> user.parse(s, true));
+        display.sendArgs(s -> user.parse(s, true));
     }
 }

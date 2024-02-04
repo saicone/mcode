@@ -2,7 +2,7 @@ package com.saicone.mcode.bukkit.util;
 
 import com.saicone.mcode.util.EasyLookup;
 
-public class BukkitLookup {
+public class BukkitLookup extends EasyLookup {
 
     static {
         try {
@@ -42,6 +42,7 @@ public class BukkitLookup {
     }
 
     BukkitLookup() {
+        super();
     }
 
     /**

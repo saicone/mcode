@@ -1,6 +1,5 @@
 package com.saicone.mcode.module.lang;
 
-import com.saicone.mcode.module.lang.display.Display;
 import com.saicone.mcode.util.DMap;
 import com.saicone.mcode.util.Strings;
 import org.intellij.lang.annotations.Language;

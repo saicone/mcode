@@ -1,15 +1,17 @@
 package com.saicone.mcode.module.lang.display;
 
+import com.saicone.mcode.module.lang.Display;
 import com.saicone.mcode.module.lang.DisplayLoader;
 import com.saicone.mcode.util.DMap;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public abstract class SoundDisplay<SenderT, SoundT> extends Display<SenderT> {
+public abstract class SoundDisplay<SenderT, SoundT> implements Display<SenderT> {
 
     private final String sound;
     private final float volume;
@@ -19,6 +21,22 @@ public abstract class SoundDisplay<SenderT, SoundT> extends Display<SenderT> {
         this.sound = sound;
         this.volume = volume;
         this.pitch = pitch;
+    }
+
+    @Override
+    public @Nullable Object get(@NotNull String field) {
+        switch (field.toLowerCase()) {
+            case "text":
+            case "sound":
+            case "value":
+                return sound;
+            case "volume":
+                return volume;
+            case "pitch":
+                return pitch;
+            default:
+                return null;
+        }
     }
 
     @NotNull
@@ -43,10 +61,10 @@ public abstract class SoundDisplay<SenderT, SoundT> extends Display<SenderT> {
     }
 
     @Override
-    public void sendToAll(@NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
+    public void sendTo(@NotNull Collection<SenderT> senders, @NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
         final SoundT parsedSound = parseSound(parser.apply(sound));
         if (parsedSound != null) {
-            for (SenderT player : players()) {
+            for (SenderT player : senders) {
                 playSound(player, parsedSound, volume, pitch);
             }
         }

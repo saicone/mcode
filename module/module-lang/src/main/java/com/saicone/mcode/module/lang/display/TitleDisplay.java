@@ -1,15 +1,17 @@
 package com.saicone.mcode.module.lang.display;
 
+import com.saicone.mcode.module.lang.Display;
 import com.saicone.mcode.module.lang.DisplayLoader;
 import com.saicone.mcode.util.DMap;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public abstract class TitleDisplay<SenderT> extends Display<SenderT> {
+public abstract class TitleDisplay<SenderT> implements Display<SenderT> {
 
     private final String title;
     private final String subtitle;
@@ -23,6 +25,31 @@ public abstract class TitleDisplay<SenderT> extends Display<SenderT> {
         this.fadeIn = fadeIn;
         this.stay = stay;
         this.fadeOut = fadeOut;
+    }
+
+    @Override
+    public @Nullable Object get(@NotNull String field) {
+        switch (field.toLowerCase()) {
+            case "text":
+            case "title":
+            case "value":
+                return title;
+            case "subtitle":
+                return subtitle;
+            case "fadein":
+                return fadeIn;
+            case "stay":
+                return stay;
+            case "fadeout":
+                return fadeOut;
+            default:
+                return null;
+        }
+    }
+
+    @Override
+    public @NotNull String getText() {
+        return title + ' ' + subtitle;
     }
 
     @NotNull
@@ -48,20 +75,15 @@ public abstract class TitleDisplay<SenderT> extends Display<SenderT> {
     }
 
     @Override
-    public @NotNull String getText() {
-        return title + ' ' + subtitle;
-    }
-
-    @Override
     public void sendTo(@NotNull SenderT type, @NotNull Function<String, String> parser) {
         sendTitle(type, parser.apply(title), parser.apply(subtitle));
     }
 
     @Override
-    public void sendToAll(@NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
+    public void sendTo(@NotNull Collection<SenderT> senders, @NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
         final String title = parser.apply(this.title);
         final String subtitle = parser.apply(this.subtitle);
-        for (SenderT player : players()) {
+        for (SenderT player : senders) {
             sendTitle(player, playerParser.apply(player, title), playerParser.apply(player, subtitle));
         }
     }

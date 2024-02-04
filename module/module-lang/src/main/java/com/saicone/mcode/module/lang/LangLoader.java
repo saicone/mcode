@@ -1,7 +1,7 @@
 package com.saicone.mcode.module.lang;
 
 import com.saicone.mcode.Platform;
-import com.saicone.mcode.module.lang.display.Display;
+import com.saicone.mcode.module.lang.display.DisplayList;
 import com.saicone.mcode.util.Strings;
 import com.saicone.settings.Settings;
 import com.saicone.settings.SettingsData;
@@ -127,7 +127,7 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
             if (list.isEmpty()) {
                 return null;
             }
-            return Display.of(list);
+            return new DisplayList<>(list);
         }
 
         if (object instanceof Map) {
@@ -145,7 +145,7 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
             return;
         }
         final List<Path> paths = new ArrayList<>();
-        getFieldsFrom(getLangProviders(), field -> field.canAccess(null) && Path.class.isAssignableFrom(field.getType()), field -> {
+        getFieldsFrom(getLangProviders(), field -> Path.class.isAssignableFrom(field.getType()), field -> {
             try {
                 final Path path = (Path) field.get(null);
                 path.setLoader(this);
@@ -163,7 +163,7 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
             return;
         }
         final Set<String> loaded = new HashSet<>();
-        getFieldsFrom(getLangProviders(), field -> (field.canAccess(null) || field.canAccess(this)) && DisplayLoader.class.isAssignableFrom(field.getType()), field -> {
+        getFieldsFrom(getLangProviders(), field -> DisplayLoader.class.isAssignableFrom(field.getType()), field -> {
             if (loaded.contains(field.getName().toLowerCase())) {
                 return;
             }
@@ -329,8 +329,7 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
     @NotNull
     protected abstract String getPlayerLocale(@NotNull PlayerT player);
 
-    @NotNull
-    public abstract Collection<? extends PlayerT> getPlayers();
+    public abstract @NotNull Collection<SenderT> getPlayers();
 
     @NotNull
     protected abstract SenderT getConsoleSender();
@@ -385,7 +384,7 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
         } else if (!language.equals(defaultLanguage)) {
             return getDefaultDisplay(path);
         } else {
-            return Display.of();
+            return Display.empty();
         }
     }
 
@@ -401,7 +400,7 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
 
     @NotNull
     public Display<SenderT> getDefaultDisplay(@NotNull String path) {
-        return getDisplays(defaultLanguage).getOrDefault(path, Display.of());
+        return getDisplays(defaultLanguage).getOrDefault(path, Display.empty());
     }
 
     @Nullable
@@ -416,7 +415,7 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
 
     @NotNull
     public String getLangText(@NotNull String path, @NotNull String type) {
-        return getDisplay(getPluginLanguage(), path).getText(type);
+        return String.valueOf(getDisplay(getPluginLanguage(), path).get(type));
     }
 
     @NotNull
@@ -426,12 +425,23 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
 
     @NotNull
     public String getLangText(@NotNull SenderT sender, @NotNull String path, @NotNull String type) {
-        return getDisplay(sender, path).getText(type);
+        return String.valueOf(getDisplay(sender, path).get(type));
     }
 
     public abstract boolean isInstanceOfSender(@Nullable Object object);
 
     public abstract boolean isInstanceOfPlayer(@Nullable Object object);
+
+    public void printStackTrace(int level, @NotNull Throwable throwable) {
+        if (getLogLevel() >= level) {
+            throwable.printStackTrace();
+        }
+    }
+
+    public void printStackTrace(int level, @NotNull Throwable throwable, @NotNull String msg, @Nullable Object... args) {
+        sendLog(level, msg, args);
+        printStackTrace(level, throwable);
+    }
 
     public void sendLog(int level, @NotNull String msg, @Nullable Object... args) {
         if (getLogLevel() < level) {
@@ -449,7 +459,7 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
     }
 
     protected void sendTo(@NotNull SenderT sender, @NotNull String language, @NotNull String path, @Nullable Object... args) {
-        getDisplay(language, path).sendTo(sender, args);
+        getDisplay(language, path).sendArgs(sender, args);
     }
 
     public void sendTo(@NotNull SenderT agent, @NotNull SenderT sender, @NotNull String path, @Nullable Object... args) {
@@ -457,7 +467,7 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
     }
 
     protected void sendTo(@NotNull SenderT agent, @NotNull SenderT sender, @NotNull String language, @NotNull String path, @Nullable Object... args) {
-        getDisplay(language, path).sendTo(agent, sender, args);
+        getDisplay(language, path).sendArgs(agent, sender, args);
     }
 
     public void sendTo(@NotNull SenderT sender, @NotNull String path, @NotNull Function<String, String> parser) {
@@ -485,7 +495,7 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
     }
 
     public void sendToAll(@NotNull String language, @NotNull String path, @Nullable Object... args) {
-        getDisplay(language, path).sendToAll(args);
+        getDisplay(language, path).sendArgs(getPlayers(), args);
     }
 
     public void sendToAll(@NotNull SenderT agent, @NotNull String path, @Nullable Object... args) {
@@ -493,7 +503,7 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
     }
 
     public void sendToAll(@NotNull SenderT agent, @NotNull String language, @NotNull String path, @Nullable Object... args) {
-        getDisplay(language, path).sendToAll(agent, args);
+        getDisplay(language, path).sendArgs(getPlayers(), agent, args);
     }
 
     public void sendToAll(@NotNull String path, @NotNull Function<String, String> parser) {
@@ -501,7 +511,7 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
     }
 
     public void sendToAll(@NotNull String language, @NotNull String path, @NotNull Function<String, String> parser) {
-        getDisplay(language, path).sendToAll(parser);
+        getDisplay(language, path).sendArgs(getPlayers(), parser);
     }
 
     public void sendToAll(@NotNull String path, @NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
@@ -509,7 +519,7 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
     }
 
     public void sendToAll(@NotNull String language, @NotNull String path, @NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
-        getDisplay(language, path).sendToAll(parser, playerParser);
+        getDisplay(language, path).sendTo(getPlayers(), parser, playerParser);
     }
 
     @NotNull
@@ -523,6 +533,7 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
             for (Class<?> clazz = provided; clazz != Object.class; clazz = clazz.getSuperclass()) {
                 for (Field field : clazz.getDeclaredFields()) {
                     if (filter.test(field)) {
+                        field.setAccessible(true);
                         consumer.accept(field);
                     }
                 }

@@ -2,6 +2,7 @@ package com.saicone.mcode.bukkit.lang;
 
 import com.google.common.base.Enums;
 import com.saicone.mcode.bukkit.util.ServerInstance;
+import com.saicone.mcode.module.lang.Display;
 import com.saicone.mcode.module.lang.LangLoader;
 import com.saicone.mcode.module.lang.display.*;
 import com.saicone.mcode.util.DMap;
@@ -175,7 +176,7 @@ public class BukkitLang extends LangLoader<CommandSender, Player> {
     }
 
     @Override
-    public @NotNull Collection<? extends Player> getPlayers() {
+    public @NotNull Collection<CommandSender> getPlayers() {
         return Bukkit.getOnlinePlayers();
     }
 
@@ -354,6 +355,17 @@ public class BukkitLang extends LangLoader<CommandSender, Player> {
             super(progress, stay);
             this.color = color;
             this.style = style;
+        }
+
+        @Override
+        public @Nullable Object get(@NotNull String field) {
+            if (field.equals("color")) {
+                return color.name();
+            } else if (field.equals("style") || field.equals("overlay")) {
+                return style.name();
+            } else {
+                return super.get(field);
+            }
         }
 
         @Override

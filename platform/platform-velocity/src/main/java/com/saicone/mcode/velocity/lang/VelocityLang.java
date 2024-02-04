@@ -131,7 +131,7 @@ public class VelocityLang extends LangLoader<CommandSource, Player> {
     }
 
     @Override
-    public @NotNull Collection<? extends Player> getPlayers() {
+    public @NotNull Collection<CommandSource> getPlayers() {
         return proxy.getAllPlayers();
     }
 

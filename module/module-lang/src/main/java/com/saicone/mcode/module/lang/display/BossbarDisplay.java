@@ -1,15 +1,17 @@
 package com.saicone.mcode.module.lang.display;
 
+import com.saicone.mcode.module.lang.Display;
 import com.saicone.mcode.module.lang.DisplayLoader;
 import com.saicone.mcode.util.DMap;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public class BossbarDisplay<SenderT> extends Display<SenderT> {
+public class BossbarDisplay<SenderT> implements Display<SenderT> {
 
     private final String text;
     private final Builder<SenderT> builder;
@@ -20,8 +22,21 @@ public class BossbarDisplay<SenderT> extends Display<SenderT> {
     }
 
     @Override
-    public @NotNull String getText(@NotNull String type) {
-        return super.getText(type);
+    public @Nullable Object get(@NotNull String field) {
+        switch (field.toLowerCase()) {
+            case "text":
+            case "bossbar":
+            case "value":
+                return text;
+            default:
+                return builder.get(field);
+        }
+    }
+
+    @NotNull
+    @Override
+    public String getText() {
+        return text;
     }
 
     @Override
@@ -30,9 +45,9 @@ public class BossbarDisplay<SenderT> extends Display<SenderT> {
     }
 
     @Override
-    public void sendToAll(@NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
+    public void sendTo(@NotNull Collection<SenderT> senders, @NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
         final String text = parser.apply(this.text);
-        for (SenderT player : players()) {
+        for (SenderT player : senders) {
             builder.sendTo(player, playerParser.apply(player, text));
         }
     }
@@ -45,6 +60,17 @@ public class BossbarDisplay<SenderT> extends Display<SenderT> {
         public Builder(float progress, long stay) {
             this.progress = progress;
             this.stay = stay;
+        }
+
+        @Nullable
+        public Object get(@NotNull String field) {
+            if (field.equals("progress")) {
+                return progress;
+            } else if (field.equals("stay")) {
+                return stay;
+            } else {
+                return null;
+            }
         }
 
         public abstract void sendTo(@NotNull SenderT type, @NotNull String text);
