@@ -1,6 +1,5 @@
-package com.saicone.mcode.module.lang.display;
+package com.saicone.mcode.module.lang;
 
-import com.saicone.mcode.module.lang.Display;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;

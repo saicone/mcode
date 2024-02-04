@@ -1,7 +1,6 @@
 package com.saicone.mcode.module.lang;
 
 import com.saicone.mcode.Platform;
-import com.saicone.mcode.module.lang.display.DisplayList;
 import com.saicone.mcode.util.Strings;
 import com.saicone.settings.Settings;
 import com.saicone.settings.SettingsData;
