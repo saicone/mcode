@@ -15,7 +15,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public abstract class LangLoader<SenderT, PlayerT extends SenderT> implements DisplaySupplier<SenderT> {
+public abstract class AbstractLang<SenderT, PlayerT extends SenderT> implements DisplaySupplier<SenderT> {
 
     protected static final String DEFAULT_DISPLAY = "text";
 
@@ -51,7 +51,7 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> implements Di
     protected String filePrefix = ".yml";
     protected final Map<String, Map<String, Display<SenderT>>> displays = new HashMap<>();
 
-    public LangLoader(@NotNull Class<?>... langProviders) {
+    public AbstractLang(@NotNull Class<?>... langProviders) {
         final int length = langProviders.length + 1;
         this.langProviders = Arrays.copyOf(langProviders, length);
         this.langProviders[length - 1] = getClass();
@@ -491,7 +491,7 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> implements Di
         private final String path;
         private final String[] oldPaths;
 
-        private LangLoader<?, ?> loader = null;
+        private AbstractLang<?, ?> loader = null;
 
         @NotNull
         public static Path of(@NotNull String path, @NotNull String... oldPaths) {
@@ -514,17 +514,17 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> implements Di
         }
 
         @Nullable
-        public LangLoader<?, ?> getLoader() {
+        public AbstractLang<?, ?> getLoader() {
             return loader;
         }
 
-        public void setLoader(@Nullable LangLoader<?, ?> loader) {
+        public void setLoader(@Nullable AbstractLang<?, ?> loader) {
             this.loader = loader;
         }
 
         @SuppressWarnings("unchecked")
-        private <SenderT> LangLoader<SenderT, ?> loader() {
-            return (LangLoader<SenderT, ?>) loader;
+        private <SenderT> AbstractLang<SenderT, ?> loader() {
+            return (AbstractLang<SenderT, ?>) loader;
         }
 
         public <SenderT> void sendTo(@NotNull SenderT sender, @Nullable Object... args) {

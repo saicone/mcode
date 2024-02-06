@@ -1,6 +1,6 @@
 package com.saicone.mcode.bungee.lang;
 
-import com.saicone.mcode.module.lang.LangLoader;
+import com.saicone.mcode.module.lang.AbstractLang;
 import com.saicone.mcode.module.lang.display.ActionbarDisplay;
 import com.saicone.mcode.module.lang.display.TextDisplay;
 import com.saicone.mcode.module.lang.display.TitleDisplay;
@@ -27,7 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 
-public class BungeeLang extends LangLoader<CommandSender, ProxiedPlayer> {
+public class BungeeLang extends AbstractLang<CommandSender, ProxiedPlayer> {
 
     public static final TextLoader TEXT = new TextLoader();
     public static final TitleLoader TITLE = new TitleLoader();

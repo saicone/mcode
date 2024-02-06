@@ -2,7 +2,7 @@ package com.saicone.mcode.velocity.lang;
 
 import com.moandjiezana.toml.Toml;
 import com.saicone.mcode.module.lang.AdventureLang;
-import com.saicone.mcode.module.lang.LangLoader;
+import com.saicone.mcode.module.lang.AbstractLang;
 import com.saicone.mcode.util.DMap;
 import com.saicone.mcode.velocity.VelocityPlatform;
 import com.velocitypowered.api.command.CommandSource;
@@ -23,7 +23,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public class VelocityLang extends LangLoader<CommandSource, Player> {
+public class VelocityLang extends AbstractLang<CommandSource, Player> {
 
     // Loadable display types
     public static final AdventureLang.TextLoader<CommandSource> TEXT = new AdventureLang.TextLoader<>();

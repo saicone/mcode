@@ -3,7 +3,7 @@ package com.saicone.mcode.bukkit.lang;
 import com.google.common.base.Enums;
 import com.saicone.mcode.bukkit.util.ServerInstance;
 import com.saicone.mcode.module.lang.Display;
-import com.saicone.mcode.module.lang.LangLoader;
+import com.saicone.mcode.module.lang.AbstractLang;
 import com.saicone.mcode.module.lang.display.*;
 import com.saicone.mcode.util.DMap;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 
-public class BukkitLang extends LangLoader<CommandSender, Player> {
+public class BukkitLang extends AbstractLang<CommandSender, Player> {
 
     // Loadable display types
     public static final TextLoader TEXT = new TextLoader();
