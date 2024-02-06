@@ -38,6 +38,83 @@ public class Strings {
         return !s.isBlank() && CUSTOM_COLOR.matcher(s).matches();
     }
 
+    public static boolean isNumber(@NotNull String s) {
+        return isNumber(s, null);
+    }
+
+    public static <T extends Number> boolean isNumber(@NotNull String s, @Nullable Class<T> numberClass) {
+        if (s.isBlank()) {
+            return false;
+        }
+        String str = s.trim();
+        if (str.charAt(0) == '-') {
+            if (str.length() == 1) {
+                return false;
+            }
+            str = str.substring(1);
+        }
+        if (numberClass != null) {
+            switch (str.charAt(str.length() - 1)) {
+                case 'L':
+                case 'l':
+                    if (numberClass == Long.class && str.length() != 1) {
+                        str = str.substring(0, str.length() - 1);
+                    } else {
+                        return false;
+                    }
+                    break;
+                case 'F':
+                case 'f':
+                    if (numberClass == Float.class && str.length() != 1) {
+                        str = str.substring(0, str.length() - 1);
+                    } else {
+                        return false;
+                    }
+                    break;
+                case 'D':
+                case 'd':
+                    if (numberClass == Double.class && str.length() != 1) {
+                        str = str.substring(0, str.length() - 1);
+                    } else {
+                        return false;
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+        boolean decimal = false;
+        for (char c : str.toCharArray()) {
+            if (!Character.isDigit(c) && c != ' ') {
+                if (!decimal && c == '.') {
+                    decimal = true;
+                    continue;
+                }
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @NotNull
+    public static String[] split(@NotNull String s, char c) {
+        int end = s.indexOf(c);
+        if (end < 1) {
+            return new String[] { s };
+        }
+        int start = 0;
+        final List<String> list = new ArrayList<>();
+        while (end > 0) {
+            if (s.charAt(end - 1) != '\\') {
+                list.add(s.substring(start, end).replace("\\" + c, String.valueOf(c)));
+                start = end + 1;
+            }
+            end = s.indexOf(c, end + 1);
+        }
+        list.add(s.substring(start));
+        return list.toArray(new String[0]);
+    }
+
     @NotNull
     public static String[] splitBy(@NotNull String str, @NotNull @Language("RegExp") String regex, @NotNull String delimiter, @NotNull String out) {
         return splitBy(str.split(regex), 0, delimiter, out);
