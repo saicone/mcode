@@ -12,6 +12,8 @@ import java.util.function.Function;
 @FunctionalInterface
 public interface Display<SenderT> {
 
+    String DEFAULT_TYPE = "text";
+
     @NotNull
     static <T> Display<T> empty() {
         return (type, parser) -> {};
@@ -35,11 +37,14 @@ public interface Display<SenderT> {
 
     void sendTo(@NotNull SenderT type, @NotNull Function<String, String> parser);
 
-    default void sendArgs(@NotNull Collection<SenderT> senders, @NotNull Function<String, String> parser) {
+    default void sendTo(@NotNull Collection<SenderT> senders, @NotNull Function<String, String> parser) {
         sendTo(senders, parser, (player, s) -> Text.of(s).parse(player).color().getString());
     }
 
     default void sendTo(@NotNull Collection<SenderT> senders, @NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
+        for (SenderT sender : senders) {
+            sendTo(sender, parser);
+        }
     }
 
     default @Nullable Object get(@NotNull String field) {

@@ -1,7 +1,8 @@
 package com.saicone.mcode.module.script.action;
 
-import com.saicone.mcode.module.lang.DisplayLoader;
+import com.saicone.mcode.Platform;
 import com.saicone.mcode.module.lang.Display;
+import com.saicone.mcode.module.lang.Displays;
 import com.saicone.mcode.module.script.Action;
 import com.saicone.mcode.module.script.EvalUser;
 import org.jetbrains.annotations.NotNull;
@@ -12,7 +13,7 @@ public class BroadcastDisplay extends Action {
     public static final Builder<BroadcastDisplay> BUILDER = new Builder<>("(?i)broadcast(-?display)?") {
         @Override
         public @Nullable BroadcastDisplay build(@Nullable Object object) {
-            final Display<Object> display = DisplayLoader.loadDisplay(object);
+            final Display<Object> display = Displays.loadOrNull(object);
             if (display == null) {
                 return null;
             }
@@ -33,6 +34,6 @@ public class BroadcastDisplay extends Action {
 
     @Override
     public void accept(@NotNull EvalUser user) {
-        display.sendArgs(s -> user.parse(s, true));
+        display.sendTo(Platform.getInstance().getOnlinePlayers(), s -> user.parse(s, true));
     }
 }

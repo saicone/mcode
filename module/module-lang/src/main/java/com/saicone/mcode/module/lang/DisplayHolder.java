@@ -1,0 +1,88 @@
+package com.saicone.mcode.module.lang;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
+@FunctionalInterface
+public interface DisplayHolder<SenderT> {
+
+    @NotNull
+    Collection<DisplayLoader<SenderT>> getDisplayLoaders();
+
+    @NotNull
+    default DisplayLoader<SenderT> getDisplayLoader(@NotNull String name) {
+        final DisplayLoader<SenderT> loader = getDisplayLoaderOrNull(name);
+        return loader != null ? loader : DisplayLoader.empty();
+    }
+
+    @Nullable
+    default DisplayLoader<SenderT> getDisplayLoaderOrNull(@NotNull String name) {
+        for (DisplayLoader<SenderT> loader : getDisplayLoaders()) {
+            if (loader.matches(name)) {
+                return loader;
+            }
+        }
+        return null;
+    }
+
+    @NotNull
+    default Display<SenderT> loadDisplay(@Nullable Object object) {
+        final Display<SenderT> display = loadDisplayOrNull(object);
+        return display != null ? display : Display.empty();
+    }
+
+    @NotNull
+    default Display<SenderT> loadDisplay(@NotNull String name, @Nullable Object object) {
+        final Display<SenderT> display = loadDisplayOrNull(name, object);
+        return display != null ? display : Display.empty();
+    }
+
+    @Nullable
+    default Display<SenderT> loadDisplayOrNull(@Nullable Object object) {
+        return loadDisplayType(object, Display.DEFAULT_TYPE);
+    }
+
+    @Nullable
+    default Display<SenderT> loadDisplayOrNull(@NotNull String name, @Nullable Object object) {
+        final DisplayLoader<SenderT> loader = getDisplayLoaderOrNull(name);
+        if (loader == null) {
+            return null;
+        }
+        return loader.load(object);
+    }
+
+    @Nullable
+    default Display<SenderT> loadDisplayType(@Nullable Object object, @NotNull String defaultType) {
+        if (object == null) {
+            return null;
+        }
+
+        if (object instanceof Iterable) {
+            final List<Display<SenderT>> list = new ArrayList<>();
+            for (Object o : (Iterable<?>) object) {
+                final Display<SenderT> display = loadDisplayOrNull(o);
+                if (display != null) {
+                    list.add(display);
+                }
+            }
+            if (list.isEmpty()) {
+                return null;
+            }
+            return new DisplayList<>(list);
+        }
+
+        if (object instanceof Map) {
+            for (var entry : ((Map<?, ?>) object).entrySet()) {
+                if (String.valueOf(entry.getKey()).equalsIgnoreCase("type")) {
+                    return loadDisplayOrNull(String.valueOf(entry.getValue()), object);
+                }
+            }
+        }
+        return loadDisplayOrNull(defaultType, object);
+    }
+}

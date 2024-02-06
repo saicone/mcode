@@ -15,7 +15,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
+public abstract class LangLoader<SenderT, PlayerT extends SenderT> implements DisplayHolder<SenderT> {
 
     protected static final String DEFAULT_DISPLAY = "text";
 
@@ -88,7 +88,7 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
 
     protected void loadDisplays(@NotNull String name, @NotNull File file) {
         for (var entry : getObjects(file).entrySet()) {
-            final Display<SenderT> display = loadDisplay(entry.getValue());
+            final Display<SenderT> display = loadDisplayOrNull(entry.getValue());
             if (display != null) {
                 if (!displays.containsKey(name)) {
                     displays.put(name, new HashMap<>());
@@ -97,46 +97,6 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
                 map.put(entry.getKey(), display);
             }
         }
-    }
-
-    @Nullable
-    protected Display<SenderT> loadDisplay(@Nullable Object object) {
-        return loadDisplay(getDisplayLoaders(), object, getDefaultDisplay());
-    }
-
-    @Nullable
-    public static <T> Display<T> loadDisplay(@NotNull Iterable<DisplayLoader<T>> loaders, @Nullable Object object) {
-        return loadDisplay(loaders, object, DEFAULT_DISPLAY);
-    }
-
-    @Nullable
-    public static <T> Display<T> loadDisplay(@NotNull Iterable<DisplayLoader<T>> loaders, @Nullable Object object, @NotNull String defaultDisplay) {
-        if (object == null) {
-            return null;
-        }
-
-        if (object instanceof Iterable) {
-            final List<Display<T>> list = new ArrayList<>();
-            for (Object o : (Iterable<?>) object) {
-                final Display<T> display = loadDisplay(loaders, o);
-                if (display != null) {
-                    list.add(display);
-                }
-            }
-            if (list.isEmpty()) {
-                return null;
-            }
-            return new DisplayList<>(list);
-        }
-
-        if (object instanceof Map) {
-            for (var entry : ((Map<?, ?>) object).entrySet()) {
-                if (String.valueOf(entry.getKey()).equalsIgnoreCase("type")) {
-                    return getDisplayLoader(loaders, String.valueOf(entry.getValue())).load(object);
-                }
-            }
-        }
-        return getDisplayLoader(loaders, defaultDisplay).load(object);
     }
 
     private void computePaths() {
@@ -236,21 +196,7 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
     }
 
     @NotNull
-    public DisplayLoader<SenderT> getDisplayLoader(@NotNull String id) {
-        return getDisplayLoader(getDisplayLoaders(), id);
-    }
-
-    @NotNull
-    public static <T> DisplayLoader<T> getDisplayLoader(@NotNull Iterable<DisplayLoader<T>> loaders, @NotNull String id) {
-        for (DisplayLoader<T> loader : loaders) {
-            if (loader.matches(id)) {
-                return loader;
-            }
-        }
-        return DisplayLoader.of();
-    }
-
-    @NotNull
+    @Override
     public List<DisplayLoader<SenderT>> getDisplayLoaders() {
         return displayLoaders;
     }
@@ -510,7 +456,7 @@ public abstract class LangLoader<SenderT, PlayerT extends SenderT> {
     }
 
     public void sendToAll(@NotNull String language, @NotNull String path, @NotNull Function<String, String> parser) {
-        getDisplay(language, path).sendArgs(getPlayers(), parser);
+        getDisplay(language, path).sendTo(getPlayers(), parser);
     }
 
     public void sendToAll(@NotNull String path, @NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
