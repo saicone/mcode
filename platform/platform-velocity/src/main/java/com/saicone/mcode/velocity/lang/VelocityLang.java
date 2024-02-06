@@ -3,6 +3,7 @@ package com.saicone.mcode.velocity.lang;
 import com.moandjiezana.toml.Toml;
 import com.saicone.mcode.module.lang.AdventureLang;
 import com.saicone.mcode.module.lang.AbstractLang;
+import com.saicone.mcode.module.lang.Displays;
 import com.saicone.mcode.util.DMap;
 import com.saicone.mcode.velocity.VelocityPlatform;
 import com.velocitypowered.api.command.CommandSource;
@@ -25,12 +26,21 @@ import java.util.Map;
 public class VelocityLang extends AbstractLang<CommandSource, Player> {
 
     // Loadable display types
+    public static final AdventureLang.ActionbarLoader<CommandSource> ACTIONBAR = new AdventureLang.ActionbarLoader<>();
+    public static final AdventureLang.BossBarLoader<CommandSource> BOSSBAR = new AdventureLang.BossBarLoader<>();
+    public static final AdventureLang.MiniMessageLoader<CommandSource> MINIMESSAGE = new AdventureLang.MiniMessageLoader<>();
+    public static final AdventureLang.SoundLoader<CommandSource> SOUND = new AdventureLang.SoundLoader<>();
     public static final AdventureLang.TextLoader<CommandSource> TEXT = new AdventureLang.TextLoader<>();
     public static final AdventureLang.TitleLoader<CommandSource> TITLE = new AdventureLang.TitleLoader<>();
-    public static final AdventureLang.ActionbarLoader<CommandSource> ACTIONBAR = new AdventureLang.ActionbarLoader<>();
-    public static final AdventureLang.SoundLoader<CommandSource> SOUND = new AdventureLang.SoundLoader<>();
-    public static final AdventureLang.MiniMessageLoader<CommandSource> MINIMESSAGE = new AdventureLang.MiniMessageLoader<>();
-    public static final AdventureLang.BossBarLoader<CommandSource> BOSSBAR = new AdventureLang.BossBarLoader<>();
+
+    static {
+        Displays.register("actionbar", ACTIONBAR);
+        Displays.register("bossbar", BOSSBAR);
+        Displays.register("minimessage", MINIMESSAGE);
+        Displays.register("sound", SOUND);
+        Displays.register("text", TEXT);
+        Displays.register("title", TITLE);
+    }
 
     private final ProxyServer proxy;
     private final Object plugin;

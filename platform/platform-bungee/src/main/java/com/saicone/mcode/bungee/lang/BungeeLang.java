@@ -1,6 +1,7 @@
 package com.saicone.mcode.bungee.lang;
 
 import com.saicone.mcode.module.lang.AbstractLang;
+import com.saicone.mcode.module.lang.Displays;
 import com.saicone.mcode.module.lang.display.ActionbarDisplay;
 import com.saicone.mcode.module.lang.display.TextDisplay;
 import com.saicone.mcode.module.lang.display.TitleDisplay;
@@ -29,9 +30,15 @@ import java.util.logging.Level;
 
 public class BungeeLang extends AbstractLang<CommandSender, ProxiedPlayer> {
 
+    public static final ActionbarLoader ACTIONBAR = new ActionbarLoader();
     public static final TextLoader TEXT = new TextLoader();
     public static final TitleLoader TITLE = new TitleLoader();
-    public static final ActionbarLoader ACTIONBAR = new ActionbarLoader();
+
+    static {
+        Displays.register("actionbar", ACTIONBAR);
+        Displays.register("text", TEXT);
+        Displays.register("title", TITLE);
+    }
 
     private final Plugin plugin;
 

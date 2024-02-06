@@ -4,6 +4,7 @@ import com.google.common.base.Enums;
 import com.saicone.mcode.bukkit.util.ServerInstance;
 import com.saicone.mcode.module.lang.Display;
 import com.saicone.mcode.module.lang.AbstractLang;
+import com.saicone.mcode.module.lang.Displays;
 import com.saicone.mcode.module.lang.display.*;
 import com.saicone.mcode.util.DMap;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -31,11 +32,28 @@ import java.util.logging.Level;
 public class BukkitLang extends AbstractLang<CommandSender, Player> {
 
     // Loadable display types
+    public static final ActionbarLoader ACTIONBAR = new ActionbarLoader();
+    public static final BossbarLoader BOSSBAR = new BossbarLoader();
+    public static final SoundLoader SOUND = new SoundLoader();
     public static final TextLoader TEXT = new TextLoader();
     public static final TitleLoader TITLE = new TitleLoader();
-    public static final ActionbarLoader ACTIONBAR = new ActionbarLoader();
-    public static final SoundLoader SOUND = new SoundLoader();
-    public static final BossbarLoader BOSSBAR = new BossbarLoader();
+
+    static {
+        boolean register = true;
+        if (ServerInstance.isPaper && ServerInstance.verNumber >= 16 && ServerInstance.release >= 3) {
+            try {
+                Class.forName("com.saicone.mcode.bukkit.lang.PaperLang");
+                register = false;
+            } catch (Throwable ignored) { }
+        }
+        if (register) {
+            Displays.register("actionbar", ACTIONBAR);
+            Displays.register("bossbar", BOSSBAR);
+            Displays.register("sound", SOUND);
+            Displays.register("text", TEXT);
+            Displays.register("title", TITLE);
+        }
+    }
 
     // Instance parameters
     private final Plugin plugin;
