@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 @FunctionalInterface
-public interface DisplayHolder<SenderT> {
+public interface DisplaySupplier<SenderT> {
 
     @NotNull
     Collection<DisplayLoader<SenderT>> getDisplayLoaders();

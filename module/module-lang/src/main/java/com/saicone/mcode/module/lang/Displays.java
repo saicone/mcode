@@ -11,7 +11,7 @@ import java.util.Map;
 public class Displays {
 
     private static final Map<String, DisplayLoader<Object>> LOADER_TYPES = new HashMap<>();
-    private static final DisplayHolder<Object> DISPLAY_HOLDER = LOADER_TYPES::values;
+    private static final DisplaySupplier<Object> DISPLAY_HOLDER = LOADER_TYPES::values;
 
     Displays() {
     }

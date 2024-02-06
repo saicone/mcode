@@ -15,7 +15,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public abstract class LangLoader<SenderT, PlayerT extends SenderT> implements DisplayHolder<SenderT> {
+public abstract class LangLoader<SenderT, PlayerT extends SenderT> implements DisplaySupplier<SenderT> {
 
     protected static final String DEFAULT_DISPLAY = "text";
 
