@@ -2,6 +2,7 @@ package com.saicone.mcode.module.lang;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.UnmodifiableView;
 
 import java.util.HashMap;
 import java.util.List;
@@ -26,6 +27,7 @@ public class Displays {
         return (DisplayLoader<T>) DISPLAY_HOLDER.getDisplayLoaderOrNull(name);
     }
 
+    @UnmodifiableView
     @NotNull
     public static List<DisplayLoader<Object>> loaders() {
         return List.copyOf(LOADER_TYPES.values());

@@ -16,6 +16,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class AdventureLang {
 
@@ -143,81 +145,26 @@ public class AdventureLang {
         }
     }
 
-    public static class BossbarLoader<T> extends BossbarDisplay.Loader<T> {
-        public BossbarLoader() {
+    public static class BossBarLoader<T> extends BossBarDisplay.Loader<T> {
+        public BossBarLoader() {
             this(false);
         }
 
-        public BossbarLoader(boolean register) {
+        public BossBarLoader(boolean register) {
             super(register);
         }
 
         @Override
-        protected BossbarDisplay.Builder<T> newBuilder(float progress, @NotNull String color, @NotNull String overlay, long stay) {
-            BossBar.Color barColor;
-            try {
-                barColor = BossBar.Color.valueOf(color);
-            } catch (IllegalArgumentException e) {
-                barColor = BossBar.Color.RED;
-            }
-            BossBar.Overlay barOverlay;
-            try {
-                barOverlay = BossBar.Overlay.valueOf(overlay);
-            } catch (IllegalArgumentException e) {
-                barOverlay = BossBar.Overlay.PROGRESS;
-            }
-            return new BossbarBuilder<>(progress, barColor, barOverlay, stay) {
-                @Override
-                protected void later(@NotNull Runnable runnable, long ticks) {
-                    BossbarLoader.this.later(runnable, ticks);
-                }
-            };
+        protected BossBarDisplay.Holder newHolder(float progress, @NotNull String text, @NotNull BossBarDisplay.Color color, @NotNull BossBarDisplay.Division division, @NotNull Set<BossBarDisplay.Flag> flags) {
+            final BossBar bossBar = BossBar.bossBar(
+                    LegacyComponentSerializer.legacyAmpersand().deserialize(text),
+                    progress,
+                    BossBar.Color.values()[color.ordinal()],
+                    BossBar.Overlay.values()[division.ordinal()],
+                    flags.isEmpty() ? Set.of() : flags.stream().map(flag -> BossBar.Flag.values()[flag.ordinal()]).collect(Collectors.toSet())
+            );
+            return new AdventureBossBar(bossBar);
         }
-
-        protected void later(@NotNull Runnable runnable, long ticks) {
-            final long millis = ticks * 1000 / 20000;
-            // Dirty delay, must be overridden
-            new Thread(() -> {
-                try {
-                    Thread.sleep(millis);
-                    runnable.run();
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            }).start();
-        }
-    }
-
-    public static abstract class BossbarBuilder<T> extends BossbarDisplay.Builder<T> {
-
-        private final BossBar.Color color;
-        private final BossBar.Overlay overlay;
-
-        public BossbarBuilder(float progress, @NotNull BossBar.Color color, @NotNull BossBar.Overlay overlay, long stay) {
-            super(progress, stay);
-            this.color = color;
-            this.overlay = overlay;
-        }
-
-        @Override
-        public @Nullable Object get(@NotNull String field) {
-            if (field.equals("color")) {
-                return color.name();
-            } else if (field.equals("style") || field.equals("overlay")) {
-                return overlay.name();
-            } else {
-                return super.get(field);
-            }
-        }
-
-        @Override
-        public void sendTo(@NotNull T type, @NotNull String text) {
-            final BossBar bossBar = BossBar.bossBar(LegacyComponentSerializer.legacyAmpersand().deserialize(text), progress, color, overlay);
-            ((Audience) type).showBossBar(bossBar);
-            later(() -> ((Audience) type).hideBossBar(bossBar), stay);
-        }
-
-        protected abstract void later(@NotNull Runnable runnable, long ticks);
     }
 
     public static class MiniMessageLoader<T> extends MiniMessageDisplay.Loader<T> {

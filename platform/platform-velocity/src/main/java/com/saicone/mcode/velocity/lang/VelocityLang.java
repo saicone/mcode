@@ -18,7 +18,6 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
 import java.io.*;
-import java.time.Duration;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,18 +30,11 @@ public class VelocityLang extends AbstractLang<CommandSource, Player> {
     public static final AdventureLang.ActionbarLoader<CommandSource> ACTIONBAR = new AdventureLang.ActionbarLoader<>();
     public static final AdventureLang.SoundLoader<CommandSource> SOUND = new AdventureLang.SoundLoader<>();
     public static final AdventureLang.MiniMessageLoader<CommandSource> MINIMESSAGE = new AdventureLang.MiniMessageLoader<>();
+    public static final AdventureLang.BossBarLoader<CommandSource> BOSSBAR = new AdventureLang.BossBarLoader<>();
 
     private final ProxyServer proxy;
     private final Object plugin;
     private final Logger logger;
-
-    private final AdventureLang.BossbarLoader<CommandSource> bossbar = new AdventureLang.BossbarLoader<>() {
-        @Override
-        protected void later(@NotNull Runnable runnable, long ticks) {
-            final long millis = ticks * 1000 / 20000;
-            proxy.getScheduler().buildTask(getPlugin(), runnable).delay(Duration.ofMillis(millis)).schedule();
-        }
-    };
 
     public VelocityLang(@NotNull Object plugin, @NotNull Logger logger, @NotNull Class<?>... langProviders) {
         this(VelocityPlatform.get().getProxy(), plugin, logger, langProviders);

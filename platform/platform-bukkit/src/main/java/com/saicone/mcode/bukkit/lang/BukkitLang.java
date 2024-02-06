@@ -13,6 +13,7 @@ import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarFlag;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.command.CommandSender;
@@ -24,10 +25,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 
 public class BukkitLang extends AbstractLang<CommandSender, Player> {
@@ -37,12 +35,11 @@ public class BukkitLang extends AbstractLang<CommandSender, Player> {
     public static final TitleLoader TITLE = new TitleLoader();
     public static final ActionbarLoader ACTIONBAR = new ActionbarLoader();
     public static final SoundLoader SOUND = new SoundLoader();
+    public static final BossbarLoader BOSSBAR = new BossbarLoader();
 
     // Instance parameters
     private final Plugin plugin;
     private final boolean useConfig;
-
-    private final BossbarLoader bossbar = new BossbarLoader();
 
     @NotNull
     public static BukkitLang of(@NotNull Plugin plugin, @NotNull Class<?>... langProviders) {
@@ -65,11 +62,6 @@ public class BukkitLang extends AbstractLang<CommandSender, Player> {
         super(langProviders);
         this.plugin = plugin;
         this.useConfig = useConfig;
-    }
-
-    @NotNull
-    public BossbarLoader bossbar() {
-        return bossbar;
     }
 
     @Override
@@ -333,49 +325,26 @@ public class BukkitLang extends AbstractLang<CommandSender, Player> {
         }
     }
 
-    public class BossbarLoader extends BossbarDisplay.Loader<CommandSender> {
+    public static class BossbarLoader extends BossBarDisplay.Loader<CommandSender> {
         public BossbarLoader() {
             super(false);
         }
 
         @Override
-        protected BossbarDisplay.Builder<CommandSender> newBuilder(float progress, @NotNull String color, @NotNull String style, long stay) {
-            final BarColor barColor = Enums.getIfPresent(BarColor.class, color).or(BarColor.RED);
-            final BarStyle barStyle = Enums.getIfPresent(BarStyle.class, style).or(BarStyle.SOLID);
-            return new BossbarBuilder(progress, barColor, barStyle, stay);
-        }
-    }
-
-    public class BossbarBuilder extends BossbarDisplay.Builder<CommandSender> {
-
-        private final BarColor color;
-        private final BarStyle style;
-
-        public BossbarBuilder(float progress, BarColor color, BarStyle style, long stay) {
-            super(progress, stay);
-            this.color = color;
-            this.style = style;
-        }
-
-        @Override
-        public @Nullable Object get(@NotNull String field) {
-            if (field.equals("color")) {
-                return color.name();
-            } else if (field.equals("style") || field.equals("overlay")) {
-                return style.name();
-            } else {
-                return super.get(field);
+        protected BossBarDisplay.Holder newHolder(float progress, @NotNull String text, @NotNull BossBarDisplay.Color color, @NotNull BossBarDisplay.Division division, @NotNull Set<BossBarDisplay.Flag> flags) {
+            final BarFlag[] values = new BarFlag[flags.size()];
+            int i = 0;
+            for (BossBarDisplay.Flag flag : flags) {
+                values[i] = BarFlag.values()[flag.ordinal()];
             }
-        }
-
-        @Override
-        public void sendTo(@NotNull CommandSender sender, @NotNull String text) {
-            if (sender instanceof Player) {
-                final BossBar bossBar = Bukkit.createBossBar(text, color, style);
-                bossBar.setProgress(progress);
-                bossBar.addPlayer((Player) sender);
-                Bukkit.getScheduler().runTaskLater(plugin, () -> bossBar.removePlayer((Player) sender), stay);
-            }
+            final BossBar bossBar = Bukkit.createBossBar(
+                    text,
+                    BarColor.values()[color.ordinal()],
+                    BarStyle.values()[division.ordinal()],
+                    values
+            );
+            bossBar.setProgress(progress);
+            return new BukkitBossBar(bossBar);
         }
     }
 }
