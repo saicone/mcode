@@ -4,6 +4,7 @@ import com.saicone.mcode.module.lang.display.*;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.key.Key;
+import net.kyori.adventure.nbt.api.BinaryTagHolder;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
@@ -15,18 +16,12 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 public class AdventureLang {
 
     public static class TextLoader<T> extends TextDisplay.Loader<T> {
-        @Override
-        protected @Nullable Object parseAction(@NotNull String s) {
-            return TextDisplay.Event.of(s);
-        }
-
         @Override
         protected void sendText(@NotNull T type, @NotNull String text) {
             for (String s : text.split("\n")) {
@@ -35,7 +30,7 @@ public class AdventureLang {
         }
 
         @Override
-        protected TextDisplay.Builder<T> newBuilder() {
+        protected TextDisplay.@NotNull Builder<T> newBuilder() {
             return new TextBuilder<>();
         }
     }
@@ -57,37 +52,57 @@ public class AdventureLang {
         }
 
         @Override
-        public void append(@NotNull String s, @NotNull Map<Object, String> actions) {
+        public void append(@NotNull String s, @NotNull Set<TextDisplay.Event> events) {
             final TextComponent.Builder component = Component.text();
             component.append(LegacyComponentSerializer.legacyAmpersand().deserialize(s));
-            for (var entry : actions.entrySet()) {
-                if (!(entry.getKey() instanceof TextDisplay.Event)) {
-                    continue;
-                }
-                switch ((TextDisplay.Event) entry.getKey()) {
-                    case SHOW_TEXT:
-                        component.hoverEvent(HoverEvent.showText(LegacyComponentSerializer.legacyAmpersand().deserialize(entry.getValue())));
-                        break;
-                    case OPEN_URL:
-                        component.clickEvent(ClickEvent.openUrl(entry.getValue()));
-                        break;
-                    case OPEN_FILE:
-                        component.clickEvent(ClickEvent.openFile(entry.getValue()));
-                        break;
-                    case RUN_COMMAND:
-                        component.clickEvent(ClickEvent.runCommand(entry.getValue()));
-                        break;
-                    case SUGGEST_COMMAND:
-                        component.clickEvent(ClickEvent.suggestCommand(entry.getValue()));
-                        break;
-                    case CHANGE_PAGE:
-                        component.clickEvent(ClickEvent.changePage(entry.getValue()));
-                        break;
-                    case COPY_TO_CLIPBOARD:
-                        component.clickEvent(ClickEvent.copyToClipboard(entry.getValue()));
-                        break;
-                    default:
-                        break;
+            for (TextDisplay.Event event : events) {
+                if (event.getAction().isClick()) {
+                    switch (event.getAction().click()) {
+                        case OPEN_URL:
+                            component.clickEvent(ClickEvent.openUrl(event.getString()));
+                            break;
+                        case OPEN_FILE:
+                            component.clickEvent(ClickEvent.openFile(event.getString()));
+                            break;
+                        case RUN_COMMAND:
+                            component.clickEvent(ClickEvent.runCommand(event.getString()));
+                            break;
+                        case SUGGEST_COMMAND:
+                            component.clickEvent(ClickEvent.suggestCommand(event.getString()));
+                            break;
+                        case CHANGE_PAGE:
+                            component.clickEvent(ClickEvent.changePage(event.getString()));
+                            break;
+                        case COPY_TO_CLIPBOARD:
+                            component.clickEvent(ClickEvent.copyToClipboard(event.getString()));
+                            break;
+                        default:
+                            break;
+                    }
+                } else if (event.getAction().isHover()) {
+                    switch (event.getAction().hover()) {
+                        case SHOW_TEXT:
+                            component.hoverEvent(HoverEvent.showText(LegacyComponentSerializer.legacyAmpersand().deserialize(event.getString())));
+                            break;
+                        case SHOW_ITEM:
+                            final String tag = event.getItemTag();
+                            component.hoverEvent(HoverEvent.showItem(
+                                    Key.key(event.getItemId()),
+                                    event.getItemCount(),
+                                    tag == null ? null : BinaryTagHolder.binaryTagHolder(tag)
+                            ));
+                            break;
+                        case SHOW_ENTITY:
+                            final String name = event.getEntityName();
+                            component.hoverEvent(HoverEvent.showEntity(
+                                    Key.key(event.getEntityType()),
+                                    event.getEntityUniqueId(),
+                                    name == null ? null : LegacyComponentSerializer.legacyAmpersand().deserialize(name)
+                            ));
+                            break;
+                        default:
+                            break;
+                    }
                 }
             }
             builder.append(component.build());
@@ -103,9 +118,9 @@ public class AdventureLang {
         @Override
         protected void sendTitle(@NotNull T type, @NotNull String title, @NotNull String subtitle, int fadeIn, int stay, int fadeOut) {
             final Title.Times times = Title.Times.times(
-                    Duration.ofMillis((long) fadeIn * 1000 / 20000),
-                    Duration.ofMillis((long) stay * 1000 / 20000),
-                    Duration.ofMillis((long) fadeOut * 1000 / 20000)
+                    Duration.ofMillis((long) fadeIn * (1000 / 20)),
+                    Duration.ofMillis((long) stay * (1000 / 20)),
+                    Duration.ofMillis((long) fadeOut * (1000 / 20))
             );
             final Title finalTitle = Title.title(
                     LegacyComponentSerializer.legacyAmpersand().deserialize(title),

@@ -3,7 +3,6 @@ package com.saicone.mcode.module.lang;
 import com.saicone.mcode.util.DMap;
 import com.saicone.mcode.util.Strings;
 import org.intellij.lang.annotations.Language;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -48,6 +47,10 @@ public class DisplayLoader<SenderT> {
         return defaults;
     }
 
+    public boolean matches(@NotNull String s) {
+        return pattern.matcher(s).matches();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -66,40 +69,6 @@ public class DisplayLoader<SenderT> {
         return result;
     }
 
-    @Contract("null, _ -> param2")
-    protected Integer asInt(@Nullable Object obj, Integer def) {
-        if (obj instanceof Integer) {
-            return (Integer) obj;
-        }
-        try {
-            return Integer.parseInt(String.valueOf(obj));
-        } catch (NumberFormatException e) {
-            return def;
-        }
-    }
-
-    @Contract("null, _ -> param2")
-    protected Boolean asBoolean(@Nullable Object obj, Boolean def) {
-        if (obj instanceof Boolean) {
-            return (Boolean) obj;
-        }
-        switch (String.valueOf(obj).trim().toLowerCase()) {
-            case "true":
-            case "yes":
-            case "1":
-                return true;
-            case "false":
-            case "no":
-            case "0":
-                return false;
-            default:
-                return def;
-        }
-    }
-
-    public boolean matches(@NotNull String s) {
-        return pattern.matcher(s).matches();
-    }
 
     @Nullable
     @SuppressWarnings("unchecked")
@@ -172,7 +141,16 @@ public class DisplayLoader<SenderT> {
                 return value;
             }
         } else if (value instanceof Boolean) {
-            return asBoolean(s, (Boolean) value);
+            switch (s.trim().toLowerCase()) {
+                case "true":
+                case "yes":
+                    return true;
+                case "false":
+                case "no":
+                    return false;
+                default:
+                    return value;
+            }
         }
         return s;
     }

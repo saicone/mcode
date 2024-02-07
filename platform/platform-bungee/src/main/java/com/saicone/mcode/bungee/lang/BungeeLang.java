@@ -8,10 +8,9 @@ import com.saicone.mcode.module.lang.display.TitleDisplay;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ProxyServer;
-import net.md_5.bungee.api.chat.ClickEvent;
-import net.md_5.bungee.api.chat.ComponentBuilder;
-import net.md_5.bungee.api.chat.HoverEvent;
-import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.api.chat.*;
+import net.md_5.bungee.api.chat.hover.content.Entity;
+import net.md_5.bungee.api.chat.hover.content.Item;
 import net.md_5.bungee.api.chat.hover.content.Text;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Plugin;
@@ -26,6 +25,7 @@ import java.io.*;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 
 public class BungeeLang extends AbstractLang<CommandSender, ProxiedPlayer> {
@@ -157,11 +157,6 @@ public class BungeeLang extends AbstractLang<CommandSender, ProxiedPlayer> {
 
     public static class TextLoader extends TextDisplay.Loader<CommandSender> {
         @Override
-        protected @Nullable Object parseAction(@NotNull String s) {
-            return null;
-        }
-
-        @Override
         protected void sendText(@NotNull CommandSender sender, @NotNull String text) {
             for (String line : text.split("\n")) {
                 sender.sendMessage(TextComponent.fromLegacyText(line));
@@ -169,7 +164,7 @@ public class BungeeLang extends AbstractLang<CommandSender, ProxiedPlayer> {
         }
 
         @Override
-        protected TextDisplay.Builder<CommandSender> newBuilder() {
+        protected TextDisplay.@NotNull Builder<CommandSender> newBuilder() {
             return new TextBuilder();
         }
     }
@@ -190,15 +185,35 @@ public class BungeeLang extends AbstractLang<CommandSender, ProxiedPlayer> {
         }
 
         @Override
-        public void append(@NotNull String s, @NotNull Map<Object, String> actions) {
+        public void append(@NotNull String s, @NotNull Set<TextDisplay.Event> events) {
             final ComponentBuilder component = new ComponentBuilder();
             component.append(s);
-            for (var entry : actions.entrySet()) {
-                final Object action = entry.getKey();
-                if (action instanceof HoverEvent.Action) {
-                    builder.event(new HoverEvent((HoverEvent.Action) action, new Text(entry.getValue())));
-                } else if (action instanceof ClickEvent.Action) {
-                    builder.event(new ClickEvent((ClickEvent.Action) action, entry.getValue()));
+            for (TextDisplay.Event event : events) {
+                if (event.getAction().isClick()) {
+                    builder.event(new ClickEvent(ClickEvent.Action.values()[event.getAction().ordinal()], event.getString()));
+                } else if (event.getAction().isHover()) {
+                    switch (event.getAction().hover()) {
+                        case SHOW_TEXT:
+                            builder.event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text(event.getString())));
+                            break;
+                        case SHOW_ITEM:
+                            final String tag = event.getItemTag();
+                            builder.event(new HoverEvent(HoverEvent.Action.SHOW_ITEM, new Item(
+                                    event.getItemId(),
+                                    event.getItemCount(),
+                                    tag == null ? null : ItemTag.ofNbt(tag)
+                            )));
+                            break;
+                        case SHOW_ENTITY:
+                            builder.event(new HoverEvent(HoverEvent.Action.SHOW_ENTITY, new Entity(
+                                    event.getEntityType(),
+                                    event.getEntityUniqueId().toString(),
+                                    net.md_5.bungee.api.chat.TextComponent.fromLegacyText(event.getEntityName())[0]
+                            )));
+                            break;
+                        default:
+                            break;
+                    }
                 }
             }
             builder.append(component.create());

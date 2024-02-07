@@ -11,17 +11,18 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public abstract class TextDisplay<SenderT> implements Display<SenderT> {
 
     private final String text;
     private final int centerWidth;
-    private final Map<String, Map<Object, String>> actions;
+    private final Map<String, Set<Event>> events;
 
-    public TextDisplay(@NotNull String text, int centerWidth, @NotNull Map<String, Map<Object, String>> actions) {
+    public TextDisplay(@NotNull String text, int centerWidth, @NotNull Map<String, Set<Event>> events) {
         this.text = text;
         this.centerWidth = centerWidth;
-        this.actions = actions;
+        this.events = events;
     }
 
     @Override
@@ -49,48 +50,44 @@ public abstract class TextDisplay<SenderT> implements Display<SenderT> {
     }
 
     @NotNull
-    public Map<String, Map<Object, String>> getActions() {
-        return actions;
+    public Map<String, Set<Event>> getEvents() {
+        return events;
     }
 
     @NotNull
-    public Map<Object, String> getActions(@NotNull String id) {
-        return actions.getOrDefault(id, Map.of());
+    public Set<Event> getEvents(@NotNull String id) {
+        return events.getOrDefault(id, Set.of());
     }
 
     @NotNull
-    public Map<String, Map<Object, String>> getParsedActions(@NotNull Function<String, String> parse) {
-        final Map<String, Map<Object, String>> map = new HashMap<>();
-        for (var entry : actions.entrySet()) {
-            final Map<Object, String> value = new HashMap<>();
-            for (var valueEntry : entry.getValue().entrySet()) {
-                value.put(valueEntry.getKey(), parse.apply(valueEntry.getValue()));
-            }
-            map.put(entry.getKey(), value);
+    public Map<String, Set<Event>> getParsedEvents(@NotNull Function<String, String> parser) {
+        final Map<String, Set<Event>> map = new HashMap<>();
+        for (var entry : events.entrySet()) {
+            map.put(entry.getKey(), entry.getValue().stream().map(event -> event.parse(parser)).collect(Collectors.toSet()));
         }
         return map;
     }
 
     @Override
     public void sendTo(@NotNull SenderT type, @NotNull Function<String, String> parser) {
-        if (actions.isEmpty()) {
+        if (events.isEmpty()) {
             sendParsed(type, parser.apply(text));
         } else {
-            sendParsed(type, parser.apply(text), getParsedActions(parser));
+            sendParsed(type, parser.apply(text), getParsedEvents(parser));
         }
     }
 
     @Override
     public void sendTo(@NotNull Collection<SenderT> senders, @NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
         final String text = parser.apply(this.text);
-        if (actions.isEmpty()) {
+        if (events.isEmpty()) {
             for (SenderT player : senders) {
                 sendParsed(player, playerParser.apply(player, text));
             }
         } else {
-            final Map<String, Map<Object, String>> actions = getParsedActions(parser);
+            final Map<String, Set<Event>> events = getParsedEvents(parser);
             for (SenderT player : senders) {
-                sendParsed(player, playerParser.apply(player, text), actions);
+                sendParsed(player, playerParser.apply(player, text), events);
             }
         }
     }
@@ -103,7 +100,7 @@ public abstract class TextDisplay<SenderT> implements Display<SenderT> {
         }
     }
 
-    private void sendParsed(@NotNull SenderT type, @NotNull String text, @NotNull Map<String, Map<Object, String>> actions) {
+    private void sendParsed(@NotNull SenderT type, @NotNull String text, @NotNull Map<String, Set<Event>> events) {
         final Builder<SenderT> builder = newBuilder();
         Strings.findInside(text, "[action=", "[/action]", (s, found) -> {
             if (found) {
@@ -111,7 +108,7 @@ public abstract class TextDisplay<SenderT> implements Display<SenderT> {
                 if (index > 0 && index + 1 < s.length()) {
                     final String str = s.substring(index + 1);
                     builder.sum(MStrings.getFontLength(str));
-                    builder.append(str, actions.getOrDefault(s.substring(0, index), Map.of()));
+                    builder.append(str, events.getOrDefault(s.substring(0, index), Set.of()));
                 } else {
                     builder.append("[action=" + s + "[/action]");
                 }
@@ -140,7 +137,7 @@ public abstract class TextDisplay<SenderT> implements Display<SenderT> {
 
         public abstract void append(@NotNull String s, boolean before);
 
-        public abstract void append(@NotNull String s, @NotNull Map<Object, String> actions);
+        public abstract void append(@NotNull String s, @NotNull Set<Event> events);
 
         public abstract void sendTo(@NotNull SenderT type);
 
@@ -192,60 +189,84 @@ public abstract class TextDisplay<SenderT> implements Display<SenderT> {
                 } else {
                     centerWidth = -1;
                 }
-            } else if (Boolean.TRUE.equals(asBoolean(centered, null))) {
-                centerWidth = MStrings.CHAT_WIDTH;
             } else {
-                centerWidth = asInt(centered, -1);
+                final String s = String.valueOf(centered);
+                if (Strings.isNumber(s, Integer.class)) {
+                    centerWidth = Integer.parseInt(s);
+                } else if (s.equalsIgnoreCase("true") || s.equalsIgnoreCase("yes")) {
+                    centerWidth = MStrings.CHAT_WIDTH;
+                } else {
+                    centerWidth = -1;
+                }
             }
 
             final DMap actionsMap = map.getChild(m -> m.getRegex("(?i)(chat-?)?actions?"));
             if (actionsMap == null) {
                 return newTextDisplay(text, centerWidth, Map.of());
             }
-            final Map<String, Map<Object, String>> actions = new HashMap<>();
+            final Map<String, Set<Event>> events = new HashMap<>();
             for (Map.Entry<String, Object> entry : actionsMap.entrySet()) {
-                if (!(entry.getValue() instanceof Iterable)) {
-                    actions.put(entry.getKey(), Map.of());
+                if (!(entry.getValue() instanceof Map)) {
+                    events.put(entry.getKey(), Set.of());
                     continue;
                 }
-                final Map<Object, String> types = new HashMap<>();
-                for (Object o : (Iterable<?>) entry.getValue()) {
-                    if (!(o instanceof Map)) {
-                        continue;
+                final Set<Event> types = new HashSet<>();
+                for (var e : ((Map<?, ?>) entry.getValue()).entrySet()) {
+                    final String key = String.valueOf(e.getKey()).trim().toUpperCase().replace('-', '_');
+                    switch (key) {
+                        case "OPEN_URL":
+                        case "OPEN_FILE":
+                        case "RUN_COMMAND":
+                        case "SUGGEST_COMMAND":
+                        case "CHANGE_PAGE":
+                        case "COPY_TO_CLIPBOARD":
+                            types.add(newEvent(ClickAction.of(key), String.valueOf(e.getValue())));
+                            break;
+                        case "SHOW_TEXT":
+                            types.add(newEvent(HoverAction.SHOW_TEXT, String.valueOf(e.getValue())));
+                            break;
+                        case "SHOW_ITEM":
+                        case "SHOW_ENTITY":
+                            types.add(newEvent(HoverAction.of(key), e.getValue()));
+                            break;
+                        default:
+                            break;
                     }
-                    final DMap action = DMap.of((Map<?, ?>) o);
-                    Object type = action.getIgnoreCase("type");
-                    if (type == null) continue;
-
-                    type = parseAction(String.valueOf(type));
-                    if (type == null) continue;
-
-                    Object value = action.getIgnoreCase("value");
-                    if (value == null) continue;
-
-                    if (value instanceof Iterable) {
-                        List<String> strings = new ArrayList<>();
-                        for (Object s : (List<?>) value) {
-                            strings.add(String.valueOf(s).replace("\\n", "\n"));
-                        }
-                        value = String.join("\n", strings);
-                    } else {
-                        value = String.valueOf(value).replace("\\n", "\n");
-                    }
-
-                    types.put(type, (String) value);
                 }
-                actions.put(entry.getKey(), types);
+                events.put(entry.getKey(), types);
             }
-            return newTextDisplay(text, centerWidth, actions);
+            return newTextDisplay(text, centerWidth, events);
         }
-
-        @Nullable
-        protected abstract Object parseAction(@NotNull String s);
 
         protected abstract void sendText(@NotNull SenderT type, @NotNull String text);
 
+        @NotNull
         protected abstract Builder<SenderT> newBuilder();
+
+        @NotNull
+        @SuppressWarnings("unchecked")
+        protected Event newEvent(@NotNull Action action, @NotNull Object value) {
+            if (action.isHover() && action != HoverAction.SHOW_TEXT) {
+                final DMap data;
+                if (value instanceof Map) {
+                    data = new DMap((Map<String, Object>) value);
+                } else {
+                    data = new DMap(Map.of("value", String.valueOf(value)));
+                }
+                final Map<String, Object> map = new HashMap<>();
+                if (action == HoverAction.SHOW_ITEM) {
+                    map.put("id", data.getBy(String::valueOf, m -> m.getRegex("(?i)value|id|material")));
+                    map.put("count", data.getBy(o -> Integer.parseInt(String.valueOf(o)), m -> m.getRegex("(?i)count|amount")));
+                    map.put("tag", data.getBy(String::valueOf, m -> m.getRegex("(?i)tag|nbt")));
+                } else if (action == HoverAction.SHOW_ENTITY) {
+                    map.put("name", data.getBy(String::valueOf, m -> m.getRegex("(?i)(display-?)?name")));
+                    map.put("type", data.getBy(String::valueOf, m -> m.getRegex("(?i)value|type")));
+                    map.put("id", data.getBy(o -> UUID.fromString(String.valueOf(o)), m -> m.getRegex("(?i)id|unique-?id")));
+                }
+                return new Event(action, map);
+            }
+            return new Event(action, value);
+        }
 
         @NotNull
         private String joinIterable(@NotNull Iterable<?> list) {
@@ -257,7 +278,7 @@ public abstract class TextDisplay<SenderT> implements Display<SenderT> {
         }
 
         @NotNull
-        private TextDisplay<SenderT> newTextDisplay(@NotNull String text, int centerWidth, @NotNull Map<String, Map<Object, String>> actions) {
+        private TextDisplay<SenderT> newTextDisplay(@NotNull String text, int centerWidth, @NotNull Map<String, Set<Event>> actions) {
             return new TextDisplay<>(text, centerWidth, actions) {
                 @Override
                 protected void sendText(@NotNull SenderT type, @NotNull String text) {
@@ -272,8 +293,104 @@ public abstract class TextDisplay<SenderT> implements Display<SenderT> {
         }
     }
 
-    public enum Event {
-        SHOW_TEXT,
+    @SuppressWarnings("unchecked")
+    public static class Event {
+        private final Action action;
+        private final Object value;
+
+        public Event(@NotNull Action action, @NotNull Object value) {
+            this.action = action;
+            this.value = value;
+        }
+
+        @NotNull
+        public Event parse(@NotNull Function<String, String> parser) {
+            if (value instanceof String) {
+                return new Event(action, parser.apply((String) value));
+            } else if (value instanceof Map) {
+                final Map<String, Object> map = new HashMap<>();
+                for (var entry : ((Map<String, Object>) value).entrySet()) {
+                    if (entry.getValue() instanceof String) {
+                        map.put(entry.getKey(), parser.apply((String) entry.getValue()));
+                    } else {
+                        map.put(entry.getKey(), entry.getValue());
+                    }
+                }
+                return new Event(action, map);
+            } else {
+                return this;
+            }
+        }
+
+        @NotNull
+        public Action getAction() {
+            return action;
+        }
+
+        @NotNull
+        public Object getValue() {
+            return value;
+        }
+
+        @NotNull
+        public String getString() {
+            return (String) value;
+        }
+
+        @NotNull
+        public String getItemId() {
+            return (String) ((Map<String, Object>) value).get("id");
+        }
+
+        public int getItemCount() {
+            return (int) ((Map<String, Object>) value).getOrDefault("count", 1);
+        }
+
+        @Nullable
+        public String getItemTag() {
+            return (String) ((Map<String, Object>) value).get("tag");
+        }
+
+        @Nullable
+        public String getEntityName() {
+            return (String) ((Map<String, Object>) value).get("name");
+        }
+
+        @NotNull
+        public String getEntityType() {
+            return (String) ((Map<String, Object>) value).get("type");
+        }
+
+        @NotNull
+        public UUID getEntityUniqueId() {
+            return (UUID) ((Map<String, Object>) value).get("id");
+        }
+    }
+
+    public interface Action {
+
+        default boolean isClick() {
+            return false;
+        }
+
+        default boolean isHover() {
+            return false;
+        }
+
+        int ordinal();
+
+        @NotNull
+        default ClickAction click() {
+            return (ClickAction) this;
+        }
+
+        @NotNull
+        default HoverAction hover() {
+            return (HoverAction) this;
+        }
+    }
+
+    public enum ClickAction implements Action {
         OPEN_URL,
         OPEN_FILE,
         RUN_COMMAND,
@@ -281,9 +398,35 @@ public abstract class TextDisplay<SenderT> implements Display<SenderT> {
         CHANGE_PAGE,
         COPY_TO_CLIPBOARD;
 
+        @Override
+        public boolean isClick() {
+            return true;
+        }
+
         @Nullable
-        public static Event of(@NotNull String name) {
-            for (Event value : values()) {
+        public static ClickAction of(@NotNull String name) {
+            for (ClickAction value : values()) {
+                if (value.name().equalsIgnoreCase(name)) {
+                    return value;
+                }
+            }
+            return null;
+        }
+    }
+
+    public enum HoverAction implements Action {
+        SHOW_TEXT,
+        SHOW_ITEM,
+        SHOW_ENTITY;
+
+        @Override
+        public boolean isHover() {
+            return true;
+        }
+
+        @Nullable
+        public static HoverAction of(@NotNull String name) {
+            for (HoverAction value : values()) {
                 if (value.name().equalsIgnoreCase(name)) {
                     return value;
                 }
