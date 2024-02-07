@@ -131,7 +131,7 @@ public class AdventureLang {
         }
     }
 
-    public static class ActionbarLoader<T> extends ActionbarDisplay.Loader<T> {
+    public static class ActionBarLoader<T> extends ActionBarDisplay.Loader<T> {
         @Override
         protected void sendActionbar(@NotNull T type, @NotNull String actionbar) {
             ((Audience) type).sendActionBar(LegacyComponentSerializer.legacyAmpersand().deserialize(actionbar));

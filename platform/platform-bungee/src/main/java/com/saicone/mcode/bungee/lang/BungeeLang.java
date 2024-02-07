@@ -2,7 +2,7 @@ package com.saicone.mcode.bungee.lang;
 
 import com.saicone.mcode.module.lang.AbstractLang;
 import com.saicone.mcode.module.lang.Displays;
-import com.saicone.mcode.module.lang.display.ActionbarDisplay;
+import com.saicone.mcode.module.lang.display.ActionBarDisplay;
 import com.saicone.mcode.module.lang.display.TextDisplay;
 import com.saicone.mcode.module.lang.display.TitleDisplay;
 import net.md_5.bungee.api.ChatMessageType;
@@ -30,7 +30,7 @@ import java.util.logging.Level;
 
 public class BungeeLang extends AbstractLang<CommandSender, ProxiedPlayer> {
 
-    public static final ActionbarLoader ACTIONBAR = new ActionbarLoader();
+    public static final ActionBarLoader ACTIONBAR = new ActionBarLoader();
     public static final TextLoader TEXT = new TextLoader();
     public static final TitleLoader TITLE = new TitleLoader();
 
@@ -242,7 +242,7 @@ public class BungeeLang extends AbstractLang<CommandSender, ProxiedPlayer> {
         }
     }
 
-    public static class ActionbarLoader extends ActionbarDisplay.Loader<CommandSender> {
+    public static class ActionBarLoader extends ActionBarDisplay.Loader<CommandSender> {
         @Override
         protected void sendActionbar(@NotNull CommandSender sender, @NotNull String actionbar) {
             if (sender instanceof ProxiedPlayer) {

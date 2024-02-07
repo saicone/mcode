@@ -1,12 +1,10 @@
 package com.saicone.mcode.module.lang;
 
+import com.saicone.mcode.module.lang.display.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @FunctionalInterface
 public interface DisplaySupplier<SenderT> {
@@ -28,6 +26,36 @@ public interface DisplaySupplier<SenderT> {
             }
         }
         return null;
+    }
+
+    @NotNull
+    default ActionBarDisplay.Loader<SenderT> getActionBarLoader() {
+        final ActionBarDisplay.Loader<SenderT> loader = (ActionBarDisplay.Loader<SenderT>) getDisplayLoaderOrNull("actionbar");
+        return Objects.requireNonNull(loader, "The actionbar loader doesn't exist");
+    }
+
+    @NotNull
+    default BossBarDisplay.Loader<SenderT> getBossBarLoader() {
+        final BossBarDisplay.Loader<SenderT> loader = (BossBarDisplay.Loader<SenderT>) getDisplayLoaderOrNull("actionbar");
+        return Objects.requireNonNull(loader, "The actionbar loader doesn't exist");
+    }
+
+    @NotNull
+    default SoundDisplay.Loader<SenderT, ?> getSoundLoader() {
+        final SoundDisplay.Loader<SenderT, ?> loader = (SoundDisplay.Loader<SenderT, ?>) getDisplayLoaderOrNull("actionbar");
+        return Objects.requireNonNull(loader, "The actionbar loader doesn't exist");
+    }
+
+    @NotNull
+    default TextDisplay.Loader<SenderT> getTextLoader() {
+        final TextDisplay.Loader<SenderT> loader = (TextDisplay.Loader<SenderT>) getDisplayLoaderOrNull("actionbar");
+        return Objects.requireNonNull(loader, "The actionbar loader doesn't exist");
+    }
+
+    @NotNull
+    default TitleDisplay.Loader<SenderT> getTitleLoader() {
+        final TitleDisplay.Loader<SenderT> loader = (TitleDisplay.Loader<SenderT>) getDisplayLoaderOrNull("actionbar");
+        return Objects.requireNonNull(loader, "The actionbar loader doesn't exist");
     }
 
     @NotNull

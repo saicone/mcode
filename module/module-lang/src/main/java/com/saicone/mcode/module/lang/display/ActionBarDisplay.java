@@ -12,11 +12,11 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public abstract class ActionbarDisplay<SenderT> implements Display<SenderT> {
+public abstract class ActionBarDisplay<SenderT> implements Display<SenderT> {
 
     private final String text;
 
-    public ActionbarDisplay(@NotNull String text) {
+    public ActionBarDisplay(@NotNull String text) {
         this.text = text;
     }
 
@@ -64,7 +64,7 @@ public abstract class ActionbarDisplay<SenderT> implements Display<SenderT> {
             if (text.isEmpty()) {
                 return null;
             }
-            return new ActionbarDisplay<>(text) {
+            return new ActionBarDisplay<>(text) {
                 @Override
                 protected void sendActionbar(@NotNull SenderT type, @NotNull String actionbar) {
                     Loader.this.sendActionbar(type, actionbar);

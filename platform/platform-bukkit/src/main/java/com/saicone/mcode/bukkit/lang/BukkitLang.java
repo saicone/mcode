@@ -35,15 +35,17 @@ import java.util.logging.Level;
 public class BukkitLang extends AbstractLang<CommandSender, Player> {
 
     // Loadable display types
-    public static final ActionbarLoader ACTIONBAR = new ActionbarLoader();
+    public static final ActionBarLoader ACTIONBAR = new ActionBarLoader();
     public static final BossbarLoader BOSSBAR = new BossbarLoader();
     public static final SoundLoader SOUND = new SoundLoader();
     public static final TextLoader TEXT = new TextLoader();
     public static final TitleLoader TITLE = new TitleLoader();
 
+    private static final boolean USE_ADVENTURE = ServerInstance.isPaper && ServerInstance.verNumber >= 16 && ServerInstance.release >= 3;
+
     static {
         boolean register = true;
-        if (ServerInstance.isPaper && ServerInstance.verNumber >= 16 && ServerInstance.release >= 3) {
+        if (USE_ADVENTURE) {
             try {
                 Class.forName("com.saicone.mcode.bukkit.lang.PaperLang");
                 register = false;
@@ -69,7 +71,7 @@ public class BukkitLang extends AbstractLang<CommandSender, Player> {
 
     @NotNull
     public static BukkitLang of(@NotNull Plugin plugin, boolean useConfig, @NotNull Class<?>... langProviders) {
-        if (ServerInstance.isPaper && ServerInstance.verNumber >= 16 && ServerInstance.release >= 3) {
+        if (USE_ADVENTURE) {
             return new PaperLang(plugin, useConfig, langProviders);
         }
         return new BukkitLang(plugin, useConfig, langProviders);
@@ -336,7 +338,7 @@ public class BukkitLang extends AbstractLang<CommandSender, Player> {
         }
     }
 
-    public static class ActionbarLoader extends ActionbarDisplay.Loader<CommandSender> {
+    public static class ActionBarLoader extends ActionBarDisplay.Loader<CommandSender> {
         @Override
         protected void sendActionbar(@NotNull CommandSender sender, @NotNull String actionbar) {
             if (sender instanceof Player && ServerInstance.isSpigot) {

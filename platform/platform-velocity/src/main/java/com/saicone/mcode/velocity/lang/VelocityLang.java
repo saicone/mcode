@@ -26,7 +26,7 @@ import java.util.Map;
 public class VelocityLang extends AbstractLang<CommandSource, Player> {
 
     // Loadable display types
-    public static final AdventureLang.ActionbarLoader<CommandSource> ACTIONBAR = new AdventureLang.ActionbarLoader<>();
+    public static final AdventureLang.ActionBarLoader<CommandSource> ACTIONBAR = new AdventureLang.ActionBarLoader<>();
     public static final AdventureLang.BossBarLoader<CommandSource> BOSSBAR = new AdventureLang.BossBarLoader<>();
     public static final AdventureLang.MiniMessageLoader<CommandSource> MINIMESSAGE = new AdventureLang.MiniMessageLoader<>();
     public static final AdventureLang.SoundLoader<CommandSource> SOUND = new AdventureLang.SoundLoader<>();
