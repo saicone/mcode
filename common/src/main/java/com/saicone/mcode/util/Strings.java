@@ -5,10 +5,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
@@ -94,6 +91,31 @@ public class Strings {
             }
         }
         return true;
+    }
+
+    @NotNull
+    public static String join(@NotNull String delimiter, @Nullable Object object) {
+        return join(delimiter, "", "", object);
+    }
+
+    @NotNull
+    public static String join(@NotNull String delimiter, @NotNull String prefix, @NotNull String suffix, @Nullable Object object) {
+        if (object == null) {
+            return "";
+        }
+        final StringJoiner joiner = new StringJoiner(delimiter, prefix, suffix);
+        if (object instanceof Iterable) {
+            for (Object o : (Iterable<?>) object) {
+                joiner.add(String.valueOf(o));
+            }
+        } else if (object instanceof Object[]) {
+            for (int i = 0; i < ((Object[]) object).length; i++) {
+                joiner.add(String.valueOf(((Object[]) object)[i]));
+            }
+        } else {
+            joiner.add(String.valueOf(object));
+        }
+        return joiner.toString();
     }
 
     @NotNull

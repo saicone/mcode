@@ -102,15 +102,15 @@ public abstract class TextDisplay<SenderT> implements Display<SenderT> {
 
     private void sendParsed(@NotNull SenderT type, @NotNull String text, @NotNull Map<String, Set<Event>> events) {
         final Builder<SenderT> builder = newBuilder();
-        Strings.findInside(text, "[action=", "[/action]", (s, found) -> {
+        Strings.findInside(text, "<event.", "</event>", (s, found) -> {
             if (found) {
-                final int index = s.indexOf(']');
+                final int index = s.indexOf('>');
                 if (index > 0 && index + 1 < s.length()) {
                     final String str = s.substring(index + 1);
                     builder.sum(MStrings.getFontLength(str));
                     builder.append(str, events.getOrDefault(s.substring(0, index), Set.of()));
                 } else {
-                    builder.append("[action=" + s + "[/action]");
+                    builder.append("<event." + s + "</event>");
                 }
             } else {
                 builder.append(s);
@@ -200,42 +200,49 @@ public abstract class TextDisplay<SenderT> implements Display<SenderT> {
                 }
             }
 
-            final DMap actionsMap = map.getChild(m -> m.getRegex("(?i)(chat-?)?actions?"));
-            if (actionsMap == null) {
-                return newTextDisplay(text, centerWidth, Map.of());
-            }
             final Map<String, Set<Event>> events = new HashMap<>();
-            for (Map.Entry<String, Object> entry : actionsMap.entrySet()) {
-                if (!(entry.getValue() instanceof Map)) {
-                    events.put(entry.getKey(), Set.of());
-                    continue;
-                }
-                final Set<Event> types = new HashSet<>();
-                for (var e : ((Map<?, ?>) entry.getValue()).entrySet()) {
-                    final String key = String.valueOf(e.getKey()).trim().toUpperCase().replace('-', '_');
-                    switch (key) {
-                        case "OPEN_URL":
-                        case "OPEN_FILE":
-                        case "RUN_COMMAND":
-                        case "SUGGEST_COMMAND":
-                        case "CHANGE_PAGE":
-                        case "COPY_TO_CLIPBOARD":
-                            types.add(newEvent(ClickAction.of(key), String.valueOf(e.getValue())));
-                            break;
-                        case "SHOW_TEXT":
-                            types.add(newEvent(HoverAction.SHOW_TEXT, String.valueOf(e.getValue())));
-                            break;
-                        case "SHOW_ITEM":
-                        case "SHOW_ENTITY":
-                            types.add(newEvent(HoverAction.of(key), e.getValue()));
-                            break;
-                        default:
-                            break;
+            map.forEach(key -> key.matches("(?i)((chat|text)-?)?events?(\\..*)?"), (key, value) -> {
+                final int index = key.indexOf('.');
+                if (index > 0) {
+                    events.put(key.substring(index + 1), loadEvents(value));
+                } else if (value instanceof Map) {
+                    for (var entry : ((Map<?, ?>) value).entrySet()) {
+                        events.put(String.valueOf(entry.getKey()), loadEvents(entry.getValue()));
                     }
                 }
-                events.put(entry.getKey(), types);
-            }
+            });
             return newTextDisplay(text, centerWidth, events);
+        }
+
+        @NotNull
+        protected Set<Event> loadEvents(@Nullable Object value) {
+            if (!(value instanceof Map)) {
+                return Set.of();
+            }
+            final Set<Event> types = new HashSet<>();
+            for (var e : ((Map<?, ?>) value).entrySet()) {
+                final String key = String.valueOf(e.getKey()).trim().toUpperCase().replace('-', '_');
+                switch (key) {
+                    case "OPEN_URL":
+                    case "OPEN_FILE":
+                    case "RUN_COMMAND":
+                    case "SUGGEST_COMMAND":
+                    case "CHANGE_PAGE":
+                    case "COPY_TO_CLIPBOARD":
+                        types.add(newEvent(ClickAction.of(key), String.valueOf(e.getValue())));
+                        break;
+                    case "SHOW_TEXT":
+                        types.add(newEvent(HoverAction.SHOW_TEXT, Strings.join("\n", e.getValue())));
+                        break;
+                    case "SHOW_ITEM":
+                    case "SHOW_ENTITY":
+                        types.add(newEvent(HoverAction.of(key), e.getValue()));
+                        break;
+                    default:
+                        break;
+                }
+            }
+            return types;
         }
 
         protected abstract void sendText(@NotNull SenderT type, @NotNull String text);

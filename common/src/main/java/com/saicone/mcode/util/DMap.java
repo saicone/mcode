@@ -10,6 +10,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -109,6 +111,18 @@ public class DMap implements Map<String, Object> {
     @NotNull
     public Map<String, Object> getMap() {
         return this.map;
+    }
+
+    public void forEach(@NotNull Predicate<? super String> condition, @NotNull BiConsumer<? super String, ? super Object> action) {
+        forEach((key, value) -> condition.test(key), action);
+    }
+
+    public void forEach(@NotNull BiPredicate<? super String, ? super Object> condition, @NotNull BiConsumer<? super String, ? super Object> action) {
+        for (Entry<String, Object> entry : entrySet()) {
+            if (condition.test(entry.getKey(), entry.getValue())) {
+                action.accept(entry.getKey(), entry.getValue());
+            }
+        }
     }
 
     @NotNull
