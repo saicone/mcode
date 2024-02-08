@@ -138,25 +138,27 @@ public class AdventureLang {
         }
     }
 
-    public static class SoundLoader<T> extends SoundDisplay.Loader<T, Sound> {
+    public static class SoundLoader<T> extends SoundDisplay.Loader<T> {
         @Override
-        protected @Nullable Sound parseSound(@NotNull String s) {
+        protected @Nullable Sound parseSound(@NotNull String s, float volume, float pitch) {
             final String[] split = s.split(" ", 2);
-            if (split.length < 2) {
-                return null;
-            }
+            final Key key = Key.key(split[0]);
             final Sound.Source source;
             try {
-                source = Sound.Source.valueOf(split[1].toUpperCase());
+                if (split.length < 2) {
+                    source = Sound.Source.valueOf(key.value().substring(0, key.value().indexOf('_')).toUpperCase());
+                } else {
+                    source = Sound.Source.valueOf(split[1].toUpperCase());
+                }
             } catch (IllegalArgumentException e) {
                 return null;
             }
-            return Sound.sound(Key.key(split[0]), source, 1f, 1f);
+            return Sound.sound(key, source, volume, pitch);
         }
 
         @Override
-        protected void playSound(@NotNull T type, @NotNull Sound sound, float volume, float pitch) {
-            ((Audience) type).playSound(Sound.sound(sound.name(), sound.source(), volume, pitch));
+        protected void playSound(@NotNull T type, @NotNull Object sound, float volume, float pitch) {
+            ((Audience) type).playSound((Sound) sound);
         }
     }
 

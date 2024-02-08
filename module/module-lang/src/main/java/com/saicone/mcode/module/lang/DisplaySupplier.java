@@ -41,8 +41,8 @@ public interface DisplaySupplier<SenderT> {
     }
 
     @NotNull
-    default SoundDisplay.Loader<SenderT, ?> getSoundLoader() {
-        final SoundDisplay.Loader<SenderT, ?> loader = (SoundDisplay.Loader<SenderT, ?>) getDisplayLoaderOrNull("actionbar");
+    default SoundDisplay.Loader<SenderT> getSoundLoader() {
+        final SoundDisplay.Loader<SenderT> loader = (SoundDisplay.Loader<SenderT>) getDisplayLoaderOrNull("actionbar");
         return Objects.requireNonNull(loader, "The actionbar loader doesn't exist");
     }
 

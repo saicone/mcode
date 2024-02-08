@@ -349,20 +349,20 @@ public class BukkitLang extends AbstractLang<CommandSender, Player> {
         }
     }
 
-    public static class SoundLoader extends SoundDisplay.Loader<CommandSender, Sound> {
+    public static class SoundLoader extends SoundDisplay.Loader<CommandSender> {
         @Override
-        protected @Nullable Sound parseSound(@NotNull String s) {
+        protected @Nullable Sound parseSound(@NotNull String s, float volume, float pitch) {
             try {
-                return Sound.valueOf(s.toUpperCase());
+                return Sound.valueOf(s.replace('.', '_').toUpperCase());
             } catch (Exception e) {
                 return null;
             }
         }
 
         @Override
-        protected void playSound(@NotNull CommandSender sender, @NotNull Sound sound, float volume, float pitch) {
+        protected void playSound(@NotNull CommandSender sender, @NotNull Object sound, float volume, float pitch) {
             if (sender instanceof Player) {
-                ((Player) sender).playSound(((Player) sender).getLocation(), sound, volume, pitch);
+                ((Player) sender).playSound(((Player) sender).getLocation(), (Sound) sound, volume, pitch);
             }
         }
     }

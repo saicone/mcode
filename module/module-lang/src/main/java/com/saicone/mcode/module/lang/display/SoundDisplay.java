@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public abstract class SoundDisplay<SenderT, SoundT> implements Display<SenderT> {
+public abstract class SoundDisplay<SenderT> implements Display<SenderT> {
 
     private final String sound;
     private final float volume;
@@ -54,7 +54,7 @@ public abstract class SoundDisplay<SenderT, SoundT> implements Display<SenderT> 
 
     @Override
     public void sendTo(@NotNull SenderT type, @NotNull Function<String, String> parser) {
-        final SoundT parsedSound = parseSound(parser.apply(sound));
+        final Object parsedSound = parseSound(parser.apply(sound), volume, pitch);
         if (parsedSound != null) {
             playSound(type, parsedSound, volume, pitch);
         }
@@ -62,7 +62,7 @@ public abstract class SoundDisplay<SenderT, SoundT> implements Display<SenderT> 
 
     @Override
     public void sendTo(@NotNull Collection<SenderT> senders, @NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
-        final SoundT parsedSound = parseSound(parser.apply(sound));
+        final Object parsedSound = parseSound(parser.apply(sound), volume, pitch);
         if (parsedSound != null) {
             for (SenderT player : senders) {
                 playSound(player, parsedSound, volume, pitch);
@@ -71,11 +71,11 @@ public abstract class SoundDisplay<SenderT, SoundT> implements Display<SenderT> 
     }
 
     @Nullable
-    protected abstract SoundT parseSound(@NotNull String s);
+    protected abstract Object parseSound(@NotNull String s, float volume, float pitch);
 
-    protected abstract void playSound(@NotNull SenderT type, @NotNull SoundT sound, float volume, float pitch);
+    protected abstract void playSound(@NotNull SenderT type, @NotNull Object sound, float volume, float pitch);
 
-    public static abstract class Loader<SenderT, SoundT> extends DisplayLoader<SenderT> {
+    public static abstract class Loader<SenderT> extends DisplayLoader<SenderT> {
 
         public Loader() {
             super("(?i)(play-?)?sound?", Map.of("sound", "", "volume", 1.0f, "pitch", 1.0f));
@@ -90,22 +90,22 @@ public abstract class SoundDisplay<SenderT, SoundT> implements Display<SenderT> 
             final float volume = map.getBy(o -> Float.parseFloat(String.valueOf(o)), m -> m.getIgnoreCase("volume"), 1.0f);
             final float pitch = map.getBy(o -> Float.parseFloat(String.valueOf(o)), m -> m.getIgnoreCase("pitch"), 1.0f);
 
-            return new SoundDisplay<SenderT, SoundT>(sound, volume, pitch) {
+            return new SoundDisplay<SenderT>(sound, volume, pitch) {
                 @Override
-                protected @Nullable SoundT parseSound(@NotNull String s) {
-                    return Loader.this.parseSound(s);
+                protected @Nullable Object parseSound(@NotNull String s, float volume, float pitch) {
+                    return Loader.this.parseSound(s, volume, pitch);
                 }
 
                 @Override
-                protected void playSound(@NotNull SenderT type, @NotNull SoundT sound1, float volume1, float pitch1) {
+                protected void playSound(@NotNull SenderT type, @NotNull Object sound1, float volume1, float pitch1) {
                     Loader.this.playSound(type, sound1, volume1, pitch1);
                 }
             };
         }
 
         @Nullable
-        protected abstract SoundT parseSound(@NotNull String s);
+        protected abstract Object parseSound(@NotNull String s, float volume, float pitch);
 
-        protected abstract void playSound(@NotNull SenderT type, @NotNull SoundT sound, float volume, float pitch);
+        protected abstract void playSound(@NotNull SenderT type, @NotNull Object sound, float volume, float pitch);
     }
 }
