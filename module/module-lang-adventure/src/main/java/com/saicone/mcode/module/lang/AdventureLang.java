@@ -52,6 +52,7 @@ public class AdventureLang {
         }
 
         @Override
+        @SuppressWarnings("deprecation")
         public void append(@NotNull String s, @NotNull Set<TextDisplay.Event> events) {
             final TextComponent.Builder component = Component.text();
             component.append(LegacyComponentSerializer.legacyAmpersand().deserialize(s));
@@ -89,7 +90,7 @@ public class AdventureLang {
                             component.hoverEvent(HoverEvent.showItem(
                                     Key.key(event.getItemId()),
                                     event.getItemCount(),
-                                    tag == null ? null : BinaryTagHolder.binaryTagHolder(tag)
+                                    tag == null ? null : BinaryTagHolder.of(tag)
                             ));
                             break;
                         case SHOW_ENTITY:
