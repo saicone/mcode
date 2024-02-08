@@ -8,10 +8,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -185,7 +182,22 @@ public abstract class BossBarDisplay<SenderT> implements Display<SenderT> {
         }
 
         @Override
-        public @Nullable Display<SenderT> load(@NotNull DMap map) {
+        public @Nullable BossBarDisplay<SenderT> load(@Nullable Object object) {
+            return (BossBarDisplay<SenderT>) super.load(object);
+        }
+
+        @Override
+        public @Nullable BossBarDisplay<SenderT> load(@NotNull String text) {
+            return (BossBarDisplay<SenderT>) super.load(text);
+        }
+
+        @Override
+        public @Nullable BossBarDisplay<SenderT> load(@NotNull List<Object> list) {
+            return (BossBarDisplay<SenderT>) super.load(list);
+        }
+
+        @Override
+        public @Nullable BossBarDisplay<SenderT> load(@NotNull DMap map) {
             final float progress = map.getBy(
                     o -> Float.parseFloat(String.valueOf(o)),
                     m -> m.getRegex("(?i)progress|percent"),

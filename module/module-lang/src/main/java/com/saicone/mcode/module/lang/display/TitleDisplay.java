@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -101,7 +102,22 @@ public abstract class TitleDisplay<SenderT> implements Display<SenderT> {
         }
 
         @Override
-        public @Nullable Display<SenderT> load(@NotNull DMap map) {
+        public @Nullable TitleDisplay<SenderT> load(@Nullable Object object) {
+            return (TitleDisplay<SenderT>) super.load(object);
+        }
+
+        @Override
+        public @Nullable TitleDisplay<SenderT> load(@NotNull String text) {
+            return (TitleDisplay<SenderT>) super.load(text);
+        }
+
+        @Override
+        public @Nullable TitleDisplay<SenderT> load(@NotNull List<Object> list) {
+            return (TitleDisplay<SenderT>) super.load(list);
+        }
+
+        @Override
+        public @Nullable TitleDisplay<SenderT> load(@NotNull DMap map) {
             final String title = map.getBy(String::valueOf, m -> m.getRegex("(?i)value|text|title"), "");
             final String subtitle = map.getBy(String::valueOf, m -> m.getIgnoreCase("subtitle"), "");
             if (title.isBlank() && subtitle.isBlank()) {

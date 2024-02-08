@@ -1,7 +1,6 @@
 package com.saicone.mcode.bukkit.lang;
 
 import com.saicone.mcode.bukkit.util.ServerInstance;
-import com.saicone.mcode.module.lang.Display;
 import com.saicone.mcode.module.lang.AbstractLang;
 import com.saicone.mcode.module.lang.Displays;
 import com.saicone.mcode.module.lang.display.*;
@@ -231,7 +230,7 @@ public class BukkitLang extends AbstractLang<CommandSender, Player> {
     public static class TextLoader extends TextDisplay.Loader<CommandSender> {
         @Override
         @SuppressWarnings("unchecked")
-        public @Nullable Display<CommandSender> load(@NotNull DMap map) {
+        public @Nullable TextDisplay<CommandSender> load(@NotNull DMap map) {
             if (ServerInstance.isSpigot) {
                 return super.load(map);
             }

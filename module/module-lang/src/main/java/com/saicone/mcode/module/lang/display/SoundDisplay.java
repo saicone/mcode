@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -82,7 +83,22 @@ public abstract class SoundDisplay<SenderT> implements Display<SenderT> {
         }
 
         @Override
-        public @Nullable Display<SenderT> load(@NotNull DMap map) {
+        public @Nullable SoundDisplay<SenderT> load(@Nullable Object object) {
+            return (SoundDisplay<SenderT>) super.load(object);
+        }
+
+        @Override
+        public @Nullable SoundDisplay<SenderT> load(@NotNull String text) {
+            return (SoundDisplay<SenderT>) super.load(text);
+        }
+
+        @Override
+        public @Nullable SoundDisplay<SenderT> load(@NotNull List<Object> list) {
+            return (SoundDisplay<SenderT>) super.load(list);
+        }
+
+        @Override
+        public @Nullable SoundDisplay<SenderT> load(@NotNull DMap map) {
             final String sound = map.getBy(String::valueOf, m -> m.getRegex("(?i)value|text|sound"), "");
             if (sound.isEmpty()) {
                 return null;
@@ -90,7 +106,7 @@ public abstract class SoundDisplay<SenderT> implements Display<SenderT> {
             final float volume = map.getBy(o -> Float.parseFloat(String.valueOf(o)), m -> m.getIgnoreCase("volume"), 1.0f);
             final float pitch = map.getBy(o -> Float.parseFloat(String.valueOf(o)), m -> m.getIgnoreCase("pitch"), 1.0f);
 
-            return new SoundDisplay<SenderT>(sound, volume, pitch) {
+            return new SoundDisplay<>(sound, volume, pitch) {
                 @Override
                 protected @Nullable Object parseSound(@NotNull String s, float volume, float pitch) {
                     return Loader.this.parseSound(s, volume, pitch);

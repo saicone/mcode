@@ -159,17 +159,22 @@ public abstract class TextDisplay<SenderT> implements Display<SenderT> {
         }
 
         @Override
-        public @Nullable Display<SenderT> load(@NotNull String text) {
+        public @Nullable TextDisplay<SenderT> load(@Nullable Object object) {
+            return (TextDisplay<SenderT>) super.load(object);
+        }
+
+        @Override
+        public @Nullable TextDisplay<SenderT> load(@NotNull String text) {
             return newTextDisplay(text, -1, Map.of());
         }
 
         @Override
-        public @Nullable Display<SenderT> load(@NotNull List<Object> list) {
+        public @Nullable TextDisplay<SenderT> load(@NotNull List<Object> list) {
             return newTextDisplay(joinIterable(list), -1, Map.of());
         }
 
         @Override
-        public @Nullable Display<SenderT> load(@NotNull DMap map) {
+        public @Nullable TextDisplay<SenderT> load(@NotNull DMap map) {
             final Object obj = map.getRegex("(?i)value|text");
             if (obj == null) {
                 return null;

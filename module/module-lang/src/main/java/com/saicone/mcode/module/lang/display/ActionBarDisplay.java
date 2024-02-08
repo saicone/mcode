@@ -60,7 +60,12 @@ public abstract class ActionBarDisplay<SenderT> implements Display<SenderT> {
         }
 
         @Override
-        public @Nullable Display<SenderT> load(@NotNull String text) {
+        public @Nullable ActionBarDisplay<SenderT> load(@Nullable Object object) {
+            return (ActionBarDisplay<SenderT>) super.load(object);
+        }
+
+        @Override
+        public @Nullable ActionBarDisplay<SenderT> load(@NotNull String text) {
             if (text.isEmpty()) {
                 return null;
             }
@@ -73,7 +78,7 @@ public abstract class ActionBarDisplay<SenderT> implements Display<SenderT> {
         }
 
         @Override
-        public @Nullable Display<SenderT> load(@NotNull List<Object> list) {
+        public @Nullable ActionBarDisplay<SenderT> load(@NotNull List<Object> list) {
             final StringBuilder builder = new StringBuilder();
             for (Object object : list) {
                 builder.append(object).append(' ');
@@ -82,7 +87,7 @@ public abstract class ActionBarDisplay<SenderT> implements Display<SenderT> {
         }
 
         @Override
-        public @Nullable Display<SenderT> load(@NotNull DMap map) {
+        public @Nullable ActionBarDisplay<SenderT> load(@NotNull DMap map) {
             return load(map.getBy(String::valueOf, m -> m.getRegex("(?i)value|text|actionbar"), ""));
         }
 
