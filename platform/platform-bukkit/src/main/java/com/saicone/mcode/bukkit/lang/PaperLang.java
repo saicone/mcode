@@ -27,19 +27,17 @@ public class PaperLang extends BukkitLang {
     public static final AdventureLang.TitleLoader<CommandSender> TITLE = new AdventureLang.TitleLoader<>();
 
     static {
-        Displays.register("actionbar", ACTIONBAR);
-        Displays.register("bossbar", BOSSBAR);
-        Displays.register("minimessage", MINIMESSAGE);
-        Displays.register("sound", SOUND);
-        Displays.register("text", TEXT);
-        Displays.register("title", TITLE);
+        if (!CREATE_AUDIENCE) {
+            Displays.register("actionbar", ACTIONBAR);
+            Displays.register("bossbar", BOSSBAR);
+            Displays.register("minimessage", MINIMESSAGE);
+            Displays.register("sound", SOUND);
+            Displays.register("text", TEXT);
+            Displays.register("title", TITLE);
+        }
     }
 
     public PaperLang(@NotNull Plugin plugin, @NotNull Class<?>... langProviders) {
         super(plugin, langProviders);
-    }
-
-    public PaperLang(@NotNull Plugin plugin, boolean useConfig, @NotNull Class<?>... langProviders) {
-        super(plugin, useConfig, langProviders);
     }
 }

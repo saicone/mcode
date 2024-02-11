@@ -10,8 +10,13 @@ dependencies {
     compileOnly 'org.spigotmc:spigot-api:1.20.4-R0.1-SNAPSHOT'
     compileOnly 'com.mojang:authlib:1.5.26' // 3.11.50
     compileOnly project(':module:module-task')
+
+    // Lang module
     compileOnly project(':module:module-lang')
     compileOnly project(':module:module-lang-adventure')
+    compileOnly 'net.kyori:adventure-platform-bukkit:4.3.2'
+    compileOnly 'net.kyori:adventure-text-serializer-legacy:4.15.0'
+
     compileOnly project(':module:module-script')
     compileOnly project(':module:module-command')
     compileOnly project(':extension:extension-lookup')

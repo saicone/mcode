@@ -21,11 +21,17 @@ import java.util.stream.Collectors;
 
 public class AdventureLang {
 
-    public static class TextLoader<T> extends TextDisplay.Loader<T> {
+    public interface AudienceSupplier<T> {
+        default Audience getAudience(@NotNull T type) {
+            return (Audience) type;
+        }
+    }
+
+    public static class TextLoader<T> extends TextDisplay.Loader<T> implements AudienceSupplier<T> {
         @Override
         protected void sendText(@NotNull T type, @NotNull String text) {
             for (String s : text.split("\n")) {
-                ((Audience) type).sendMessage(LegacyComponentSerializer.legacyAmpersand().deserialize(s));
+                getAudience(type).sendMessage(LegacyComponentSerializer.legacyAmpersand().deserialize(s));
             }
         }
 
@@ -35,9 +41,9 @@ public class AdventureLang {
         }
     }
 
-    public static class TextBuilder<T> extends TextDisplay.Builder<T> {
+    public static class TextBuilder<T> extends TextDisplay.Builder<T> implements AudienceSupplier<T> {
 
-        private TextComponent.Builder builder = Component.text();
+        protected TextComponent.Builder builder = Component.text();
 
         @Override
         public void append(@NotNull String s, boolean before) {
@@ -111,11 +117,11 @@ public class AdventureLang {
 
         @Override
         public void sendTo(@NotNull T type) {
-            ((Audience) type).sendMessage(builder.build());
+            getAudience(type).sendMessage(builder.build());
         }
     }
 
-    public static class TitleLoader<T> extends TitleDisplay.Loader<T> {
+    public static class TitleLoader<T> extends TitleDisplay.Loader<T> implements AudienceSupplier<T> {
         @Override
         protected void sendTitle(@NotNull T type, @NotNull String title, @NotNull String subtitle, int fadeIn, int stay, int fadeOut) {
             final Title.Times times = Title.Times.times(
@@ -128,18 +134,18 @@ public class AdventureLang {
                     LegacyComponentSerializer.legacyAmpersand().deserialize(subtitle),
                     times
             );
-            ((Audience) type).showTitle(finalTitle);
+            getAudience(type).showTitle(finalTitle);
         }
     }
 
-    public static class ActionBarLoader<T> extends ActionBarDisplay.Loader<T> {
+    public static class ActionBarLoader<T> extends ActionBarDisplay.Loader<T> implements AudienceSupplier<T> {
         @Override
         protected void sendActionbar(@NotNull T type, @NotNull String actionbar) {
-            ((Audience) type).sendActionBar(LegacyComponentSerializer.legacyAmpersand().deserialize(actionbar));
+            getAudience(type).sendActionBar(LegacyComponentSerializer.legacyAmpersand().deserialize(actionbar));
         }
     }
 
-    public static class SoundLoader<T> extends SoundDisplay.Loader<T> {
+    public static class SoundLoader<T> extends SoundDisplay.Loader<T> implements AudienceSupplier<T> {
         @Override
         protected @Nullable Sound parseSound(@NotNull String s, float volume, float pitch) {
             final String[] split = s.split(" ", 2);
@@ -159,7 +165,7 @@ public class AdventureLang {
 
         @Override
         protected void playSound(@NotNull T type, @NotNull Object sound, float volume, float pitch) {
-            ((Audience) type).playSound((Sound) sound);
+            getAudience(type).playSound((Sound) sound);
         }
     }
 
@@ -181,14 +187,18 @@ public class AdventureLang {
                     BossBar.Overlay.values()[division.ordinal()],
                     flags.isEmpty() ? Set.of() : flags.stream().map(flag -> BossBar.Flag.values()[flag.ordinal()]).collect(Collectors.toSet())
             );
+            return newHolder(bossBar);
+        }
+
+        protected BossBarDisplay.Holder newHolder(@NotNull BossBar bossBar) {
             return new AdventureBossBar(bossBar);
         }
     }
 
-    public static class MiniMessageLoader<T> extends MiniMessageDisplay.Loader<T> {
+    public static class MiniMessageLoader<T> extends MiniMessageDisplay.Loader<T> implements AudienceSupplier<T> {
         @Override
         protected void sendMiniMessage(@NotNull T type, @NotNull Component miniMessage) {
-            ((Audience) type).sendMessage(miniMessage);
+            getAudience(type).sendMessage(miniMessage);
         }
     }
 }

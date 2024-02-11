@@ -34,13 +34,29 @@ public class BungeeLang extends AbstractLang<CommandSender> {
     public static final TextLoader TEXT = new TextLoader();
     public static final TitleLoader TITLE = new TitleLoader();
 
+    private static final boolean USE_ADVENTURE;
+
     static {
+        boolean useAdventure = false;
+        try {
+            Class.forName("net.kyori.adventure.audience.Audience");
+            useAdventure = true;
+        } catch (Throwable ignored) { }
+        USE_ADVENTURE = useAdventure;
+
         Displays.register("actionbar", ACTIONBAR);
         Displays.register("text", TEXT);
         Displays.register("title", TITLE);
     }
 
     private final Plugin plugin;
+
+    public static BungeeLang of(@NotNull Plugin plugin, @NotNull Class<?>... langProviders) {
+        if (USE_ADVENTURE) {
+            return new BungeeAdventureLang(plugin, langProviders);
+        }
+        return new BungeeLang(plugin, langProviders);
+    }
 
     public BungeeLang(@NotNull Plugin plugin, @NotNull Class<?>... langProviders) {
         super(langProviders);

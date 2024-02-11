@@ -24,6 +24,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -40,17 +41,24 @@ public class BukkitLang extends AbstractLang<CommandSender> {
     public static final TextLoader TEXT = new TextLoader();
     public static final TitleLoader TITLE = new TitleLoader();
 
-    private static final boolean USE_ADVENTURE = ServerInstance.isPaper && ServerInstance.verNumber >= 16 && ServerInstance.release >= 3;
+    private static final boolean USE_ADVENTURE;
+    protected static final boolean CREATE_AUDIENCE;
 
     static {
-        boolean register = true;
-        if (USE_ADVENTURE) {
-            try {
-                Class.forName("com.saicone.mcode.bukkit.lang.PaperLang");
-                register = false;
-            } catch (Throwable ignored) { }
-        }
-        if (register) {
+        boolean useAdventure = false;
+        boolean createAudience = true;
+        try {
+            final Class<?> audience = Class.forName("net.kyori.adventure.audience.Audience");
+            useAdventure = true;
+            // Check native support
+            if (audience.isAssignableFrom(CommandSender.class)) {
+                createAudience = false;
+            }
+        } catch (Throwable ignored) { }
+        USE_ADVENTURE = useAdventure;
+        CREATE_AUDIENCE = createAudience;
+
+        if (CREATE_AUDIENCE) {
             Displays.register("actionbar", ACTIONBAR);
             Displays.register("bossbar", BOSSBAR);
             Displays.register("sound", SOUND);
@@ -61,36 +69,40 @@ public class BukkitLang extends AbstractLang<CommandSender> {
 
     // Instance parameters
     private final Plugin plugin;
-    private final boolean useConfig;
+    private boolean useConfig;
 
     private transient Map<String, String> cachedAliases;
 
     @NotNull
     public static BukkitLang of(@NotNull Plugin plugin, @NotNull Class<?>... langProviders) {
-        return of(plugin, false, langProviders);
-    }
-
-    @NotNull
-    public static BukkitLang of(@NotNull Plugin plugin, boolean useConfig, @NotNull Class<?>... langProviders) {
         if (USE_ADVENTURE) {
-            return new PaperLang(plugin, useConfig, langProviders);
+            if (CREATE_AUDIENCE) {
+                return new BukkitAdventureLang(plugin, langProviders);
+            }
+            return new PaperLang(plugin, langProviders);
         }
-        return new BukkitLang(plugin, useConfig, langProviders);
+        return new BukkitLang(plugin, langProviders);
     }
 
-    public BukkitLang(@NotNull Plugin plugin,  @NotNull Class<?>... langProviders) {
-        this(plugin, false, langProviders);
-    }
-
-    public BukkitLang(@NotNull Plugin plugin, boolean useConfig, @NotNull Class<?>... langProviders) {
+    public BukkitLang(@NotNull Plugin plugin, @NotNull Class<?>... langProviders) {
         super(langProviders);
         this.plugin = plugin;
-        this.useConfig = useConfig;
+    }
+
+    public boolean isUseConfig() {
+        return useConfig;
     }
 
     @NotNull
     public Plugin getPlugin() {
         return plugin;
+    }
+
+    @NotNull
+    @Contract("_ -> this")
+    public BukkitLang useConfig(boolean useConfig) {
+        this.useConfig = useConfig;
+        return this;
     }
 
     @Override
