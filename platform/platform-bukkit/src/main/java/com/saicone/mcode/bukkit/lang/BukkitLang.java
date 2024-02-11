@@ -1,5 +1,8 @@
 package com.saicone.mcode.bukkit.lang;
 
+import com.cryptomorin.xseries.XSound;
+import com.cryptomorin.xseries.messages.ActionBar;
+import com.cryptomorin.xseries.messages.Titles;
 import com.google.gson.Gson;
 import com.saicone.mcode.bukkit.util.ServerInstance;
 import com.saicone.mcode.module.lang.AbstractLang;
@@ -45,6 +48,7 @@ public class BukkitLang extends AbstractLang<CommandSender> {
 
     private static final boolean USE_ADVENTURE;
     protected static final boolean CREATE_AUDIENCE;
+    private static final boolean USE_XSERIES;
 
     static {
         boolean useAdventure = false;
@@ -59,6 +63,15 @@ public class BukkitLang extends AbstractLang<CommandSender> {
         } catch (Throwable ignored) { }
         USE_ADVENTURE = useAdventure;
         CREATE_AUDIENCE = createAudience;
+
+        boolean useXSeries = false;
+        try {
+            Class.forName("com.cryptomorin.xseries.messages.ActionBar");
+            Class.forName("com.cryptomorin.xseries.messages.Titles");
+            Class.forName("com.cryptomorin.xseries.XSound");
+            useXSeries = true;
+        } catch (Throwable ignored) { }
+        USE_XSERIES = useXSeries;
 
         if (CREATE_AUDIENCE) {
             Displays.register("actionbar", ACTIONBAR);
@@ -368,7 +381,9 @@ public class BukkitLang extends AbstractLang<CommandSender> {
         @SuppressWarnings("deprecation")
         protected void sendTitle(@NotNull CommandSender sender, @NotNull String title, @NotNull String subtitle, int fadeIn, int stay, int fadeOut) {
             if (sender instanceof Player) {
-                if (ServerInstance.verNumber > 8) {
+                if (USE_XSERIES) {
+                    Titles.sendTitle((Player) sender, fadeIn, stay, fadeOut, title, subtitle);
+                } else if (ServerInstance.verNumber > 8) {
                     ((Player) sender).sendTitle(title, subtitle, fadeIn, stay, fadeOut);
                 } else {
                     ((Player) sender).sendTitle(title, subtitle);
@@ -383,8 +398,14 @@ public class BukkitLang extends AbstractLang<CommandSender> {
     public static class ActionBarLoader extends ActionBarDisplay.Loader<CommandSender> {
         @Override
         protected void sendActionbar(@NotNull CommandSender sender, @NotNull String actionbar) {
-            if (sender instanceof Player && ServerInstance.isSpigot) {
-                ((Player) sender).spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR, net.md_5.bungee.api.chat.TextComponent.fromLegacyText(actionbar));
+            if (sender instanceof Player) {
+                if (USE_XSERIES) {
+                    ActionBar.sendActionBar((Player) sender, actionbar);
+                } else if (ServerInstance.isSpigot) {
+                    ((Player) sender).spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR, net.md_5.bungee.api.chat.TextComponent.fromLegacyText(actionbar));
+                } else {
+                    sender.sendMessage(actionbar);
+                }
             } else {
                 sender.sendMessage(actionbar);
             }
@@ -394,6 +415,9 @@ public class BukkitLang extends AbstractLang<CommandSender> {
     public static class SoundLoader extends SoundDisplay.Loader<CommandSender> {
         @Override
         protected @Nullable Sound parseSound(@NotNull String s, float volume, float pitch) {
+            if (USE_XSERIES) {
+                return XSound.matchXSound(s).map(XSound::parseSound).orElse(null);
+            }
             try {
                 return Sound.valueOf(s.replace('.', '_').toUpperCase());
             } catch (Exception e) {
