@@ -46,12 +46,12 @@ public class VelocityLang extends AbstractLang<CommandSource> {
     private final Object plugin;
     private final Logger logger;
 
-    public VelocityLang(@NotNull Object plugin, @NotNull Logger logger, @NotNull Class<?>... langProviders) {
-        this(VelocityPlatform.get().getProxy(), plugin, logger, langProviders);
+    public VelocityLang(@NotNull Object plugin, @NotNull Logger logger, @NotNull Object... providers) {
+        this(VelocityPlatform.get().getProxy(), plugin, logger, providers);
     }
 
-    public VelocityLang(@NotNull ProxyServer proxy, @NotNull Object plugin, @NotNull Logger logger, @NotNull Class<?>... langProviders) {
-        super(langProviders);
+    public VelocityLang(@NotNull ProxyServer proxy, @NotNull Object plugin, @NotNull Logger logger, @NotNull Object... providers) {
+        super(providers);
         this.proxy = proxy;
         this.plugin = plugin;
         this.logger = logger;

@@ -29,6 +29,11 @@ public interface DisplaySupplier<SenderT> {
     }
 
     @NotNull
+    default String getDisplayType() {
+        return Display.DEFAULT_TYPE;
+    }
+
+    @NotNull
     default ActionBarDisplay.Loader<SenderT> getActionBarLoader() {
         final ActionBarDisplay.Loader<SenderT> loader = (ActionBarDisplay.Loader<SenderT>) getDisplayLoaderOrNull("actionbar");
         return Objects.requireNonNull(loader, "The actionbar loader doesn't exist");
@@ -72,7 +77,7 @@ public interface DisplaySupplier<SenderT> {
 
     @Nullable
     default Display<SenderT> loadDisplayOrNull(@Nullable Object object) {
-        return loadDisplayType(object, Display.DEFAULT_TYPE);
+        return loadDisplayType(object, getDisplayType());
     }
 
     @Nullable

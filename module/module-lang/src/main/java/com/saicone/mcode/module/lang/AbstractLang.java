@@ -16,6 +16,7 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
 
     private static final boolean USE_SETTINGS = Platform.isAvailable("Settings");
 
+    private final LangSupplier langSupplier;
     private final Class<?>[] langProviders;
 
     private Path[] paths = new Path[0];
@@ -23,10 +24,19 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
 
     protected String filePrefix = ".yml";
 
-    public AbstractLang(@NotNull Class<?>... langProviders) {
-        final int length = langProviders.length + 1;
-        this.langProviders = Arrays.copyOf(langProviders, length);
-        this.langProviders[length - 1] = getClass();
+    public AbstractLang(@NotNull Object... providers) {
+        LangSupplier langSupplier = null;
+        final Class<?>[] langProviders = new Class[providers.length + 1];
+        int i = 0;
+        for (Object provider : providers) {
+            if (langSupplier == null && provider instanceof LangSupplier) {
+                langSupplier = (LangSupplier) provider;
+            }
+            langProviders[i] = provider instanceof Class ? (Class<?>) provider : provider.getClass();
+            i++;
+        }
+        this.langSupplier = langSupplier;
+        this.langProviders = langProviders;
     }
 
     public void load() {
@@ -159,12 +169,6 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
     }
 
     @NotNull
-    @Override
-    public List<DisplayLoader<SenderT>> getDisplayLoaders() {
-        return displayLoaders;
-    }
-
-    @NotNull
     public Path[] getPaths() {
         return paths;
     }
@@ -177,6 +181,44 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
     @NotNull
     protected String[] splitPath(@NotNull String path) {
         return path.split("\\.");
+    }
+
+    @NotNull
+    @Override
+    public List<DisplayLoader<SenderT>> getDisplayLoaders() {
+        return displayLoaders;
+    }
+
+    @Override
+    public @NotNull String getLanguage() {
+        if (langSupplier != null) {
+            return langSupplier.getLanguage();
+        }
+        return super.getLanguage();
+    }
+
+    @Override
+    public @NotNull Set<String> getLanguageTypes() {
+        if (langSupplier != null) {
+            return langSupplier.getLanguageTypes();
+        }
+        return super.getLanguageTypes();
+    }
+
+    @Override
+    public @NotNull Map<String, String> getLanguageAliases() {
+        if (langSupplier != null) {
+            return langSupplier.getLanguageAliases();
+        }
+        return super.getLanguageAliases();
+    }
+
+    @Override
+    public int getLogLevel() {
+        if (langSupplier != null) {
+            return langSupplier.getLogLevel();
+        }
+        return super.getLogLevel();
     }
 
     protected void getFieldsFrom(@NotNull Class<?>[] classes, @NotNull Predicate<Field> filter, @NotNull Consumer<Field> consumer) {

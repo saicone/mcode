@@ -37,7 +37,7 @@ public class PaperLang extends BukkitLang {
         }
     }
 
-    public PaperLang(@NotNull Plugin plugin, @NotNull Class<?>... langProviders) {
-        super(plugin, langProviders);
+    public PaperLang(@NotNull Plugin plugin, @NotNull Object... providers) {
+        super(plugin, providers);
     }
 }

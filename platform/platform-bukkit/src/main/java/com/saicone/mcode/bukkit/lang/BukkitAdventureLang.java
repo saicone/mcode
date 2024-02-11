@@ -88,8 +88,8 @@ public class BukkitAdventureLang extends BukkitLang {
         }
     };
 
-    public BukkitAdventureLang(@NotNull Plugin plugin, @NotNull Class<?>... langProviders) {
-        super(plugin, langProviders);
+    public BukkitAdventureLang(@NotNull Plugin plugin, @NotNull Object... providers) {
+        super(plugin, providers);
         this.audiences = BukkitAudiences.create(plugin);
     }
 

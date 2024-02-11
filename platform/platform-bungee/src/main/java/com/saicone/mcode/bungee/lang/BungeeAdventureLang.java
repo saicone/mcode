@@ -73,8 +73,8 @@ public class BungeeAdventureLang extends BungeeLang {
         }
     };
 
-    public BungeeAdventureLang(@NotNull Plugin plugin, @NotNull Class<?>... langProviders) {
-        super(plugin, langProviders);
+    public BungeeAdventureLang(@NotNull Plugin plugin, @NotNull Object... providers) {
+        super(plugin, providers);
         this.audiences = BungeeAudiences.create(plugin);
     }
 

@@ -74,18 +74,18 @@ public class BukkitLang extends AbstractLang<CommandSender> {
     private transient Map<String, String> cachedAliases;
 
     @NotNull
-    public static BukkitLang of(@NotNull Plugin plugin, @NotNull Class<?>... langProviders) {
+    public static BukkitLang of(@NotNull Plugin plugin, @NotNull Object... providers) {
         if (USE_ADVENTURE) {
             if (CREATE_AUDIENCE) {
-                return new BukkitAdventureLang(plugin, langProviders);
+                return new BukkitAdventureLang(plugin, providers);
             }
-            return new PaperLang(plugin, langProviders);
+            return new PaperLang(plugin, providers);
         }
-        return new BukkitLang(plugin, langProviders);
+        return new BukkitLang(plugin, providers);
     }
 
-    public BukkitLang(@NotNull Plugin plugin, @NotNull Class<?>... langProviders) {
-        super(langProviders);
+    public BukkitLang(@NotNull Plugin plugin, @NotNull Object... providers) {
+        super(providers);
         this.plugin = plugin;
     }
 

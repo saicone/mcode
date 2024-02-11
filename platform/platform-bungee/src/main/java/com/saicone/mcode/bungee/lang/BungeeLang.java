@@ -51,15 +51,15 @@ public class BungeeLang extends AbstractLang<CommandSender> {
 
     private final Plugin plugin;
 
-    public static BungeeLang of(@NotNull Plugin plugin, @NotNull Class<?>... langProviders) {
+    public static BungeeLang of(@NotNull Plugin plugin, @NotNull Object... providers) {
         if (USE_ADVENTURE) {
-            return new BungeeAdventureLang(plugin, langProviders);
+            return new BungeeAdventureLang(plugin, providers);
         }
-        return new BungeeLang(plugin, langProviders);
+        return new BungeeLang(plugin, providers);
     }
 
-    public BungeeLang(@NotNull Plugin plugin, @NotNull Class<?>... langProviders) {
-        super(langProviders);
+    public BungeeLang(@NotNull Plugin plugin, @NotNull Object... providers) {
+        super(providers);
         this.plugin = plugin;
     }
 
