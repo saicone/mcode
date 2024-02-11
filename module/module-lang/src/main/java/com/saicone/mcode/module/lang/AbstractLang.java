@@ -1,6 +1,7 @@
 package com.saicone.mcode.module.lang;
 
 import com.saicone.mcode.Platform;
+import com.saicone.mcode.util.DMap;
 import com.saicone.settings.Settings;
 import com.saicone.settings.SettingsData;
 import org.jetbrains.annotations.NotNull;
@@ -131,7 +132,8 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
     @NotNull
     private Map<String, Object> getObjects(@NotNull File file) {
         if (!useSettings) {
-            return getFileObjects(file);
+            return DMap.of(getFileObjects(file)).asDeepPath(".",
+                    (value) -> !(value instanceof Map) || DMap.of((Map<?, ?>) value).getIgnoreCase("type") == null);
         }
         final Settings settings = SettingsData.of(file.getName()).load(file.getParentFile());
         final Map<String, Object> map = new HashMap<>();
@@ -142,7 +144,7 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
     }
 
     @NotNull
-    protected abstract Map<String, Object> getFileObjects(@NotNull File file);
+    protected abstract Map<?, ?> getFileObjects(@NotNull File file);
 
     @Nullable
     public LangSupplier getLangSupplier() {

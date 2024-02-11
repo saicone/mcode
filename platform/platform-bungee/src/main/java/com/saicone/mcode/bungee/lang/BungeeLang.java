@@ -141,7 +141,7 @@ public class BungeeLang extends AbstractLang<CommandSender> {
     }
 
     @Override
-    protected @NotNull Map<String, Object> getFileObjects(@NotNull File file) {
+    protected @NotNull Map<?, ?> getFileObjects(@NotNull File file) {
         final String name = file.getName().toLowerCase();
         final Configuration config;
         try {
@@ -153,7 +153,7 @@ public class BungeeLang extends AbstractLang<CommandSender> {
                 return new HashMap<>();
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            sendLog(2, e, "Cannot load displays from configuration at file " + file.getName());
             return new HashMap<>();
         }
         return getFileObjects(config);

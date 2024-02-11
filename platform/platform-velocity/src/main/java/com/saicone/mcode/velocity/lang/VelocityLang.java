@@ -4,7 +4,6 @@ import com.moandjiezana.toml.Toml;
 import com.saicone.mcode.module.lang.AdventureLang;
 import com.saicone.mcode.module.lang.AbstractLang;
 import com.saicone.mcode.module.lang.Displays;
-import com.saicone.mcode.util.DMap;
 import com.saicone.mcode.velocity.VelocityPlatform;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
@@ -142,14 +141,14 @@ public class VelocityLang extends AbstractLang<CommandSource> implements Adventu
     }
 
     @Override
-    protected @NotNull Map<String, Object> getFileObjects(@NotNull File file) {
+    protected @NotNull Map<?, ?> getFileObjects(@NotNull File file) {
         if (!file.getName().contains(".")) {
             return new HashMap<>();
         }
         final ConfigurationLoader<? extends ConfigurationNode> loader;
         switch (file.getName().substring(file.getName().lastIndexOf('.') + 1).toLowerCase().trim()) {
             case "toml":
-                return new DMap(new Toml().read(file).toMap()).asDeepPath(".");
+                return new Toml().read(file).toMap();
             case "yml":
             case "yaml":
                 loader = YAMLConfigurationLoader.builder().setFile(file).build();
@@ -166,10 +165,10 @@ public class VelocityLang extends AbstractLang<CommandSource> implements Adventu
         try {
             final Object value = loader.load().getValue();
             if (value instanceof Map) {
-                return DMap.of((Map<?, ?>) value).asDeepPath(".");
+                return (Map<?, ?>) value;
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            sendLog(2, e, "Cannot load displays from configuration at file " + file.getName());
         }
         return new HashMap<>();
     }

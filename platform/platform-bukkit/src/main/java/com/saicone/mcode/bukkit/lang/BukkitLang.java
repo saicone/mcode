@@ -236,28 +236,36 @@ public class BukkitLang extends AbstractLang<CommandSender> {
     }
 
     @Override
-    protected @NotNull Map<String, Object> getFileObjects(@NotNull File file) {
-        final Map<String, Object> objects = new HashMap<>();
+    protected @NotNull Map<?, ?> getFileObjects(@NotNull File file) {
         final String name = file.getName().trim().toLowerCase();
-        if (!name.endsWith(".yml") && !name.endsWith(".yaml")) {
-            if (name.endsWith(".json")) {
-                try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-                    return DMap.of(new Gson().fromJson(reader, Map.class)).asDeepPath(".");
-                } catch (IOException e) {
-                    sendLog(2, e, "Cannot load displays from json configuration at file " + file.getName());
-                    return objects;
-                }
+        if (name.endsWith(".yaml") || name.endsWith(".yml")) {
+            final YamlConfiguration config = new YamlConfiguration();
+            try {
+                config.load(file);
+            } catch (Exception e) {
+                sendLog(2, e, "Cannot load displays from yaml configuration at file " + file.getName());
             }
-            return objects;
+            return getConfigObjects(config);
+        } else if (name.endsWith(".json")) {
+            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                return new Gson().fromJson(reader, Map.class);
+            } catch (IOException e) {
+                sendLog(2, e, "Cannot load displays from json configuration at file " + file.getName());
+            }
         }
-        final YamlConfiguration config = new YamlConfiguration();
-        try {
-            config.load(file);
-        } catch (Exception e) {
-            sendLog(2, e, "Cannot load displays from yaml configuration at file " + file.getName());
-        }
-        for (String key : config.getKeys(true)) {
-            objects.put(key, config.get(key));
+        return new HashMap<>();
+    }
+
+    @NotNull
+    protected Map<String, Object> getConfigObjects(@NotNull ConfigurationSection config) {
+        final Map<String, Object> objects = new HashMap<>();
+        for (String key : config.getKeys(false)) {
+            final Object value = config.get(key);
+            if (value instanceof ConfigurationSection) {
+                objects.put(key, getConfigObjects((ConfigurationSection) value));
+            } else {
+                objects.put(key, value);
+            }
         }
         return objects;
     }
