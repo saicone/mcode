@@ -13,6 +13,7 @@ public class DisplayList<SenderT> implements Display<SenderT>, List<Display<Send
     public DisplayList(@NotNull List<Display<SenderT>> list) {
         this.list = list;
     }
+
     @Override
     public void sendTo(@NotNull SenderT type, @NotNull Function<String, String> parser) {
         for (Display<SenderT> display : list) {

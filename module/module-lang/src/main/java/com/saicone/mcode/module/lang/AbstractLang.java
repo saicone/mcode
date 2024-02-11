@@ -13,7 +13,7 @@ import java.util.function.BiConsumer;
 
 public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> implements DisplaySupplier<SenderT> {
 
-    private static final boolean USE_SETTINGS = Platform.isAvailable("Settings");
+    private static final boolean ALLOW_SETTINGS = Platform.isAvailable("Settings");
 
     // Object parameters
     private LangSupplier langSupplier;
@@ -24,7 +24,8 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
     private final List<DisplayLoader<SenderT>> displayLoaders = new ArrayList<>();
 
     // Mutable parameters
-    protected transient String filePrefix = ".yml";
+    private transient boolean useSettings;
+    private transient String filePrefix = ".yml";
     private transient String displayType = Display.DEFAULT_TYPE;
 
     public AbstractLang(@NotNull Object... providers) {
@@ -89,12 +90,20 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
         this.langSupplier = langSupplier;
     }
 
+    public void setUseSettings(boolean useSettings) {
+        this.useSettings = useSettings;
+    }
+
     public void setFilePrefix(@NotNull String filePrefix) {
         this.filePrefix = filePrefix;
     }
 
     public void setDisplayType(@NotNull String displayType) {
         this.displayType = displayType;
+    }
+
+    public boolean isUseSettings() {
+        return useSettings;
     }
 
     @NotNull
@@ -121,7 +130,7 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
 
     @NotNull
     private Map<String, Object> getObjects(@NotNull File file) {
-        if (!USE_SETTINGS) {
+        if (!useSettings) {
             return getFileObjects(file);
         }
         final Settings settings = SettingsData.of(file.getName()).load(file.getParentFile());
