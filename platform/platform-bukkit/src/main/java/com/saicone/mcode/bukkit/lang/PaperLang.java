@@ -8,7 +8,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
-public class PaperLang extends BukkitLang {
+public class PaperLang extends BukkitLang implements AdventureLang<CommandSender> {
 
     // Loadable display types
     public static final AdventureLang.ActionBarLoader<CommandSender> ACTIONBAR = new AdventureLang.ActionBarLoader<>();

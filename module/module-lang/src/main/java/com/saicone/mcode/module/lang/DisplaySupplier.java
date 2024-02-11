@@ -41,26 +41,26 @@ public interface DisplaySupplier<SenderT> {
 
     @NotNull
     default BossBarDisplay.Loader<SenderT> getBossBarLoader() {
-        final BossBarDisplay.Loader<SenderT> loader = (BossBarDisplay.Loader<SenderT>) getDisplayLoaderOrNull("actionbar");
-        return Objects.requireNonNull(loader, "The actionbar loader doesn't exist");
+        final BossBarDisplay.Loader<SenderT> loader = (BossBarDisplay.Loader<SenderT>) getDisplayLoaderOrNull("bossbar");
+        return Objects.requireNonNull(loader, "The bossbar loader doesn't exist");
     }
 
     @NotNull
     default SoundDisplay.Loader<SenderT> getSoundLoader() {
-        final SoundDisplay.Loader<SenderT> loader = (SoundDisplay.Loader<SenderT>) getDisplayLoaderOrNull("actionbar");
-        return Objects.requireNonNull(loader, "The actionbar loader doesn't exist");
+        final SoundDisplay.Loader<SenderT> loader = (SoundDisplay.Loader<SenderT>) getDisplayLoaderOrNull("sound");
+        return Objects.requireNonNull(loader, "The sound loader doesn't exist");
     }
 
     @NotNull
     default TextDisplay.Loader<SenderT> getTextLoader() {
-        final TextDisplay.Loader<SenderT> loader = (TextDisplay.Loader<SenderT>) getDisplayLoaderOrNull("actionbar");
-        return Objects.requireNonNull(loader, "The actionbar loader doesn't exist");
+        final TextDisplay.Loader<SenderT> loader = (TextDisplay.Loader<SenderT>) getDisplayLoaderOrNull("text");
+        return Objects.requireNonNull(loader, "The text loader doesn't exist");
     }
 
     @NotNull
     default TitleDisplay.Loader<SenderT> getTitleLoader() {
-        final TitleDisplay.Loader<SenderT> loader = (TitleDisplay.Loader<SenderT>) getDisplayLoaderOrNull("actionbar");
-        return Objects.requireNonNull(loader, "The actionbar loader doesn't exist");
+        final TitleDisplay.Loader<SenderT> loader = (TitleDisplay.Loader<SenderT>) getDisplayLoaderOrNull("title");
+        return Objects.requireNonNull(loader, "The title loader doesn't exist");
     }
 
     @NotNull

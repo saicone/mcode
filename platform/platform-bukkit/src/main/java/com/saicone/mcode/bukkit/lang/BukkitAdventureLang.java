@@ -12,7 +12,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
-public class BukkitAdventureLang extends BukkitLang {
+public class BukkitAdventureLang extends BukkitLang implements AdventureLang<CommandSender> {
 
     private final BukkitAudiences audiences;
 

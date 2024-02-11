@@ -16,18 +16,25 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class AdventureLang {
+public interface AdventureLang<SenderT> extends DisplaySupplier<SenderT> {
 
-    public interface AudienceSupplier<T> {
+    @NotNull
+    default MiniMessageDisplay.Loader<SenderT> getMiniMessageLoader() {
+        final MiniMessageDisplay.Loader<SenderT> loader = (MiniMessageDisplay.Loader<SenderT>) getDisplayLoaderOrNull("minimessage");
+        return Objects.requireNonNull(loader, "The minimessage loader doesn't exist");
+    }
+
+    interface AudienceSupplier<T> {
         default Audience getAudience(@NotNull T type) {
             return (Audience) type;
         }
     }
 
-    public static class TextLoader<T> extends TextDisplay.Loader<T> implements AudienceSupplier<T> {
+    class TextLoader<T> extends TextDisplay.Loader<T> implements AudienceSupplier<T> {
         @Override
         protected void sendText(@NotNull T type, @NotNull String text) {
             for (String s : text.split("\n")) {
@@ -41,7 +48,7 @@ public class AdventureLang {
         }
     }
 
-    public static class TextBuilder<T> extends TextDisplay.Builder<T> implements AudienceSupplier<T> {
+    class TextBuilder<T> extends TextDisplay.Builder<T> implements AudienceSupplier<T> {
 
         protected TextComponent.Builder builder = Component.text();
 
@@ -121,7 +128,7 @@ public class AdventureLang {
         }
     }
 
-    public static class TitleLoader<T> extends TitleDisplay.Loader<T> implements AudienceSupplier<T> {
+    class TitleLoader<T> extends TitleDisplay.Loader<T> implements AudienceSupplier<T> {
         @Override
         protected void sendTitle(@NotNull T type, @NotNull String title, @NotNull String subtitle, int fadeIn, int stay, int fadeOut) {
             final Title.Times times = Title.Times.times(
@@ -138,14 +145,14 @@ public class AdventureLang {
         }
     }
 
-    public static class ActionBarLoader<T> extends ActionBarDisplay.Loader<T> implements AudienceSupplier<T> {
+    class ActionBarLoader<T> extends ActionBarDisplay.Loader<T> implements AudienceSupplier<T> {
         @Override
         protected void sendActionbar(@NotNull T type, @NotNull String actionbar) {
             getAudience(type).sendActionBar(LegacyComponentSerializer.legacyAmpersand().deserialize(actionbar));
         }
     }
 
-    public static class SoundLoader<T> extends SoundDisplay.Loader<T> implements AudienceSupplier<T> {
+    class SoundLoader<T> extends SoundDisplay.Loader<T> implements AudienceSupplier<T> {
         @Override
         protected @Nullable Sound parseSound(@NotNull String s, float volume, float pitch) {
             final String[] split = s.split(" ", 2);
@@ -169,7 +176,7 @@ public class AdventureLang {
         }
     }
 
-    public static class BossBarLoader<T> extends BossBarDisplay.Loader<T> {
+    class BossBarLoader<T> extends BossBarDisplay.Loader<T> {
         public BossBarLoader() {
             this(false);
         }
@@ -195,7 +202,7 @@ public class AdventureLang {
         }
     }
 
-    public static class MiniMessageLoader<T> extends MiniMessageDisplay.Loader<T> implements AudienceSupplier<T> {
+    class MiniMessageLoader<T> extends MiniMessageDisplay.Loader<T> implements AudienceSupplier<T> {
         @Override
         protected void sendMiniMessage(@NotNull T type, @NotNull Component miniMessage) {
             getAudience(type).sendMessage(miniMessage);

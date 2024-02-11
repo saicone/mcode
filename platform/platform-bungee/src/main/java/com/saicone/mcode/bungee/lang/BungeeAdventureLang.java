@@ -11,7 +11,7 @@ import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
-public class BungeeAdventureLang extends BungeeLang {
+public class BungeeAdventureLang extends BungeeLang implements AdventureLang<CommandSender> {
 
     private final BungeeAudiences audiences;
 

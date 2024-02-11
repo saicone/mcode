@@ -23,7 +23,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public class VelocityLang extends AbstractLang<CommandSource> {
+public class VelocityLang extends AbstractLang<CommandSource> implements AdventureLang<CommandSource> {
 
     // Loadable display types
     public static final AdventureLang.ActionBarLoader<CommandSource> ACTIONBAR = new AdventureLang.ActionBarLoader<>();
@@ -142,7 +142,7 @@ public class VelocityLang extends AbstractLang<CommandSource> {
 
     @Override
     public @NotNull File getLangFolder() {
-        return new File(new File(new File("plugins"), proxy.getPluginManager().ensurePluginContainer(plugin).getDescription().getId()), "lang");
+        return java.nio.file.Path.of("plugins", proxy.getPluginManager().ensurePluginContainer(plugin).getDescription().getId(), "lang").toFile();
     }
 
     @Override
