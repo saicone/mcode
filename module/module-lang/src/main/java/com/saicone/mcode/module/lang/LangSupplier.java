@@ -5,6 +5,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 @FunctionalInterface
 public interface LangSupplier {
@@ -54,5 +56,103 @@ public interface LangSupplier {
 
     default int getLogLevel() {
         return DEFAULT_LOG_LEVEL;
+    }
+
+    class Path {
+
+        private final String path;
+        private final String[] oldPaths;
+
+        private DisplayHolder<?> holder = null;
+
+        @NotNull
+        public static Path of(@NotNull String path, @NotNull String... oldPaths) {
+            return new Path(path, oldPaths);
+        }
+
+        public Path(@NotNull String path, @NotNull String[] oldPaths) {
+            this.path = path;
+            this.oldPaths = oldPaths;
+        }
+
+        @NotNull
+        public String getPath() {
+            return path;
+        }
+
+        @NotNull
+        public String[] getOldPaths() {
+            return oldPaths;
+        }
+
+        @Nullable
+        public DisplayHolder<?> getHolder() {
+            return holder;
+        }
+
+        public void setHolder(@Nullable DisplayHolder<?> holder) {
+            this.holder = holder;
+        }
+
+        @SuppressWarnings("unchecked")
+        private <SenderT> DisplayHolder<SenderT> holder() {
+            return (DisplayHolder<SenderT>) holder;
+        }
+
+        public <SenderT> void sendTo(@NotNull SenderT sender, @Nullable Object... args) {
+            holder().sendTo(sender, path, args);
+        }
+
+        public <SenderT> void sendTo(@NotNull SenderT agent, @NotNull SenderT sender, @Nullable Object... args) {
+            holder().sendTo(agent, sender, path, args);
+        }
+
+        public <SenderT> void sendTo(@NotNull SenderT sender, @NotNull Function<String, String> parser) {
+            holder().sendTo(sender, path, parser);
+        }
+
+        public void sendToConsole(@Nullable Object... args) {
+            holder.sendToConsole(path, args);
+        }
+
+        public <SenderT> void sendToConsole(@NotNull SenderT agent, @Nullable Object... args) {
+            holder().sendToConsole(agent, path, args);
+        }
+
+        public void sendToConsole(@NotNull Function<String, String> parser) {
+            holder.sendToConsole(path, parser);
+        }
+
+        public void sendToAll(@Nullable Object... args) {
+            holder.sendToAll(path, args);
+        }
+
+        public void sendToAll(@NotNull String language, @Nullable Object... args) {
+            holder.sendToAll(language, path, args);
+        }
+
+        public <SenderT> void sendToAll(@NotNull SenderT agent, @Nullable Object... args) {
+            holder().sendToAll(agent, path, args);
+        }
+
+        public <SenderT> void sendToAll(@NotNull SenderT agent, @NotNull String language, @Nullable Object... args) {
+            holder().sendToAll(agent, language, path, args);
+        }
+
+        public void sendToAll(@NotNull Function<String, String> parser) {
+            holder.sendToAll(path, parser);
+        }
+
+        public void sendToAll(@NotNull String language, @NotNull Function<String, String> parser) {
+            holder.sendToAll(language, path, parser);
+        }
+
+        public <SenderT> void sendToAll(@NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
+            holder().sendToAll(path, parser, playerParser);
+        }
+
+        public <SenderT> void sendToAll(@NotNull String language, @NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
+            holder().sendToAll(language, path, parser, playerParser);
+        }
     }
 }

@@ -9,9 +9,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.*;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> implements DisplaySupplier<SenderT> {
@@ -77,7 +75,7 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
         getFieldsFrom(getLangProviders(), field -> Path.class.isAssignableFrom(field.getType()), field -> {
             try {
                 final Path path = (Path) field.get(null);
-                path.setLoader(this);
+                path.setHolder(this);
                 paths.add(path);
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
@@ -192,104 +190,6 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
                     }
                 }
             }
-        }
-    }
-
-    public static class Path {
-
-        private final String path;
-        private final String[] oldPaths;
-
-        private AbstractLang<?> loader = null;
-
-        @NotNull
-        public static Path of(@NotNull String path, @NotNull String... oldPaths) {
-            return new Path(path, oldPaths);
-        }
-
-        public Path(@NotNull String path, @NotNull String[] oldPaths) {
-            this.path = path;
-            this.oldPaths = oldPaths;
-        }
-
-        @NotNull
-        public String getPath() {
-            return path;
-        }
-
-        @NotNull
-        public String[] getOldPaths() {
-            return oldPaths;
-        }
-
-        @Nullable
-        public AbstractLang<?> getLoader() {
-            return loader;
-        }
-
-        public void setLoader(@Nullable AbstractLang<?> loader) {
-            this.loader = loader;
-        }
-
-        @SuppressWarnings("unchecked")
-        private <SenderT> AbstractLang<SenderT> loader() {
-            return (AbstractLang<SenderT>) loader;
-        }
-
-        public <SenderT> void sendTo(@NotNull SenderT sender, @Nullable Object... args) {
-            loader().sendTo(sender, path, args);
-        }
-
-        public <SenderT> void sendTo(@NotNull SenderT agent, @NotNull SenderT sender, @Nullable Object... args) {
-            loader().sendTo(agent, sender, path, args);
-        }
-
-        public <SenderT> void sendTo(@NotNull SenderT sender, @NotNull Function<String, String> parser) {
-            loader().sendTo(sender, path, parser);
-        }
-
-        public void sendToConsole(@Nullable Object... args) {
-            loader.sendToConsole(path, args);
-        }
-
-        public <SenderT> void sendToConsole(@NotNull SenderT agent, @Nullable Object... args) {
-            loader().sendToConsole(agent, path, args);
-        }
-
-        public void sendToConsole(@NotNull Function<String, String> parser) {
-            loader.sendToConsole(path, parser);
-        }
-
-        public void sendToAll(@Nullable Object... args) {
-            loader.sendToAll(path, args);
-        }
-
-        public void sendToAll(@NotNull String language, @Nullable Object... args) {
-            loader.sendToAll(language, path, args);
-        }
-
-        public <SenderT> void sendToAll(@NotNull SenderT agent, @Nullable Object... args) {
-            loader().sendToAll(agent, path, args);
-        }
-
-        public <SenderT> void sendToAll(@NotNull SenderT agent, @NotNull String language, @Nullable Object... args) {
-            loader().sendToAll(agent, language, path, args);
-        }
-
-        public void sendToAll(@NotNull Function<String, String> parser) {
-            loader.sendToAll(path, parser);
-        }
-
-        public void sendToAll(@NotNull String language, @NotNull Function<String, String> parser) {
-            loader.sendToAll(language, path, parser);
-        }
-
-        public <SenderT> void sendToAll(@NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
-            loader().sendToAll(path, parser, playerParser);
-        }
-
-        public <SenderT> void sendToAll(@NotNull String language, @NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
-            loader().sendToAll(language, path, parser, playerParser);
         }
     }
 }
