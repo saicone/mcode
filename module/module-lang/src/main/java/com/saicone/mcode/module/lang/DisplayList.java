@@ -21,7 +21,7 @@ public class DisplayList<SenderT> implements Display<SenderT>, List<Display<Send
     }
 
     @Override
-    public void sendTo(@NotNull Collection<SenderT> senders, @NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
+    public void sendTo(@NotNull Collection<? extends SenderT> senders, @NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
         for (Display<SenderT> display : list) {
             display.sendTo(senders, parser, playerParser);
         }

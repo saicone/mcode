@@ -31,7 +31,7 @@ import java.io.*;
 import java.util.*;
 import java.util.logging.Level;
 
-public class BukkitLang extends AbstractLang<CommandSender, Player> {
+public class BukkitLang extends AbstractLang<CommandSender> {
 
     // Loadable display types
     public static final ActionBarLoader ACTIONBAR = new ActionBarLoader();
@@ -63,6 +63,8 @@ public class BukkitLang extends AbstractLang<CommandSender, Player> {
     private final Plugin plugin;
     private final boolean useConfig;
 
+    private transient Map<String, String> cachedAliases;
+
     @NotNull
     public static BukkitLang of(@NotNull Plugin plugin, @NotNull Class<?>... langProviders) {
         return of(plugin, false, langProviders);
@@ -84,6 +86,122 @@ public class BukkitLang extends AbstractLang<CommandSender, Player> {
         super(langProviders);
         this.plugin = plugin;
         this.useConfig = useConfig;
+    }
+
+    @NotNull
+    public Plugin getPlugin() {
+        return plugin;
+    }
+
+    @Override
+    public @NotNull String getLanguage() {
+        if (useConfig) {
+            return plugin.getConfig().getString("Locale.Plugin", DEFAULT_LANGUAGE).toLowerCase();
+        }
+        return super.getLanguage();
+    }
+
+    @Override
+    public @NotNull String getLanguageFor(@Nullable Object object) {
+        if (object instanceof Player) {
+            return ((Player) object).getLocale();
+        }
+        return super.getLanguageFor(object);
+    }
+
+    @Override
+    public @NotNull Set<String> getLanguageTypes() {
+        if (useConfig) {
+            final ConfigurationSection section = plugin.getConfig().getConfigurationSection("Locale.Aliases");
+            if (section != null) {
+                return section.getKeys(false);
+            }
+        }
+        return super.getLanguageTypes();
+    }
+
+    @Override
+    public @NotNull Map<String, String> getLanguageAliases() {
+        if (useConfig) {
+            if (cachedAliases == null) {
+                cachedAliases = new HashMap<>();
+                final ConfigurationSection section = plugin.getConfig().getConfigurationSection("Locale.Aliases");
+                if (section != null) {
+                    for (String key : section.getKeys(false)) {
+                        final Object object = section.get(key);
+                        if (object instanceof List) {
+                            for (Object o : (List<?>) object) {
+                                cachedAliases.put(key.toLowerCase(), String.valueOf(o).toLowerCase());
+                            }
+                        }
+                    }
+                }
+            }
+            return cachedAliases;
+        } else {
+            return super.getLanguageAliases();
+        }
+    }
+
+    @Override
+    public int getLogLevel() {
+        if (useConfig) {
+            return plugin.getConfig().getInt("Locale.LogLevel", DEFAULT_LOG_LEVEL);
+        } else {
+            return super.getLogLevel();
+        }
+    }
+
+    @Override
+    protected @NotNull CommandSender getConsole() {
+        return Bukkit.getConsoleSender();
+    }
+
+    @Override
+    protected @NotNull Collection<? extends CommandSender> getSenders() {
+        return Bukkit.getOnlinePlayers();
+    }
+
+    @Override
+    protected void log(int level, @NotNull String msg) {
+        switch (level) {
+            case 1:
+                plugin.getLogger().severe(msg);
+                break;
+            case 2:
+                plugin.getLogger().warning(msg);
+                break;
+            case 3:
+                plugin.getLogger().info(msg);
+                break;
+            case 4:
+            default:
+                plugin.getLogger().log(Level.INFO, msg);
+        }
+    }
+
+    @Override
+    protected void log(int level, @NotNull String msg, @NotNull Throwable exception) {
+        switch (level) {
+            case 1:
+                plugin.getLogger().log(Level.SEVERE, msg, exception);
+                break;
+            case 2:
+                plugin.getLogger().log(Level.WARNING, msg, exception);
+                break;
+            case 3:
+                plugin.getLogger().log(Level.INFO, msg, exception);
+                break;
+            case 4:
+            default:
+                plugin.getLogger().log(Level.INFO, msg, exception);
+        }
+    }
+
+    @Override
+    public void load(@NotNull File langFolder) {
+        cachedAliases = null;
+        super.load(langFolder);
     }
 
     @Override
@@ -124,107 +242,6 @@ public class BukkitLang extends AbstractLang<CommandSender, Player> {
             objects.put(key, config.get(key));
         }
         return objects;
-    }
-
-    @NotNull
-    public Plugin getPlugin() {
-        return plugin;
-    }
-
-    @Override
-    public int getLogLevel() {
-        if (useConfig) {
-            return plugin.getConfig().getInt("Locale.LogLevel", 2);
-        } else {
-            return super.getLogLevel();
-        }
-    }
-
-    @Override
-    public @NotNull Map<String, String> getLanguageAliases() {
-        if (useConfig) {
-            final Map<String, String> map = new HashMap<>();
-            final ConfigurationSection section = plugin.getConfig().getConfigurationSection("Locale.Aliases");
-            if (section != null) {
-                for (String key : section.getKeys(false)) {
-                    final Object object = section.get(key);
-                    if (object instanceof List) {
-                        for (Object o : (List<?>) object) {
-                            map.put(key.toLowerCase(), String.valueOf(o).toLowerCase());
-                        }
-                    }
-                }
-            }
-            return map;
-        } else {
-            return super.getLanguageAliases();
-        }
-    }
-
-    @Override
-    public @NotNull String getPluginLanguage() {
-        if (useConfig) {
-            return plugin.getConfig().getString("Locale.Plugin", DEFAULT_LANGUAGE).toLowerCase();
-        } else {
-            return super.getPluginLanguage();
-        }
-    }
-
-    @Override
-    public @NotNull String getDefaultLanguage() {
-        if (useConfig) {
-            return plugin.getConfig().getString("Locale.Default", DEFAULT_LANGUAGE).toLowerCase();
-        } else {
-            return super.getDefaultLanguage();
-        }
-    }
-
-    @Override
-    protected @NotNull String getPlayerName(@NotNull Player player) {
-        return player.getName();
-    }
-
-    @Override
-    protected @NotNull String getPlayerLocale(@NotNull Player player) {
-        return player.getLocale();
-    }
-
-    @Override
-    public @NotNull Collection<CommandSender> getPlayers() {
-        return Bukkit.getOnlinePlayers();
-    }
-
-    @Override
-    protected @NotNull CommandSender getConsoleSender() {
-        return Bukkit.getConsoleSender();
-    }
-
-    @Override
-    public boolean isInstanceOfSender(@Nullable Object object) {
-        return object instanceof CommandSender;
-    }
-
-    @Override
-    public boolean isInstanceOfPlayer(@Nullable Object object) {
-        return object instanceof Player;
-    }
-
-    @Override
-    protected void sendLogToConsole(int level, @NotNull String msg) {
-        switch (level) {
-            case 1:
-                plugin.getLogger().severe(msg);
-                break;
-            case 2:
-                plugin.getLogger().warning(msg);
-                break;
-            case 3:
-                plugin.getLogger().info(msg);
-                break;
-            case 4:
-            default:
-                plugin.getLogger().log(Level.INFO, msg);
-        }
     }
 
     public static class TextLoader extends TextDisplay.Loader<CommandSender> {

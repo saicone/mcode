@@ -85,7 +85,7 @@ public abstract class BossBarDisplay<SenderT> implements Display<SenderT> {
     }
 
     @Override
-    public void sendTo(@NotNull Collection<SenderT> senders, @NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
+    public void sendTo(@NotNull Collection<? extends SenderT> senders, @NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
         final String text = parser.apply(this.text);
         for (SenderT player : senders) {
             createHolder(playerParser.apply(player, text)).showTo(player);

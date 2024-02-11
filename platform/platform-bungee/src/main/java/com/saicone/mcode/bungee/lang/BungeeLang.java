@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 
-public class BungeeLang extends AbstractLang<CommandSender, ProxiedPlayer> {
+public class BungeeLang extends AbstractLang<CommandSender> {
 
     public static final ActionBarLoader ACTIONBAR = new ActionBarLoader();
     public static final TextLoader TEXT = new TextLoader();
@@ -45,6 +45,65 @@ public class BungeeLang extends AbstractLang<CommandSender, ProxiedPlayer> {
     public BungeeLang(@NotNull Plugin plugin, @NotNull Class<?>... langProviders) {
         super(langProviders);
         this.plugin = plugin;
+    }
+
+    @NotNull
+    public Plugin getPlugin() {
+        return plugin;
+    }
+
+    @Override
+    public @NotNull String getLanguageFor(@Nullable Object object) {
+        if (object instanceof ProxiedPlayer) {
+            return ((ProxiedPlayer) object).getLocale().toLanguageTag().replace('-', '_');
+        }
+        return super.getLanguageFor(object);
+    }
+
+    @Override
+    protected @NotNull CommandSender getConsole() {
+        return plugin.getProxy().getConsole();
+    }
+
+    @Override
+    protected @NotNull Collection<? extends CommandSender> getSenders() {
+        return plugin.getProxy().getPlayers();
+    }
+
+    @Override
+    protected void log(int level, @NotNull String msg) {
+        switch (level) {
+            case 1:
+                plugin.getLogger().severe(msg);
+                break;
+            case 2:
+                plugin.getLogger().warning(msg);
+                break;
+            case 3:
+                plugin.getLogger().info(msg);
+                break;
+            case 4:
+            default:
+                plugin.getLogger().log(Level.INFO, msg);
+        }
+    }
+
+    @Override
+    protected void log(int level, @NotNull String msg, @NotNull Throwable exception) {
+        switch (level) {
+            case 1:
+                plugin.getLogger().log(Level.SEVERE, msg, exception);
+                break;
+            case 2:
+                plugin.getLogger().log(Level.WARNING, msg, exception);
+                break;
+            case 3:
+                plugin.getLogger().log(Level.INFO, msg, exception);
+                break;
+            case 4:
+            default:
+                plugin.getLogger().log(Level.INFO, msg, exception);
+        }
     }
 
     @Override
@@ -89,11 +148,6 @@ public class BungeeLang extends AbstractLang<CommandSender, ProxiedPlayer> {
     }
 
     @NotNull
-    public Plugin getPlugin() {
-        return plugin;
-    }
-
-    @NotNull
     protected Map<String, Object> getFileObjects(@NotNull Configuration config) {
         final Map<String, Object> map = new HashMap<>();
         for (String key : config.getKeys()) {
@@ -105,54 +159,6 @@ public class BungeeLang extends AbstractLang<CommandSender, ProxiedPlayer> {
             }
         }
         return map;
-    }
-
-    @Override
-    protected @NotNull String getPlayerName(@NotNull ProxiedPlayer player) {
-        return player.getName();
-    }
-
-    @Override
-    protected @NotNull String getPlayerLocale(@NotNull ProxiedPlayer player) {
-        return player.getLocale().toLanguageTag().replace('-', '_');
-    }
-
-    @Override
-    public @NotNull Collection<CommandSender> getPlayers() {
-        return plugin.getProxy().getPlayers();
-    }
-
-    @Override
-    protected @NotNull CommandSender getConsoleSender() {
-        return plugin.getProxy().getConsole();
-    }
-
-    @Override
-    public boolean isInstanceOfSender(@Nullable Object object) {
-        return object instanceof CommandSender;
-    }
-
-    @Override
-    public boolean isInstanceOfPlayer(@Nullable Object object) {
-        return object instanceof ProxiedPlayer;
-    }
-
-    @Override
-    protected void sendLogToConsole(int level, @NotNull String msg) {
-        switch (level) {
-            case 1:
-                plugin.getLogger().severe(msg);
-                break;
-            case 2:
-                plugin.getLogger().warning(msg);
-                break;
-            case 3:
-                plugin.getLogger().info(msg);
-                break;
-            case 4:
-            default:
-                plugin.getLogger().log(Level.INFO, msg);
-        }
     }
 
     public static class TextLoader extends TextDisplay.Loader<CommandSender> {

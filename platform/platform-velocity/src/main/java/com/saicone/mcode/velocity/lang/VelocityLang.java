@@ -23,7 +23,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public class VelocityLang extends AbstractLang<CommandSource, Player> {
+public class VelocityLang extends AbstractLang<CommandSource> {
 
     // Loadable display types
     public static final AdventureLang.ActionBarLoader<CommandSource> ACTIONBAR = new AdventureLang.ActionBarLoader<>();
@@ -55,6 +55,72 @@ public class VelocityLang extends AbstractLang<CommandSource, Player> {
         this.proxy = proxy;
         this.plugin = plugin;
         this.logger = logger;
+    }
+
+    @NotNull
+    public Object getPlugin() {
+        return plugin;
+    }
+
+    @NotNull
+    public Logger getLogger() {
+        return logger;
+    }
+
+    @Override
+    public @NotNull String getLanguageFor(@Nullable Object object) {
+        if (object instanceof Player) {
+            return ((Player) object).getPlayerSettings().getLocale().toLanguageTag().replace('-', '_');
+        }
+        return super.getLanguageFor(object);
+    }
+
+    @Override
+    protected @NotNull CommandSource getConsole() {
+        return proxy.getConsoleCommandSource();
+    }
+
+    @Override
+    protected @NotNull Collection<? extends CommandSource> getSenders() {
+        return proxy.getAllPlayers();
+    }
+
+    @Override
+    protected void log(int level, @NotNull String msg) {
+        switch (level) {
+            case 1:
+                logger.error(msg);
+                break;
+            case 2:
+                logger.warn(msg);
+                break;
+            case 3:
+                logger.info(msg);
+                break;
+            case 4:
+            default:
+                logger.debug(msg);
+                break;
+        }
+    }
+
+    @Override
+    protected void log(int level, @NotNull String msg, @NotNull Throwable exception) {
+        switch (level) {
+            case 1:
+                logger.error(msg, exception);
+                break;
+            case 2:
+                logger.warn(msg, exception);
+                break;
+            case 3:
+                logger.info(msg, exception);
+                break;
+            case 4:
+            default:
+                logger.debug(msg, exception);
+                break;
+        }
     }
 
     @Override
@@ -110,64 +176,5 @@ public class VelocityLang extends AbstractLang<CommandSource, Player> {
             e.printStackTrace();
         }
         return new HashMap<>();
-    }
-
-    @NotNull
-    public Object getPlugin() {
-        return plugin;
-    }
-
-    @NotNull
-    public Logger getLogger() {
-        return logger;
-    }
-
-    @Override
-    protected @NotNull String getPlayerName(@NotNull Player player) {
-        return player.getUsername();
-    }
-
-    @Override
-    protected @NotNull String getPlayerLocale(@NotNull Player player) {
-        return player.getPlayerSettings().getLocale().toLanguageTag().replace('-', '_');
-    }
-
-    @Override
-    public @NotNull Collection<CommandSource> getPlayers() {
-        return proxy.getAllPlayers();
-    }
-
-    @Override
-    protected @NotNull CommandSource getConsoleSender() {
-        return proxy.getConsoleCommandSource();
-    }
-
-    @Override
-    public boolean isInstanceOfSender(@Nullable Object object) {
-        return object instanceof CommandSource;
-    }
-
-    @Override
-    public boolean isInstanceOfPlayer(@Nullable Object object) {
-        return object instanceof Player;
-    }
-
-    @Override
-    protected void sendLogToConsole(int level, @NotNull String msg) {
-        switch (level) {
-            case 1:
-                logger.error(msg);
-                break;
-            case 2:
-                logger.warn(msg);
-                break;
-            case 3:
-                logger.info(msg);
-                break;
-            case 4:
-            default:
-                logger.debug(msg);
-                break;
-        }
     }
 }

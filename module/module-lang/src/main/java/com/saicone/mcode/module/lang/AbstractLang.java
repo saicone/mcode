@@ -1,7 +1,6 @@
 package com.saicone.mcode.module.lang;
 
 import com.saicone.mcode.Platform;
-import com.saicone.mcode.util.Strings;
 import com.saicone.settings.Settings;
 import com.saicone.settings.SettingsData;
 import org.jetbrains.annotations.NotNull;
@@ -15,41 +14,16 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public abstract class AbstractLang<SenderT, PlayerT extends SenderT> implements DisplaySupplier<SenderT> {
-
-    protected static final String DEFAULT_DISPLAY = "text";
-
-    protected static final String DEFAULT_LANGUAGE = "en_us";
-
-    protected static final List<String> DEFAULT_LANGUAGES = List.of("en_US");
-
-    protected static final Map<String, String> LANGUAGE_ALIASES = Map.of(
-            "en_au", "en_us",
-            "en_ca", "en_us",
-            "en_gb", "en_us",
-            "en_nz", "en_us",
-            "es_ar", "es_es",
-            "es_cl", "es_es",
-            "es_ec", "es_es",
-            "es_mx", "es_es",
-            "es_uy", "es_es",
-            "es_ve", "es_es"
-    );
+public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> implements DisplaySupplier<SenderT> {
 
     private static final boolean USE_SETTINGS = Platform.isAvailable("Settings");
-
 
     private final Class<?>[] langProviders;
 
     private Path[] paths = new Path[0];
     private final List<DisplayLoader<SenderT>> displayLoaders = new ArrayList<>();
 
-    protected String defaultLanguage = DEFAULT_LANGUAGE;
-    protected final Map<String, String> languageAliases = new HashMap<>();
-    protected final Map<String, String> playerLanguages = new HashMap<>();
-
     protected String filePrefix = ".yml";
-    protected final Map<String, Map<String, Display<SenderT>>> displays = new HashMap<>();
 
     public AbstractLang(@NotNull Class<?>... langProviders) {
         final int length = langProviders.length + 1;
@@ -62,17 +36,13 @@ public abstract class AbstractLang<SenderT, PlayerT extends SenderT> implements 
     }
 
     public void load(@NotNull File langFolder) {
-        defaultLanguage = getDefaultLanguage().toLowerCase();
-        languageAliases.clear();
-        languageAliases.putAll(getLanguageAliases());
-
         if (!langFolder.exists()) {
             langFolder.mkdirs();
         }
         computePaths();
         computeDisplayLoaders();
         final Map<String, List<File>> langFiles = getLangFiles(langFolder);
-        for (String defaultLanguage : getDefaultLanguages()) {
+        for (String defaultLanguage : getLanguageTypes()) {
             final String key = defaultLanguage.toLowerCase();
             if (!langFiles.containsKey(key)) {
                 final File file = saveDefaultLang(langFolder, defaultLanguage);
@@ -137,12 +107,7 @@ public abstract class AbstractLang<SenderT, PlayerT extends SenderT> implements 
     }
 
     public void unload() {
-        languageAliases.clear();
-        playerLanguages.clear();
-        for (var entry : displays.entrySet()) {
-            entry.getValue().clear();
-        }
-        displays.clear();
+        clear();
     }
 
     @Nullable
@@ -201,270 +166,14 @@ public abstract class AbstractLang<SenderT, PlayerT extends SenderT> implements 
         return displayLoaders;
     }
 
-    public int getLogLevel() {
-        return 2;
-    }
-
     @NotNull
     public Path[] getPaths() {
         return paths;
     }
 
     @NotNull
-    public String getLanguage(@NotNull String lang) {
-        if (displays.containsKey(lang)) {
-            return lang;
-        } else {
-            return languageAliases.getOrDefault(lang, defaultLanguage);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    @NotNull
-    public String getLanguage(@NotNull SenderT sender) {
-        if (isInstanceOfPlayer(sender)) {
-            return getPlayerLanguage((PlayerT) sender);
-        } else {
-            return getPluginLanguage();
-        }
-    }
-
-    @NotNull
-    public Map<String, String> getLanguageAliases() {
-        return LANGUAGE_ALIASES;
-    }
-
-    @NotNull
-    public String getPluginLanguage() {
-        return DEFAULT_LANGUAGE;
-    }
-
-    @NotNull
-    public String getDefaultDisplay() {
-        return DEFAULT_DISPLAY;
-    }
-
-    @NotNull
-    public String getDefaultLanguage() {
-        return DEFAULT_LANGUAGE;
-    }
-
-    @NotNull
-    public List<String> getDefaultLanguages() {
-        return DEFAULT_LANGUAGES;
-    }
-
-    @NotNull
-    public String getPlayerLanguage(@NotNull PlayerT player) {
-        final String name = getPlayerName(player);
-        if (!playerLanguages.containsKey(name)) {
-            playerLanguages.put(name, getLanguage(getPlayerLocale(player).toLowerCase()));
-        }
-        return playerLanguages.get(name);
-    }
-
-    @NotNull
-    public Map<String, String> getPlayerLanguages() {
-        return playerLanguages;
-    }
-
-    @NotNull
-    protected abstract String getPlayerName(@NotNull PlayerT player);
-
-    @NotNull
-    protected abstract String getPlayerLocale(@NotNull PlayerT player);
-
-    public abstract @NotNull Collection<SenderT> getPlayers();
-
-    @NotNull
-    protected abstract SenderT getConsoleSender();
-
-    @NotNull
     public String getFilePrefix() {
         return filePrefix;
-    }
-
-    @NotNull
-    public Map<String, Map<String, Display<SenderT>>> getDisplays() {
-        return displays;
-    }
-
-    @NotNull
-    public Map<String, Display<SenderT>> getDisplays(@NotNull SenderT sender) {
-        return getDisplays(getLanguage(sender));
-    }
-
-    @NotNull
-    public Map<String, Display<SenderT>> getDisplays(@NotNull String language) {
-        final Map<String, Display<SenderT>> map = getDisplaysOrNull(language);
-        if (map != null) {
-            return map;
-        } else if (!language.equals(defaultLanguage)) {
-            return displays.getOrDefault(defaultLanguage, Map.of());
-        } else {
-            return Map.of();
-        }
-    }
-
-    @Nullable
-    public Map<String, Display<SenderT>> getDisplaysOrNull(@NotNull SenderT sender) {
-        return getDisplaysOrNull(getLanguage(sender));
-    }
-
-    @Nullable
-    public Map<String, Display<SenderT>> getDisplaysOrNull(@NotNull String language) {
-        return displays.get(language);
-    }
-
-    @NotNull
-    public Display<SenderT> getDisplay(@NotNull SenderT sender, @NotNull String path) {
-        return getDisplay(getLanguage(sender), path);
-    }
-
-    @NotNull
-    public Display<SenderT> getDisplay(@NotNull String language, @NotNull String path) {
-        final Display<SenderT> display = getDisplayOrNull(language, path);
-        if (display != null) {
-            return display;
-        } else if (!language.equals(defaultLanguage)) {
-            return getDefaultDisplay(path);
-        } else {
-            return Display.empty();
-        }
-    }
-
-    @Nullable
-    public Display<SenderT> getDisplayOrNull(@NotNull SenderT sender, @NotNull String path) {
-        return getDisplayOrNull(getLanguage(sender), path);
-    }
-
-    @Nullable
-    public Display<SenderT> getDisplayOrNull(@NotNull String language, @NotNull String path) {
-        return getDisplays(language).get(path);
-    }
-
-    @NotNull
-    public Display<SenderT> getDefaultDisplay(@NotNull String path) {
-        return getDisplays(defaultLanguage).getOrDefault(path, Display.empty());
-    }
-
-    @Nullable
-    public Display<SenderT> getDefaultDisplayOrNull(@NotNull String path) {
-        return getDisplays(defaultLanguage).get(path);
-    }
-
-    @NotNull
-    public String getLangText(@NotNull String path) {
-        return getDisplay(getPluginLanguage(), path).getText();
-    }
-
-    @NotNull
-    public String getLangText(@NotNull String path, @NotNull String type) {
-        return String.valueOf(getDisplay(getPluginLanguage(), path).get(type));
-    }
-
-    @NotNull
-    public String getLangText(@NotNull SenderT sender, @NotNull String path) {
-        return getDisplay(sender, path).getText();
-    }
-
-    @NotNull
-    public String getLangText(@NotNull SenderT sender, @NotNull String path, @NotNull String type) {
-        return String.valueOf(getDisplay(sender, path).get(type));
-    }
-
-    public abstract boolean isInstanceOfSender(@Nullable Object object);
-
-    public abstract boolean isInstanceOfPlayer(@Nullable Object object);
-
-    public void printStackTrace(int level, @NotNull Throwable throwable) {
-        if (getLogLevel() >= level) {
-            throwable.printStackTrace();
-        }
-    }
-
-    public void printStackTrace(int level, @NotNull Throwable throwable, @NotNull String msg, @Nullable Object... args) {
-        sendLog(level, msg, args);
-        printStackTrace(level, throwable);
-    }
-
-    public void sendLog(int level, @NotNull String msg, @Nullable Object... args) {
-        if (getLogLevel() < level) {
-            return;
-        }
-        for (String s : Strings.replaceArgs(msg, args).split("\n")) {
-            sendLogToConsole(level, s);
-        }
-    }
-
-    protected abstract void sendLogToConsole(int level, @NotNull String msg);
-
-    public void sendTo(@NotNull SenderT sender, @NotNull String path, @Nullable Object... args) {
-        sendTo(sender, getLanguage(sender), path, args);
-    }
-
-    protected void sendTo(@NotNull SenderT sender, @NotNull String language, @NotNull String path, @Nullable Object... args) {
-        getDisplay(language, path).sendArgs(sender, args);
-    }
-
-    public void sendTo(@NotNull SenderT agent, @NotNull SenderT sender, @NotNull String path, @Nullable Object... args) {
-        sendTo(agent, sender, getLanguage(sender), path, args);
-    }
-
-    protected void sendTo(@NotNull SenderT agent, @NotNull SenderT sender, @NotNull String language, @NotNull String path, @Nullable Object... args) {
-        getDisplay(language, path).sendArgs(agent, sender, args);
-    }
-
-    public void sendTo(@NotNull SenderT sender, @NotNull String path, @NotNull Function<String, String> parser) {
-        sendTo(sender, getLanguage(sender), path, parser);
-    }
-
-    protected void sendTo(@NotNull SenderT sender, @NotNull String language, @NotNull String path, @NotNull Function<String, String> parser) {
-        getDisplay(language, path).sendTo(sender, parser);
-    }
-
-    public void sendToConsole(@NotNull String path, @Nullable Object... args) {
-        sendTo(getConsoleSender(), path, args);
-    }
-
-    public void sendToConsole(@NotNull SenderT agent, @NotNull String path, @Nullable Object... args) {
-        sendTo(agent, getConsoleSender(), path, args);
-    }
-
-    public void sendToConsole(@NotNull String path, @NotNull Function<String, String> parser) {
-        sendTo(getConsoleSender(), path, parser);
-    }
-
-    public void sendToAll(@NotNull String path, @Nullable Object... args) {
-        sendToAll(defaultLanguage, path, args);
-    }
-
-    public void sendToAll(@NotNull String language, @NotNull String path, @Nullable Object... args) {
-        getDisplay(language, path).sendArgs(getPlayers(), args);
-    }
-
-    public void sendToAll(@NotNull SenderT agent, @NotNull String path, @Nullable Object... args) {
-        sendToAll(agent, defaultLanguage, path, args);
-    }
-
-    public void sendToAll(@NotNull SenderT agent, @NotNull String language, @NotNull String path, @Nullable Object... args) {
-        getDisplay(language, path).sendArgs(getPlayers(), agent, args);
-    }
-
-    public void sendToAll(@NotNull String path, @NotNull Function<String, String> parser) {
-        sendToAll(defaultLanguage, path, parser);
-    }
-
-    public void sendToAll(@NotNull String language, @NotNull String path, @NotNull Function<String, String> parser) {
-        getDisplay(language, path).sendTo(getPlayers(), parser);
-    }
-
-    public void sendToAll(@NotNull String path, @NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
-        sendToAll(defaultLanguage, path, parser, playerParser);
-    }
-
-    public void sendToAll(@NotNull String language, @NotNull String path, @NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
-        getDisplay(language, path).sendTo(getPlayers(), parser, playerParser);
     }
 
     @NotNull
@@ -491,7 +200,7 @@ public abstract class AbstractLang<SenderT, PlayerT extends SenderT> implements 
         private final String path;
         private final String[] oldPaths;
 
-        private AbstractLang<?, ?> loader = null;
+        private AbstractLang<?> loader = null;
 
         @NotNull
         public static Path of(@NotNull String path, @NotNull String... oldPaths) {
@@ -514,17 +223,17 @@ public abstract class AbstractLang<SenderT, PlayerT extends SenderT> implements 
         }
 
         @Nullable
-        public AbstractLang<?, ?> getLoader() {
+        public AbstractLang<?> getLoader() {
             return loader;
         }
 
-        public void setLoader(@Nullable AbstractLang<?, ?> loader) {
+        public void setLoader(@Nullable AbstractLang<?> loader) {
             this.loader = loader;
         }
 
         @SuppressWarnings("unchecked")
-        private <SenderT> AbstractLang<SenderT, ?> loader() {
-            return (AbstractLang<SenderT, ?>) loader;
+        private <SenderT> AbstractLang<SenderT> loader() {
+            return (AbstractLang<SenderT>) loader;
         }
 
         public <SenderT> void sendTo(@NotNull SenderT sender, @Nullable Object... args) {

@@ -23,7 +23,7 @@ public interface Display<SenderT> {
         sendTo(type, s -> Text.of(s).args(args).parse(type).toString());
     }
 
-    default void sendArgs(@NotNull Collection<SenderT> senders, @Nullable Object... args) {
+    default void sendArgs(@NotNull Collection<? extends SenderT> senders, @Nullable Object... args) {
         sendTo(senders, s -> Strings.replaceArgs(s, args), (player, s) -> Text.of(s).parse(player).color().getString());
     }
 
@@ -31,17 +31,17 @@ public interface Display<SenderT> {
         sendTo(type, s -> Text.of(s).args(args).parseAgent(type, agent).toString());
     }
 
-    default void sendArgs(@NotNull SenderT agent, @NotNull Collection<SenderT> senders, @Nullable Object... args) {
+    default void sendArgs(@NotNull SenderT agent, @NotNull Collection<? extends SenderT> senders, @Nullable Object... args) {
         sendTo(senders, s -> Text.of(s).args(args).parseAgent(agent).toString(), (player, s) -> Text.of(s).parse(player).color().getString());
     }
 
     void sendTo(@NotNull SenderT type, @NotNull Function<String, String> parser);
 
-    default void sendTo(@NotNull Collection<SenderT> senders, @NotNull Function<String, String> parser) {
+    default void sendTo(@NotNull Collection<? extends SenderT> senders, @NotNull Function<String, String> parser) {
         sendTo(senders, parser, (player, s) -> Text.of(s).parse(player).color().getString());
     }
 
-    default void sendTo(@NotNull Collection<SenderT> senders, @NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
+    default void sendTo(@NotNull Collection<? extends SenderT> senders, @NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
         for (SenderT sender : senders) {
             sendTo(sender, parser);
         }
