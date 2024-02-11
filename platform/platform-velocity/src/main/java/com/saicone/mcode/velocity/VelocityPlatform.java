@@ -38,7 +38,7 @@ public class VelocityPlatform extends Platform {
             initModule("com.saicone.mcode.velocity.script.VelocityScripts", "registerActions", "registerConditions");
         }
         if (isAvailable("Settings")) {
-            initModule("com.saicone.mcode.velocity.settings.TomlSettingsSource", "register");
+            initModule("com.saicone.mcode.velocity.settings.TomlSettingsSource");
         }
     }
 

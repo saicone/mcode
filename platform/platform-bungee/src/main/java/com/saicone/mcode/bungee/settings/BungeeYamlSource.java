@@ -16,7 +16,7 @@ import java.util.List;
 
 public class BungeeYamlSource implements SettingsSource {
 
-    public static void register() {
+    static {
         DataFormat.addSource("yaml", BungeeYamlSource.class);
     }
 

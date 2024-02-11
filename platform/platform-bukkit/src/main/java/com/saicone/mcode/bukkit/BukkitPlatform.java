@@ -38,7 +38,7 @@ public class BukkitPlatform extends Platform {
             initModule("com.saicone.mcode.bukkit.script.BukkitScripts", "registerActions", "registerConditions");
         }
         if (isAvailable("Settings")) {
-            initModule("com.saicone.mcode.bukkit.settings.BukkitYamlSource", "register");
+            initModule("com.saicone.mcode.bukkit.settings.BukkitYamlSource");
         }
         if (isAvailable("Lookup")) {
             initModule("com.saicone.mcode.bukkit.util.BukkitLookup");

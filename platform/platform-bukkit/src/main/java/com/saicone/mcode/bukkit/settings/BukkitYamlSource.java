@@ -24,9 +24,6 @@ public class BukkitYamlSource implements SettingsSource {
             allowComments = true;
         } catch (NoSuchMethodException ignored) { }
         ALLOW_COMMENTS = allowComments;
-    }
-
-    public static void register() {
         DataFormat.addSource("yaml", BukkitYamlSource.class);
     }
 

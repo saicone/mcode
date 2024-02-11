@@ -13,7 +13,7 @@ import java.io.Writer;
 
 public class TomlSettingsSource implements SettingsSource {
 
-    public static void register() {
+    static {
         DataFormat.addSource("toml", TomlSettingsSource.class);
     }
 
