@@ -96,6 +96,20 @@ public interface DisplaySupplier<SenderT> {
         }
 
         if (object instanceof Iterable) {
+            boolean flat = true;
+            for (Object o : (Iterable<?>) object) {
+                if (o != null && !(o instanceof String)) {
+                    flat = false;
+                    break;
+                }
+            }
+            if (flat) {
+                final List<String> list = new ArrayList<>();
+                for (Object o : (Iterable<?>) object) {
+                    list.add(o == null ? "" : String.valueOf(o));
+                }
+                return loadDisplayOrNull(defaultType, list);
+            }
             final List<Display<SenderT>> list = new ArrayList<>();
             for (Object o : (Iterable<?>) object) {
                 final Display<SenderT> display = loadDisplayOrNull(o);
