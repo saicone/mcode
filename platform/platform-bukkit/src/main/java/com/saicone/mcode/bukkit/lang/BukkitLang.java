@@ -1,5 +1,6 @@
 package com.saicone.mcode.bukkit.lang;
 
+import com.google.gson.Gson;
 import com.saicone.mcode.bukkit.util.ServerInstance;
 import com.saicone.mcode.module.lang.AbstractLang;
 import com.saicone.mcode.module.lang.Displays;
@@ -237,15 +238,23 @@ public class BukkitLang extends AbstractLang<CommandSender> {
     @Override
     protected @NotNull Map<String, Object> getFileObjects(@NotNull File file) {
         final Map<String, Object> objects = new HashMap<>();
-        final String name = file.getName().toLowerCase();
-        if (!name.endsWith(".yml") || !name.endsWith(".yaml")) {
+        final String name = file.getName().trim().toLowerCase();
+        if (!name.endsWith(".yml") && !name.endsWith(".yaml")) {
+            if (name.endsWith(".json")) {
+                try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                    return DMap.of(new Gson().fromJson(reader, Map.class)).asDeepPath(".");
+                } catch (IOException e) {
+                    sendLog(2, e, "Cannot load displays from json configuration at file " + file.getName());
+                    return objects;
+                }
+            }
             return objects;
         }
         final YamlConfiguration config = new YamlConfiguration();
         try {
             config.load(file);
         } catch (Exception e) {
-            e.printStackTrace();
+            sendLog(2, e, "Cannot load displays from yaml configuration at file " + file.getName());
         }
         for (String key : config.getKeys(true)) {
             objects.put(key, config.get(key));
