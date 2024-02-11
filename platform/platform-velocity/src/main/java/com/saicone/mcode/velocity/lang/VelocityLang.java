@@ -19,6 +19,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -124,20 +125,15 @@ public class VelocityLang extends AbstractLang<CommandSource> implements Adventu
     }
 
     @Override
-    protected @Nullable File saveDefaultLang(@NotNull File folder, @NotNull String name) {
-        final String fileName = name + ".yml";
-        final InputStream in = plugin.getClass().getClassLoader().getResourceAsStream("lang/" + fileName);
-        if (in == null) {
-            return null;
-        }
-        final File file = new File(folder, fileName);
-        try (OutputStream out = new FileOutputStream(file, false)) {
-            in.transferTo(out);
-            in.close();
+    protected void saveFile(@NotNull File folder, @NotNull String name) {
+        try (InputStream in = plugin.getClass().getClassLoader().getResourceAsStream("lang/" + name)) {
+            if (in == null) {
+                return;
+            }
+            Files.copy(in, new File(folder, name).toPath());
         } catch (IOException e) {
-            return null;
+            sendLog(2, e);
         }
-        return file;
     }
 
     @Override

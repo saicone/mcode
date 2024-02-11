@@ -22,6 +22,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -123,20 +124,15 @@ public class BungeeLang extends AbstractLang<CommandSender> {
     }
 
     @Override
-    protected @Nullable File saveDefaultLang(@NotNull File folder, @NotNull String name) {
-        final String fileName = name + filePrefix;
-        final InputStream in = plugin.getResourceAsStream("lang/" + fileName);
-        if (in == null) {
-            return null;
-        }
-        final File file = new File(folder, fileName);
-        try (OutputStream out = new FileOutputStream(file, false)) {
-            in.transferTo(out);
-            in.close();
+    protected void saveFile(@NotNull File folder, @NotNull String name) {
+        try (InputStream in = plugin.getResourceAsStream("lang/" + name)) {
+            if (in == null) {
+                return;
+            }
+            Files.copy(in, new File(folder, name).toPath());
         } catch (IOException e) {
-            return null;
+            sendLog(2, e);
         }
-        return file;
     }
 
     @Override

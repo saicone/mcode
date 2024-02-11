@@ -9,20 +9,23 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
+import java.util.function.BiConsumer;
 
 public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> implements DisplaySupplier<SenderT> {
 
     private static final boolean USE_SETTINGS = Platform.isAvailable("Settings");
 
-    private final LangSupplier langSupplier;
+    // Object parameters
+    private LangSupplier langSupplier;
     private final Class<?>[] langProviders;
 
+    // Instance fields parameters
     private Path[] paths = new Path[0];
     private final List<DisplayLoader<SenderT>> displayLoaders = new ArrayList<>();
 
-    protected String filePrefix = ".yml";
+    // Mutable parameters
+    protected transient String filePrefix = ".yml";
+    private transient String displayType = Display.DEFAULT_TYPE;
 
     public AbstractLang(@NotNull Object... providers) {
         LangSupplier langSupplier = null;
@@ -37,6 +40,8 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
         }
         this.langSupplier = langSupplier;
         this.langProviders = langProviders;
+        computePaths();
+        computeDisplayLoaders();
     }
 
     public void load() {
@@ -47,82 +52,49 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
         if (!langFolder.exists()) {
             langFolder.mkdirs();
         }
-        computePaths();
-        computeDisplayLoaders();
-        final Map<String, List<File>> langFiles = getLangFiles(langFolder);
-        for (String defaultLanguage : getLanguageTypes()) {
-            final String key = defaultLanguage.toLowerCase();
-            if (!langFiles.containsKey(key)) {
-                final File file = saveDefaultLang(langFolder, defaultLanguage);
-                if (file != null) {
-                    final List<File> list = new ArrayList<>();
-                    list.add(file);
-                    langFiles.put(key, list);
+        // Save language files
+        for (String language : getLanguageTypes()) {
+            saveFile(langFolder, language + filePrefix);
+            final int index = language.indexOf('_');
+            if (index > 0) {
+                final String formatted = language.substring(0, index).toLowerCase() + "_" + language.substring(index + 1).toUpperCase();
+                if (!formatted.equals(language)) {
+                    saveFile(langFolder, formatted + filePrefix);
                 }
             }
         }
-        langFiles.forEach((key, list) -> list.forEach(file -> loadDisplays(key, file)));
+        getLangFiles(langFolder).forEach((key, list) -> list.forEach(file -> loadDisplays(key, file)));
     }
 
-    protected void loadDisplays(@NotNull String name, @NotNull File file) {
+    protected void loadDisplays(@NotNull String language, @NotNull File file) {
         for (var entry : getObjects(file).entrySet()) {
             final Display<SenderT> display = loadDisplayOrNull(entry.getValue());
             if (display != null) {
-                if (!displays.containsKey(name)) {
-                    displays.put(name, new HashMap<>());
+                if (!displays.containsKey(language)) {
+                    displays.put(language, new HashMap<>());
                 }
-                final Map<String, Display<SenderT>> map = displays.get(name);
+                final Map<String, Display<SenderT>> map = displays.get(language);
                 map.put(entry.getKey(), display);
             }
         }
-    }
-
-    private void computePaths() {
-        if (paths.length > 0) {
-            return;
-        }
-        final List<Path> paths = new ArrayList<>();
-        getFieldsFrom(getLangProviders(), field -> Path.class.isAssignableFrom(field.getType()), field -> {
-            try {
-                final Path path = (Path) field.get(null);
-                path.setHolder(this);
-                paths.add(path);
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            }
-        });
-        this.paths = paths.toArray(new Path[0]);
-    }
-
-    @SuppressWarnings("unchecked")
-    private void computeDisplayLoaders() {
-        if (!displayLoaders.isEmpty()) {
-            return;
-        }
-        final Set<String> loaded = new HashSet<>();
-        getFieldsFrom(getLangProviders(), field -> DisplayLoader.class.isAssignableFrom(field.getType()), field -> {
-            if (loaded.contains(field.getName().toLowerCase())) {
-                return;
-            }
-            try {
-                final DisplayLoader<SenderT> loader = (DisplayLoader<SenderT>) field.get(this);
-                displayLoaders.add(loader);
-                loaded.add(field.getName().toLowerCase());
-            } catch (IllegalAccessException | ClassCastException e) {
-                e.printStackTrace();
-            }
-        });
     }
 
     public void unload() {
         clear();
     }
 
-    @Nullable
-    protected abstract File saveDefaultLang(@NotNull File folder, @NotNull String name);
+    protected abstract void saveFile(@NotNull File folder, @NotNull String name);
+
+    public void setLangSupplier(@Nullable LangSupplier langSupplier) {
+        this.langSupplier = langSupplier;
+    }
 
     public void setFilePrefix(@NotNull String filePrefix) {
         this.filePrefix = filePrefix;
+    }
+
+    public void setDisplayType(@NotNull String displayType) {
+        this.displayType = displayType;
     }
 
     @NotNull
@@ -163,6 +135,11 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
     @NotNull
     protected abstract Map<String, Object> getFileObjects(@NotNull File file);
 
+    @Nullable
+    public LangSupplier getLangSupplier() {
+        return langSupplier;
+    }
+
     @NotNull
     protected Class<?>[] getLangProviders() {
         return langProviders;
@@ -179,14 +156,15 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
     }
 
     @NotNull
-    protected String[] splitPath(@NotNull String path) {
-        return path.split("\\.");
+    @Override
+    public List<DisplayLoader<SenderT>> getDisplayLoaders() {
+        return displayLoaders;
     }
 
     @NotNull
     @Override
-    public List<DisplayLoader<SenderT>> getDisplayLoaders() {
-        return displayLoaders;
+    public String getDisplayType() {
+        return displayType;
     }
 
     @Override
@@ -221,14 +199,46 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
         return super.getLogLevel();
     }
 
-    protected void getFieldsFrom(@NotNull Class<?>[] classes, @NotNull Predicate<Field> filter, @NotNull Consumer<Field> consumer) {
+    private void computePaths() {
+        if (paths.length > 0) {
+            return;
+        }
+        final List<Path> paths = new ArrayList<>();
+        computeFields(getLangProviders(), Path.class, (name, path) -> {
+            path.setHolder(this);
+            paths.add(path);
+        });
+        this.paths = paths.toArray(new Path[0]);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void computeDisplayLoaders() {
+        if (!displayLoaders.isEmpty()) {
+            return;
+        }
+        final Set<String> loaded = new HashSet<>();
+        computeFields(getLangProviders(), DisplayLoader.class, (name, loader) -> {
+            if (loaded.contains(name)) {
+                return;
+            }
+            displayLoaders.add(loader);
+            loaded.add(name);
+        });
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> void computeFields(@NotNull Class<?>[] classes, @NotNull Class<T> classType, @NotNull BiConsumer<String, T> consumer) {
         for (Class<?> provided : classes) {
             // Check every superclass
             for (Class<?> clazz = provided; clazz != Object.class; clazz = clazz.getSuperclass()) {
                 for (Field field : clazz.getDeclaredFields()) {
-                    if (filter.test(field)) {
+                    if (classType.isAssignableFrom(field.getType())) {
                         field.setAccessible(true);
-                        consumer.accept(field);
+                        try {
+                            consumer.accept(field.getName().toLowerCase(), (T) field.get(this));
+                        } catch (IllegalAccessException | ClassCastException e) {
+                            sendLog(2, e);
+                        }
                     }
                 }
             }
