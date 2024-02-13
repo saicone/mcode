@@ -1,57 +1,92 @@
 package com.saicone.mcode.velocity.command;
 
-import com.saicone.mcode.module.command.ACommand;
-import com.saicone.mcode.module.command.CommandKey;
-import com.saicone.mcode.module.command.builder.CommandBuilder;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.saicone.mcode.module.command.CommandArgument;
+import com.saicone.mcode.module.command.CommandBuilder;
+import com.saicone.mcode.module.command.CommandExecution;
+import com.saicone.mcode.module.command.CommandNode;
+import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
-public class VelocityCommandBuilder extends CommandBuilder<CommandSource> {
+public class VelocityCommandBuilder implements CommandBuilder<CommandSource> {
 
-    public VelocityCommandBuilder(@NotNull CommandKey key) {
-        this(new AVelocityCommand(key));
-    }
+    private LiteralArgumentBuilder<CommandSource> builder;
 
-    public VelocityCommandBuilder(@NotNull ACommand command) {
-        this(command.wrap(new AVelocityCommand(command.getKey())));
-    }
-
-    public VelocityCommandBuilder(@NotNull AVelocityCommand command) {
-        super(command);
+    public VelocityCommandBuilder(@NotNull String name) {
+        this.builder = BrigadierCommand.literalArgumentBuilder(name);
     }
 
     @Override
-    public @NotNull AVelocityCommand getCommand() {
-        return (AVelocityCommand) super.getCommand();
-    }
+    public @NotNull VelocityCommandBuilder alias(@NotNull String... aliases) {
 
-    @Override
-    public @NotNull CommandBuilder<CommandSource> permission(@Nullable String permission) {
-        getCommand().setPermission(permission);
         return this;
     }
 
     @Override
-    public @NotNull CommandBuilder<CommandSource> permissionBound(@Nullable String permissionBound) {
-        return permissionBound(LegacyComponentSerializer.legacyAmpersand().deserializeOrNull(permissionBound));
-    }
+    public @NotNull VelocityCommandBuilder description(@NotNull String description) {
 
-    @NotNull
-    public CommandBuilder<CommandSource> permissionBound(@Nullable Component component) {
-        if (component == null) {
-            return this;
-        }
-        return permissionBound(source -> source.sendMessage(component));
+        return this;
     }
 
     @Override
-    public @NotNull CommandBuilder<CommandSource> permissionBound(@Nullable Consumer<CommandSource> permissionBound) {
-        getCommand().setPermissionBound(permissionBound);
+    public @NotNull VelocityCommandBuilder permission(@NotNull String... permissions) {
+        builder = builder.requires(source -> {
+            for (String permission : permissions) {
+                if (!source.hasPermission(permission)) {
+                    return false;
+                }
+            }
+            return true;
+        });
         return this;
+    }
+
+    @Override
+    public @NotNull VelocityCommandBuilder eval(@NotNull Predicate<CommandSource> predicate) {
+        builder = builder.requires(predicate);
+        return this;
+    }
+
+    @Override
+    public @NotNull VelocityCommandBuilder argument(@NotNull CommandArgument<CommandSource> argument) {
+
+        return this;
+    }
+
+    @Override
+    public @NotNull VelocityCommandBuilder subCommand(@NotNull CommandNode<CommandSource> node) {
+
+        return this;
+    }
+
+    @Override
+    public @NotNull VelocityCommandBuilder subCommand(@NotNull String name, @NotNull Consumer<CommandBuilder<CommandSource>> consumer) {
+        // TODO: Save arguments temporally as Map
+        return this;
+    }
+
+    @Override
+    public @NotNull VelocityCommandBuilder executes(CommandExecution<CommandSource> execution) {
+
+        return this;
+    }
+
+    @Override
+    public @NotNull VelocityCommandBuilder register() {
+        return this;
+    }
+
+    @Override
+    public @NotNull VelocityCommandBuilder unregister() {
+        return this;
+    }
+
+    @Override
+    public @NotNull CommandNode<CommandSource> build() {
+        return null;
     }
 }

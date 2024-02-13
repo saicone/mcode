@@ -19,7 +19,11 @@ dependencies {
     compileOnly 'net.kyori:adventure-text-serializer-legacy:4.15.0'
 
     compileOnly project(':module:module-script')
+
+    // Command module
     compileOnly project(':module:module-command')
+    compileOnly 'dev.jorel:commandapi-bukkit-core:9.3.0'
+
     compileOnly project(':extension:extension-lookup')
     compileOnly 'com.saicone.delivery4j:delivery4j:1.0'
     compileOnly 'com.saicone.settings:settings:0d340f8961'

@@ -1,10 +1,8 @@
 package com.saicone.mcode.bungee.command;
 
-import com.saicone.mcode.module.command.ACommand;
-import com.saicone.mcode.module.command.CommandCentral;
+import com.saicone.mcode.module.command.CommandNode;
+import com.saicone.mcode.module.command.CommandBuilder;
 import com.saicone.mcode.module.command.CommandResult;
-import com.saicone.mcode.module.command.InputContext;
-import com.saicone.mcode.module.command.builder.CommandBuilder;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -17,7 +15,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
 import java.util.Map;
 
-public class BungeeCommand extends CommandCentral<CommandSender> {
+public class BungeeCommand {
 
     private static final MethodHandle COMMANDS;
 
@@ -33,17 +31,6 @@ public class BungeeCommand extends CommandCentral<CommandSender> {
         COMMANDS = commands;
     }
 
-    public static void init() {
-        if (INSTANCE == null) {
-            INSTANCE = new BungeeCommand();
-        }
-    }
-
-    @NotNull
-    public static BungeeCommand central() {
-        return (BungeeCommand) INSTANCE;
-    }
-
     @NotNull
     @SuppressWarnings("unchecked")
     public static Map<String, Command> all() {
@@ -54,18 +41,18 @@ public class BungeeCommand extends CommandCentral<CommandSender> {
         }
     }
 
-    @Override
-    public @NotNull CommandBuilder<CommandSender> builder(@NotNull ACommand command) {
-        return builder(new ABungeeCommand(command));
+    @NotNull
+    public static CommandBuilder<CommandSender> builder(@NotNull CommandNode<CommandSender> command) {
+
     }
 
     @NotNull
-    public CommandBuilder<CommandSender> builder(@NotNull ABungeeCommand command) {
-        return new BungeeCommandBuilder(command);
+    public static CommandBuilder<CommandSender> builder(@NotNull Command command) {
+
     }
 
-    @Override
-    public CommandResult dispatch(@NotNull CommandSender user, @NotNull String id, @NotNull String input) {
+    @NotNull
+    public static CommandResult dispatch(@NotNull CommandSender user, @NotNull String id, @NotNull String input) {
         if (user instanceof ProxiedPlayer && ProxyServer.getInstance().getDisabledCommands().contains(id.toLowerCase())) {
             return CommandResult.NOT_FOUND;
         }
@@ -73,19 +60,6 @@ public class BungeeCommand extends CommandCentral<CommandSender> {
         final Command command = all().get(id.toLowerCase());
         if (command == null) {
             return CommandResult.NOT_FOUND;
-        }
-
-        // Use wrapped bungee command
-        if (command instanceof ABungeeCommand) {
-            final ABungeeCommand aCommand = (ABungeeCommand) command;
-
-            if (!aCommand.testPermission(user)) {
-                return CommandResult.NO_PERMISSION;
-            }
-            if (!aCommand.isRegistered()) {
-                return CommandResult.NOT_REGISTERED;
-            }
-            return execute(aCommand.getKey(), new InputContext<>(user, null, input));
         }
 
         if (!command.hasPermission(user)) {
@@ -106,33 +80,41 @@ public class BungeeCommand extends CommandCentral<CommandSender> {
         }
     }
 
-    @Override
-    protected void register(@NotNull CommandBuilder<CommandSender> builder) {
-        if (builder instanceof BungeeCommandBuilder) {
-            register(builder, ((BungeeCommandBuilder) builder).getBungeeCommand());
-        } else if (builder.getCommand().isMain()) {
-            register(builder, new ABungeeCommand(builder.getCommand()));
-        } else {
-            super.register(builder);
+    public static void register(@NotNull Command command) {
+        final Map<String, Command> commands = all();
+        commands.put(command.getName(), command);
+        for (String alias : command.getAliases()) {
+            commands.put(alias, command);
         }
     }
 
-    protected void register(@NotNull CommandBuilder<CommandSender> builder, @NotNull ABungeeCommand command) {
-        if (!builder.getCommand().isMain()) {
-            if (command.getPermission() != null) {
-                builder.function().setEval(
-                        context -> command.testPermission(context.getSender()) ? CommandResult.DONE : CommandResult.FAIL_EVAL, true);
-            }
-            super.register(builder);
+    public static void register(@NotNull CommandNode<CommandSender> node) {
+        if (node instanceof Command) {
+            register((Command) node);
             return;
         }
-        super.register(builder);
+        final Command command = new Command(node.getName(), null, node.getNodeAliases().toArray(new String[0])) {
+            @Override
+            public void execute(CommandSender commandSender, String[] strings) {
 
+            }
+        };
         final Map<String, Command> commands = all();
         commands.put(command.getName(), command);
-        command.register(this);
         for (String alias : command.getAliases()) {
-            commands.put(alias, command.clone(alias));
+            commands.put(alias, command);
         }
+    }
+
+    public static void unregister(@NotNull Command command) {
+        final Map<String, Command> commands = all();
+        commands.remove(command.getName());
+        for (String alias : command.getAliases()) {
+            commands.remove(alias);
+        }
+    }
+
+    public static void unregister(@NotNull String name) {
+        all().remove(name);
     }
 }

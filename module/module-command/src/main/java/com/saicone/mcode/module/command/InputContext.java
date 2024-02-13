@@ -14,11 +14,11 @@ public class InputContext<T> {
     private final T agent;
     private final List<String> inputs;
 
+    private String[] path;
     // String
     // Dual<String, String>
     private List<Object> arguments;
     private int position = 0;
-    private CommandKey key;
     private CommandResult result = CommandResult.DONE;
 
     public InputContext(@NotNull T user, @Nullable T agent, @NotNull String input) {
@@ -73,25 +73,12 @@ public class InputContext<T> {
     }
 
     @NotNull
-    public String getCommand() {
-        return key.getName();
-    }
-
-    @NotNull
-    public CommandKey getKey() {
-        return key;
-    }
-
-    @NotNull
     public CommandResult getResult() {
         return result;
     }
 
     public void setArguments(@NotNull List<Object> arguments) {
         this.arguments = arguments;
-    }
-    public void setKey(@NotNull CommandKey key) {
-        this.key = key;
     }
 
     public void setResult(@NotNull CommandResult result) {
@@ -148,7 +135,6 @@ public class InputContext<T> {
     public void clear() {
         inputs.clear();
         arguments.clear();
-        key = null;
     }
 
     @NotNull
@@ -193,10 +179,10 @@ public class InputContext<T> {
     @NotNull
     public Object[] allArgs() {
         if (arguments == null || arguments.isEmpty()) {
-            return new Object[] { getCommand() };
+            return new Object[] { path[path.length - 1] };
         }
         final Object[] args = new Object[arguments.size() + 1];
-        args[0] = getCommand();
+        args[0] = path[path.length - 1];
         for (int i = 0; i < arguments.size(); i++) {
             args[i + 1] = arguments.get(i);
         }

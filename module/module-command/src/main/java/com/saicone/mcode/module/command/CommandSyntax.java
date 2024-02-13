@@ -156,6 +156,8 @@ public class CommandSyntax {
         private String separator = " ";
         private String prefix = "";
         private String suffix = "";
+        // Process String matcher
+        private Predicate<String> matcher;
         private ThrowableFunction<String, Object> mapper;
 
         public Argument(@NotNull String name) {

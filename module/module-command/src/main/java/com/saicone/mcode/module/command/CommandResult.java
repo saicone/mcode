@@ -11,10 +11,6 @@ public enum CommandResult {
      */
     NOT_FOUND,
     /**
-     * Command was found, but is not registered.
-     */
-    NOT_REGISTERED,
-    /**
      * User doesn't have permission to execute the command.
      */
     NO_PERMISSION,
@@ -48,7 +44,7 @@ public enum CommandResult {
     }
 
     public boolean isUnknown() {
-        return this == NOT_FOUND || this == NOT_REGISTERED;
+        return this == NOT_FOUND;
     }
 
     public boolean isFail() {
