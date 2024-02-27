@@ -5,6 +5,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 public class CommandArgument<SenderT> {
 
@@ -12,9 +13,13 @@ public class CommandArgument<SenderT> {
     private final boolean required;
     private final boolean array;
 
+    private Predicate<SenderT> requiredPredicate;
+    private boolean preview;
+    private Function<String, Object> previewFunction;
     private int size = 1;
     private Object type = String.class;
     private Function<String, Object> typeFunction;
+    private Predicate<String> typeChecker;
     private Object mapper = String.class;
     private Function<String, Object> mapperFunction;
     private List<String> suggestionList;
@@ -57,6 +62,13 @@ public class CommandArgument<SenderT> {
     }
 
     public boolean isRequired() {
+        return isRequired(null);
+    }
+
+    public boolean isRequired(@Nullable SenderT sender) {
+        if (sender != null && requiredPredicate != null) {
+            return requiredPredicate.test(sender);
+        }
         return required;
     }
 
@@ -64,9 +76,23 @@ public class CommandArgument<SenderT> {
         return array;
     }
 
+    public boolean isPreview() {
+        return preview;
+    }
+
     @NotNull
     public String getName() {
         return name;
+    }
+
+    @Nullable
+    public Predicate<SenderT> getRequiredPredicate() {
+        return requiredPredicate;
+    }
+
+    @Nullable
+    public Function<String, Object> getPreviewFunction() {
+        return previewFunction;
     }
 
     public int getSize() {
@@ -81,6 +107,11 @@ public class CommandArgument<SenderT> {
     @Nullable
     public Function<String, Object> getTypeFunction() {
         return typeFunction;
+    }
+
+    @Nullable
+    public Predicate<String> getTypeChecker() {
+        return typeChecker;
     }
 
     @NotNull
@@ -104,6 +135,25 @@ public class CommandArgument<SenderT> {
     }
 
     @NotNull
+    public CommandArgument<SenderT> required(@NotNull Predicate<SenderT> predicate) {
+        this.requiredPredicate = predicate;
+        return this;
+    }
+
+    @NotNull
+    public CommandArgument<SenderT> preview(boolean preview) {
+        this.preview = preview;
+        return this;
+    }
+
+    @NotNull
+    public CommandArgument<SenderT> preview(@NotNull Function<String, Object> preview) {
+        this.preview = true;
+        this.previewFunction = preview;
+        return this;
+    }
+
+    @NotNull
     public CommandArgument<SenderT> size(int size) {
         this.size = size;
         return this;
@@ -124,6 +174,12 @@ public class CommandArgument<SenderT> {
     @NotNull
     public CommandArgument<SenderT> type(@NotNull Function<String, Object> function) {
         this.typeFunction = function;
+        return this;
+    }
+
+    @NotNull
+    public CommandArgument<SenderT> checkType(@NotNull Predicate<String> predicate) {
+        this.typeChecker = predicate;
         return this;
     }
 
