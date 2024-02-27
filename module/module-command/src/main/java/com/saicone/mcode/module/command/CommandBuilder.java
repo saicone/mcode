@@ -3,24 +3,33 @@ package com.saicone.mcode.module.command;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
-public interface CommandBuilder<SenderT> {
+public interface CommandBuilder<SenderT, BuilderT extends CommandBuilder<SenderT, BuilderT>> {
 
     @NotNull
-    CommandBuilder<SenderT> alias(@NotNull String... aliases);
+    BuilderT builder();
 
     @NotNull
-    CommandBuilder<SenderT> description(@NotNull String description);
+    BuilderT alias(@NotNull String... aliases);
 
     @NotNull
-    CommandBuilder<SenderT> permission(@NotNull String... permissions);
+    default BuilderT description(@NotNull String description) {
+        return description(sender -> description);
+    }
 
     @NotNull
-    CommandBuilder<SenderT> eval(@NotNull Predicate<SenderT> predicate);
+    BuilderT description(@NotNull Function<SenderT, String> description);
 
     @NotNull
-    default CommandBuilder<SenderT> syntax(@NotNull String syntax) {
+    BuilderT permission(@NotNull String... permissions);
+
+    @NotNull
+    BuilderT eval(@NotNull Predicate<SenderT> predicate);
+
+    @NotNull
+    default BuilderT syntax(@NotNull String syntax) {
         final char[] chars = syntax.toCharArray();
         int mark = 0;
         Character looking = null;
@@ -52,48 +61,67 @@ public interface CommandBuilder<SenderT> {
                 mark = i + 1;
             }
         }
-        return this;
+        return builder();
     }
 
     @NotNull
-    CommandBuilder<SenderT> argument(@NotNull CommandArgument<SenderT> argument);
+    BuilderT argument(@NotNull CommandArgument<SenderT> argument);
 
     @NotNull
-    default CommandBuilder<SenderT> argument(@NotNull String name) {
+    default BuilderT argument(@NotNull String name) {
         return argument(CommandArgument.of(name));
     }
 
     @NotNull
-    default CommandBuilder<SenderT> argument(@NotNull String name, @NotNull Consumer<CommandArgument<SenderT>> consumer) {
+    default BuilderT argument(@NotNull String name, @NotNull Consumer<CommandArgument<SenderT>> consumer) {
         final CommandArgument<SenderT> argument = CommandArgument.of(name);
         consumer.accept(argument);
         return argument(argument);
     }
 
     @NotNull
-    CommandBuilder<SenderT> subCommand(@NotNull CommandNode<SenderT> node);
+    default BuilderT minArgs(int minArgs) {
+        return minArgs(sender -> minArgs);
+    }
 
     @NotNull
-    CommandBuilder<SenderT> subCommand(@NotNull String name, @NotNull Consumer<CommandBuilder<SenderT>> consumer);
+    BuilderT minArgs(@NotNull Function<SenderT, Integer> minArgs);
 
     @NotNull
-    default CommandBuilder<SenderT> executes(@NotNull Consumer<InputContext<SenderT>> execution) {
+    default BuilderT subStart(int subStart) {
+        return subStart(sender -> subStart);
+    }
+
+    @NotNull
+    BuilderT subStart(@NotNull Function<SenderT, Integer> subStart);
+
+    @NotNull
+    BuilderT subCommand(@NotNull CommandNode<SenderT> node);
+
+    @NotNull
+    BuilderT subCommand(@NotNull String name, @NotNull Consumer<BuilderT> consumer);
+
+    @NotNull
+    BuilderT throwable(@NotNull CommandThrowable<SenderT> throwable);
+
+    @NotNull
+    default BuilderT executes(@NotNull Consumer<InputContext<SenderT>> execution) {
         return executes(CommandExecution.of(execution));
     }
 
     @NotNull
-    CommandBuilder<SenderT> executes(CommandExecution<SenderT> execution);
+    BuilderT executes(CommandExecution<SenderT> execution);
 
     @NotNull
-    default CommandBuilder<SenderT> test(@NotNull Predicate<InputContext<SenderT>> execution) {
+    default BuilderT test(@NotNull Predicate<InputContext<SenderT>> execution) {
         return executes(CommandExecution.of(execution));
     }
 
     @NotNull
-    CommandBuilder<SenderT> register();
+    BuilderT register();
 
     @NotNull
-    CommandBuilder<SenderT> unregister();
+    BuilderT unregister();
 
     @NotNull
     CommandNode<SenderT> build();

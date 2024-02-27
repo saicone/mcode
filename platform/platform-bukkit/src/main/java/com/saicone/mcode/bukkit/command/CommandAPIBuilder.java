@@ -16,12 +16,17 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-public class CommandAPIBuilder implements CommandBuilder<CommandSender> {
+public class CommandAPIBuilder implements CommandBuilder<CommandSender, CommandAPIBuilder> {
 
     private final Node node;
 
     public CommandAPIBuilder(@NotNull String name) {
         this.node = new Node(name);
+    }
+
+    @Override
+    public @NotNull CommandAPIBuilder builder() {
+        return this;
     }
 
     @Override
@@ -67,7 +72,7 @@ public class CommandAPIBuilder implements CommandBuilder<CommandSender> {
     }
 
     @Override
-    public @NotNull CommandAPIBuilder subCommand(@NotNull String name, @NotNull Consumer<CommandBuilder<CommandSender>> consumer) {
+    public @NotNull CommandAPIBuilder subCommand(@NotNull String name, @NotNull Consumer<CommandAPIBuilder> consumer) {
         final CommandAPIBuilder builder = new CommandAPIBuilder(name);
         builder.node.parent = node;
         consumer.accept(builder);

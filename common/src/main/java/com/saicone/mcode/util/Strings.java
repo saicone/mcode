@@ -92,6 +92,15 @@ public class Strings {
         }
         return true;
     }
+    
+    @Nullable
+    @Contract("!null -> !null")
+    public static String capitalize(@Nullable String s) {
+        if (s == null || s.isBlank()) {
+            return s;
+        }
+        return Character.toUpperCase(s.charAt(0)) + s.substring(1);
+    }
 
     @NotNull
     public static String join(@NotNull String delimiter, @Nullable Object object) {

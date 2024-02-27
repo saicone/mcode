@@ -1,75 +1,163 @@
 package com.saicone.mcode.module.command;
 
 import com.saicone.mcode.util.Dual;
+import com.saicone.types.TypeParser;
+import com.saicone.types.Types;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
-public class InputContext<T> {
+public class InputContext<SenderT> {
 
-    private final T user;
-    private final T agent;
-    private final List<String> inputs;
+    // Sender instances
+    private final SenderT user;
+    private final SenderT agent;
+    private final CommandThrowable<SenderT> throwable;
 
-    private String[] path;
-    // String
-    // Dual<String, String>
-    private List<Object> arguments;
-    private int position = 0;
+    // Past arguments
+    private final List<Dual<String, Object>> inputs = new ArrayList<>();
+    // Current arguments
+    private final Map<String, Dual<String, Object>> arguments = new LinkedHashMap<>();
+
+    // Commands path, not using a LinkedHashMap due some arguments can have same name
+    private final List<String> path = new ArrayList<>();
+    private final List<CommandNode<SenderT>> commands = new ArrayList<>();
+
     private CommandResult result = CommandResult.DONE;
 
-    public InputContext(@NotNull T user, @Nullable T agent, @NotNull String input) {
+    public InputContext(@NotNull SenderT user, @NotNull CommandThrowable<SenderT> throwable) {
+        this(user, null, throwable);
+    }
+
+    public InputContext(@NotNull SenderT user, @Nullable SenderT agent, @NotNull CommandThrowable<SenderT> throwable) {
         this.user = user;
         this.agent = agent;
-        this.inputs = new ArrayList<>();
-        this.inputs.add(input);
+        this.throwable = throwable;
     }
 
     @NotNull
-    public T getUser() {
+    public SenderT getUser() {
         return user;
     }
 
     @NotNull
-    public T getPlayer() {
+    public SenderT getPlayer() {
         return user;
     }
 
     @NotNull
-    public T getSender() {
+    public SenderT getSender() {
         return user;
     }
 
     @NotNull
-    public T getSource() {
+    public SenderT getSource() {
         return user;
     }
 
     @NotNull
-    public T getAgent() {
+    public SenderT getAgent() {
         return agent == null ? user : agent;
     }
 
-    @NotNull
-    public List<Object> getArguments() {
-        return arguments;
+    public int getSize() {
+        return arguments.size();
     }
 
     @NotNull
-    public String getInput() {
-        return inputs.get(position);
+    public String getFullInput() {
+        final StringJoiner joiner = new StringJoiner(" ");
+        for (Dual<String, Object> input : inputs) {
+            joiner.add(input.getLeft());
+        }
+        for (Map.Entry<String, Dual<String, Object>> entry : arguments.entrySet()) {
+            joiner.add(entry.getValue().getLeft());
+        }
+        return joiner.toString();
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> T getArgument(@NotNull Object obj) {
+        return (T) getArgumentInput(obj).getRightOrLeft();
+    }
+
+    public <T> T getArgument(@NotNull Object obj, @NotNull Object type) {
+        return getArgument(obj, Types.of(type));
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> T getArgument(@NotNull Object obj, @NotNull Class<T> type) {
+        if (type == String.class) {
+            return (T) getArgumentInput(obj).getLeft();
+        }
+        return getArgument(obj, Types.of(type));
+    }
+
+    public <T> T getArgument(@NotNull Object obj, @NotNull TypeParser<T> parser) {
+        return parser.parse(getArgumentInput(obj).getRightOrLeft());
+    }
+
+    public Dual<String, Object> getArgumentInput(@NotNull Object obj) {
+        if (obj instanceof Number) {
+            return getArgumentInput(((Number) obj).intValue());
+        } else if (obj instanceof String) {
+            return getArgumentInput((String) obj);
+        } else {
+            throw new IllegalArgumentException("The object '" + obj + "' cannot be used to get an argument");
+        }
+    }
+
+    public Dual<String, Object> getArgumentInput(int index) {
+        if (index < 0) {
+            return inputs.get(inputs.size() + index);
+        }
+        int i = 0;
+        for (Map.Entry<String, Dual<String, Object>> entry : arguments.entrySet()) {
+            if (i == index) {
+                return entry.getValue();
+            }
+            i++;
+        }
+        throw new IllegalArgumentException("The argument at index " + index + " doesn't exist");
+    }
+
+    public Dual<String, Object> getArgumentInput(@NotNull String name) {
+        final Dual<String, Object> argument = arguments.get(name);
+        if (argument != null) {
+            return argument;
+        }
+        throw new IllegalArgumentException("The argument with name '" + name + "' doesn't exist");
     }
 
     @NotNull
-    public List<String> getInputs() {
-        return inputs;
+    public List<String> getPath() {
+        return path;
     }
 
-    public int getPosition() {
-        return position;
+    @NotNull
+    public CommandNode<SenderT> getCommand() {
+        return getCommand(0);
+    }
+
+    @NotNull
+    public CommandNode<SenderT> getCommand(int position) {
+        return commands.get(commands.size() - (1 + position));
+    }
+
+    @NotNull
+    public String getCommandName() {
+        return getCommandName(0);
+    }
+
+    @NotNull
+    public String getCommandName(int position) {
+        return path.get(path.size() - (1 + position));
+    }
+
+    @NotNull
+    public List<CommandNode<SenderT>> getCommands() {
+        return commands;
     }
 
     @NotNull
@@ -77,115 +165,77 @@ public class InputContext<T> {
         return result;
     }
 
-    public void setArguments(@NotNull List<Object> arguments) {
-        this.arguments = arguments;
+    public boolean hasAgent() {
+        return agent != null;
+    }
+
+    public boolean hasArgument(@NotNull String name) {
+        return arguments.containsKey(name);
     }
 
     public void setResult(@NotNull CommandResult result) {
         this.result = result;
     }
 
-    public void addInput(@NotNull String input) {
-        this.inputs.add(input);
-        this.position++;
+    @NotNull
+    public InputContext<SenderT> then(@NotNull CommandNode<SenderT> command, @NotNull String... args) {
+        return then(command.getName(), command, args);
     }
 
-    public void removeInput() {
-        this.inputs.remove(this.inputs.size() - 1);
-        this.position--;
-    }
-
-    public void removeLast() {
-        if (this.arguments != null) {
-            this.arguments.clear();
-            this.arguments = null;
-        }
-        removeInput();
-    }
-
-    public boolean isEval() {
-        return this.arguments == null;
-    }
-
-    public boolean has(int index) {
-        return index < arguments.size();
-    }
-
-    public boolean has(@NotNull String name) {
-        for (final Object arg : arguments) {
-            if (arg instanceof Dual && name.equalsIgnoreCase((String) ((Dual<?, ?>) arg).getLeft())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public boolean notHas(int index) {
-        return !has(index);
-    }
-
-    public boolean notHas(@NotNull String name) {
-        return !has(name);
-    }
-
-    public int size() {
-        return arguments.size();
-    }
-
-    public void clear() {
-        inputs.clear();
+    @NotNull
+    public InputContext<SenderT> then(@NotNull String name, @NotNull CommandNode<SenderT> command, @NotNull String... args) {
+        inputs.addAll(arguments.values());
+        inputs.add(Dual.of(name, null));
         arguments.clear();
-    }
+        // Parse args
+        command.parseInput(args, arguments::put);
 
-    @NotNull
-    @SuppressWarnings("unchecked")
-    public <A> A arg(int index) throws IllegalArgumentException {
-        Object arg = arguments != null ? arguments.get(index) : null;
-        if (arg instanceof Dual) {
-            arg = ((Dual<?, ?>) arg).getRight();
-        }
-        Objects.requireNonNull(arg, "The argument at index " + index + " is null");
-        try {
-            return (A) arg;
-        } catch (ClassCastException e) {
-            throw new IllegalArgumentException("The argument at index " + index + " is not mapped into required type", e);
-        }
-    }
+        path.add(name);
+        commands.add(command);
 
-    @NotNull
-    @SuppressWarnings("unchecked")
-    public <A> A arg(String name) throws IllegalArgumentException {
-        if (arguments != null) {
-            for (Object arg : arguments) {
-                if (arg instanceof Dual && name.equalsIgnoreCase((String) ((Dual<?, ?>) arg).getLeft())) {
-                    arg = ((Dual<?, ?>) arg).getRight();
-                    Objects.requireNonNull(arg, "The argument with name '" + name + "' is null");
-                    try {
-                        return (A) arg;
-                    } catch (ClassCastException e) {
-                        throw new IllegalArgumentException("The argument '" + name + "' is not mapped into required type", e);
+        if (command.hasSubCommands()) {
+            final int start = command.getSubStart(user);
+            if (args.length > start) {
+                final String sub = args[start];
+                for (CommandNode<SenderT> node : command.getSubCommands()) {
+                    if (node.matches(sub)) {
+                        final InputContext<SenderT> context = then(sub, node, Arrays.copyOfRange(args, start + 1, args.length));
+                        if (context.getResult() == CommandResult.BREAK) {
+                            break;
+                        } else if (context.getResult() != CommandResult.CONTINUE) {
+                            return this;
+                        }
                     }
                 }
             }
         }
-        throw new IllegalArgumentException("The argument with name '" + name + "' doesn't exist");
+
+        if (getSize() < command.getMinArgs(user)) {
+            sendUsage();
+        } else {
+            setResult(command.execute(this));
+        }
+
+        return this;
     }
 
-    @NotNull
-    public String[] textArgs() {
-        return arguments == null ? new String[0] : arguments.stream().map(String::valueOf).toArray(String[]::new);
+    public void sendMessage(@NotNull String msg) {
+        throwable.sendMessage(user, msg);
     }
 
-    @NotNull
-    public Object[] allArgs() {
-        if (arguments == null || arguments.isEmpty()) {
-            return new Object[] { path[path.length - 1] };
-        }
-        final Object[] args = new Object[arguments.size() + 1];
-        args[0] = path[path.length - 1];
-        for (int i = 0; i < arguments.size(); i++) {
-            args[i + 1] = arguments.get(i);
-        }
-        return args;
+    public void sendColoredMessage(@NotNull String msg) {
+        throwable.sendColoredMessage(user, msg);
+    }
+
+    public void sendPermissionMessage(@NotNull String permission) {
+        throwable.sendPermissionMessage(user, permission);
+    }
+
+    public void sendKey(@NotNull String key, @Nullable Object... args) {
+        throwable.sendKey(user, getCommand().getPath() + '.' + key, args);
+    }
+
+    public void sendUsage() {
+        throwable.sendUsage(user, this);
     }
 }

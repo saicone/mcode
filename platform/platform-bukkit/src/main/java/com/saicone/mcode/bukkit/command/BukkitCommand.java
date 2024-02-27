@@ -58,23 +58,49 @@ public class BukkitCommand {
         }
     }
 
+    public static void register(@NotNull Command command) {
+        command.register(map());
+        final Map<String, Command> commands = all();
+        commands.put(command.getName(), command);
+        for (String alias : command.getAliases()) {
+            commands.put(alias, command);
+        }
+    }
+
+    public static void unregister(@NotNull String name, @NotNull String... aliases) {
+        final Map<String, Command> commands = all();
+        commands.remove(name);
+        for (String alias : aliases) {
+            commands.remove(alias);
+        }
+    }
+
+    public static void unregister(@NotNull Command command) {
+        command.unregister(map());
+        final Map<String, Command> commands = all();
+        commands.remove(command.getName(), command);
+        for (String alias : command.getAliases()) {
+            commands.remove(alias, command);
+        }
+    }
+
     @NotNull
-    public static CommandBuilder<CommandSender> builder(@NotNull CommandNode<CommandSender> command) {
+    public static <BuilderT extends CommandBuilder<CommandSender, BuilderT>> BuilderT builder(@NotNull CommandNode<CommandSender> command) {
 
     }
 
     @NotNull
-    public static CommandBuilder<CommandSender> builder(@NotNull Command command) {
+    public static <BuilderT extends CommandBuilder<CommandSender, BuilderT>> BuilderT builder(@NotNull Command command) {
 
     }
 
     @NotNull
-    public static CommandBuilder<CommandSender> builder(@NotNull PluginCommand command) {
+    public static <BuilderT extends CommandBuilder<CommandSender, BuilderT>> BuilderT builder(@NotNull PluginCommand command) {
 
     }
 
     @NotNull
-    public static CommandBuilder<CommandSender> builder(@NotNull JavaPlugin plugin, @NotNull String name) {
+    public static <BuilderT extends CommandBuilder<CommandSender, BuilderT>> BuilderT builder(@NotNull JavaPlugin plugin, @NotNull String name) {
 
     }
 }

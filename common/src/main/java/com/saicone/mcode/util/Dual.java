@@ -46,14 +46,20 @@ public class Dual<A, B> {
         this.right = right;
     }
 
-    @Nullable
     public A getLeft() {
         return left;
     }
 
-    @Nullable
+    public Object getLeftOrRight() {
+        return left != null ? left : right;
+    }
+
     public B getRight() {
         return right;
+    }
+
+    public Object getRightOrLeft() {
+        return right != null ? right : left;
     }
 
     public void setLeft(@Nullable A left) {
@@ -90,6 +96,26 @@ public class Dual<A, B> {
         return consumer.apply(left, right);
     }
 
+    @NotNull
+    public Dual<A, B> copy() {
+        return new Dual<>(left, right);
+    }
+
+    @NotNull
+    public <L, R> Dual<L, R> by(@NotNull Function<A, L> leftFunction, @NotNull Function<B, R> rightFunction) {
+        return new Dual<>(leftFunction.apply(left), rightFunction.apply(right));
+    }
+
+    @NotNull
+    public <L> Dual<L, B> byLeft(@NotNull Function<A, L> leftFunction) {
+        return new Dual<>(leftFunction.apply(left), right);
+    }
+
+    @NotNull
+    public <R> Dual<A, R> byRight(@NotNull Function<B, R> rightFunction) {
+        return new Dual<>(left, rightFunction.apply(right));
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -109,25 +135,5 @@ public class Dual<A, B> {
         int result = left != null ? left.hashCode() : 0;
         result = 31 * result + (right != null ? right.hashCode() : 0);
         return result;
-    }
-
-    @NotNull
-    public Dual<A, B> copy() {
-        return new Dual<>(left, right);
-    }
-
-    @NotNull
-    public <L, R> Dual<L, R> by(@NotNull Function<A, L> leftFunction, @NotNull Function<B, R> rightFunction) {
-        return new Dual<>(leftFunction.apply(left), rightFunction.apply(right));
-    }
-
-    @NotNull
-    public <L> Dual<L, B> byLeft(@NotNull Function<A, L> leftFunction) {
-        return new Dual<>(leftFunction.apply(left), right);
-    }
-
-    @NotNull
-    public <R> Dual<A, R> byRight(@NotNull Function<B, R> rightFunction) {
-        return new Dual<>(left, rightFunction.apply(right));
     }
 }

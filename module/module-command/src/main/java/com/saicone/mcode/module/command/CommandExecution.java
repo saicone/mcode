@@ -22,5 +22,14 @@ public interface CommandExecution<SenderT> {
     }
 
     @NotNull
-    CommandResult execute(@NotNull InputContext<SenderT> inputContext);
+    CommandResult execute(@NotNull InputContext<SenderT> context);
+
+    @NotNull
+    default CommandResult run(@NotNull InputContext<SenderT> context) {
+        final CommandResult result = execute(context);
+        if (context.getResult() != CommandResult.DONE) {
+            return context.getResult();
+        }
+        return result;
+    }
 }
