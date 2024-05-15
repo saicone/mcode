@@ -37,28 +37,33 @@ public class InputContext<SenderT> {
     }
 
     @NotNull
-    public SenderT getUser() {
-        return user;
+    @SuppressWarnings("unchecked")
+    public <T extends SenderT> T getUser() {
+        return (T) user;
     }
 
     @NotNull
-    public SenderT getPlayer() {
-        return user;
+    @SuppressWarnings("unchecked")
+    public <T extends SenderT> T getPlayer() {
+        return (T) user;
     }
 
     @NotNull
-    public SenderT getSender() {
-        return user;
+    @SuppressWarnings("unchecked")
+    public <T extends SenderT> T getSender() {
+        return (T) user;
     }
 
     @NotNull
-    public SenderT getSource() {
-        return user;
+    @SuppressWarnings("unchecked")
+    public <T extends SenderT> T getSource() {
+        return (T) user;
     }
 
     @NotNull
-    public SenderT getAgent() {
-        return agent == null ? user : agent;
+    @SuppressWarnings("unchecked")
+    public <T extends SenderT> T getAgent() {
+        return (T) (agent == null ? user : agent);
     }
 
     public int getSize() {
@@ -89,7 +94,11 @@ public class InputContext<SenderT> {
     @SuppressWarnings("unchecked")
     public <T> T getArgument(@NotNull Object obj, @NotNull Class<T> type) {
         if (type == String.class) {
-            return (T) getArgumentInput(obj).getLeft();
+            final Dual<String, Object> input = getArgumentInput(obj);
+            if (input.getRight() instanceof String) {
+                return (T) input.getRight();
+            }
+            return (T) input.getLeft();
         }
         return getArgument(obj, Types.of(type));
     }
@@ -188,13 +197,17 @@ public class InputContext<SenderT> {
         inputs.add(Dual.of(name, null));
         arguments.clear();
         // Parse args
-        command.parseInput(args, arguments::put);
+        final int consumedArgs = command.parseInput(args, arguments::put);
+        if (getSize() < command.getMinArgs(user)) {
+            sendUsage();
+            return this;
+        }
 
         path.add(name);
         commands.add(command);
 
         if (command.hasSubCommands()) {
-            final int start = command.getSubStart(user);
+            final int start = command.getSubStart(user) + consumedArgs;
             if (args.length > start) {
                 final String sub = args[start];
                 for (CommandNode<SenderT> node : command.getSubCommands()) {
@@ -210,12 +223,7 @@ public class InputContext<SenderT> {
             }
         }
 
-        if (getSize() < command.getMinArgs(user)) {
-            sendUsage();
-        } else {
-            setResult(command.execute(this));
-        }
-
+        setResult(command.execute(this));
         return this;
     }
 

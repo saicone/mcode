@@ -73,6 +73,20 @@ public interface CommandBuilder<SenderT, BuilderT extends CommandBuilder<SenderT
     }
 
     @NotNull
+    default BuilderT argument(@NotNull String name, @NotNull ArgumentType type) {
+        final CommandArgument<SenderT> argument = CommandArgument.of(name);
+        argument.type(type);
+        return argument(argument);
+    }
+
+    @NotNull
+    default BuilderT argument(@NotNull String name, @NotNull Class<?> type) {
+        final CommandArgument<SenderT> argument = CommandArgument.of(name);
+        argument.type(type);
+        return argument(argument);
+    }
+
+    @NotNull
     default BuilderT argument(@NotNull String name, @NotNull Consumer<CommandArgument<SenderT>> consumer) {
         final CommandArgument<SenderT> argument = CommandArgument.of(name);
         consumer.accept(argument);

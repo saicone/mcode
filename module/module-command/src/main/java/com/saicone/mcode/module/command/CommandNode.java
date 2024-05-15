@@ -89,7 +89,7 @@ public interface CommandNode<SenderT> {
         return 0;
     }
 
-    void parseInput(@NotNull String[] args, @NotNull BiConsumer<String, Dual<String, Object>> consumer);
+    int parseInput(@NotNull String[] args, @NotNull BiConsumer<String, Dual<String, Object>> consumer);
 
     @NotNull
     CommandResult execute(@NotNull InputContext<SenderT> input);

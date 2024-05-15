@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -71,6 +72,9 @@ public abstract class AbstractCommandNode<SenderT> implements CommandNode<Sender
         if (arguments == null) {
             arguments = new ArrayList<>();
         }
+        if (!arguments.isEmpty() && arguments.get(arguments.size() - 1).isArray()) {
+            throw new IllegalArgumentException("Cannot add ");
+        }
         arguments.add(argument);
     }
 
@@ -113,6 +117,8 @@ public abstract class AbstractCommandNode<SenderT> implements CommandNode<Sender
             for (CommandArgument<SenderT> argument : getArguments()) {
                 if (argument.isRequired(sender)) {
                     count++;
+                } else {
+                    break;
                 }
             }
             cachedMinArgs = count;
@@ -125,12 +131,38 @@ public abstract class AbstractCommandNode<SenderT> implements CommandNode<Sender
         if (subStart != null) {
             return subStart.apply(sender);
         }
+        if (arguments != null) {
+            return arguments.size();
+        }
         return CommandNode.super.getSubStart(sender);
     }
 
     @Override
-    public void parseInput(@NotNull String[] args, @NotNull BiConsumer<String, Dual<String, Object>> consumer) {
-
+    public int parseInput(@NotNull String[] args, @NotNull BiConsumer<String, Dual<String, Object>> consumer) {
+        if (arguments == null || args.length < 1) {
+            return 0;
+        }
+        int index = 0;
+        for (CommandArgument<SenderT> argument : arguments) {
+            final int end;
+            if (argument.isArray()) {
+                if (index < args.length) {
+                    end = args.length;
+                } else {
+                    break;
+                }
+            } else {
+                end = index + argument.getSize();
+                if (end > args.length) {
+                    break;
+                }
+            }
+            final String input = String.join(" ", Arrays.copyOfRange(args, index, end));
+            final Object parsed = argument.parse(input);
+            consumer.accept(argument.getName(), Dual.of(input, parsed));
+            index = end;
+        }
+        return index;
     }
 
     @Override

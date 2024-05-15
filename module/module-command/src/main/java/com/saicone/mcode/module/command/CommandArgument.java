@@ -1,5 +1,7 @@
 package com.saicone.mcode.module.command;
 
+import com.saicone.types.TypeParser;
+import com.saicone.types.Types;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -11,14 +13,11 @@ public class CommandArgument<SenderT> {
 
     private final String name;
     private final boolean required;
-    private final boolean array;
+    private boolean array;
 
     private Predicate<SenderT> requiredPredicate;
-    private boolean preview;
-    private Function<String, Object> previewFunction;
     private int size = 1;
-    private Object type = String.class;
-    private Function<String, Object> typeFunction;
+    private TypeParser<?> typeParser;
     private Predicate<String> typeChecker;
     private Object mapper = String.class;
     private Function<String, Object> mapperFunction;
@@ -61,6 +60,17 @@ public class CommandArgument<SenderT> {
         this.array = array;
     }
 
+    @Nullable
+    public Object parse(@NotNull String s) {
+        if (typeChecker != null && !typeChecker.test(s)) {
+            return null;
+        }
+        if (typeParser != null) {
+            return typeParser.parse(s);
+        }
+        return null;
+    }
+
     public boolean isRequired() {
         return isRequired(null);
     }
@@ -76,10 +86,6 @@ public class CommandArgument<SenderT> {
         return array;
     }
 
-    public boolean isPreview() {
-        return preview;
-    }
-
     @NotNull
     public String getName() {
         return name;
@@ -90,23 +96,13 @@ public class CommandArgument<SenderT> {
         return requiredPredicate;
     }
 
-    @Nullable
-    public Function<String, Object> getPreviewFunction() {
-        return previewFunction;
-    }
-
     public int getSize() {
         return size;
     }
 
-    @NotNull
-    public Object getType() {
-        return type;
-    }
-
     @Nullable
-    public Function<String, Object> getTypeFunction() {
-        return typeFunction;
+    public TypeParser<?> getTypeParser() {
+        return typeParser;
     }
 
     @Nullable
@@ -141,19 +137,6 @@ public class CommandArgument<SenderT> {
     }
 
     @NotNull
-    public CommandArgument<SenderT> preview(boolean preview) {
-        this.preview = preview;
-        return this;
-    }
-
-    @NotNull
-    public CommandArgument<SenderT> preview(@NotNull Function<String, Object> preview) {
-        this.preview = true;
-        this.previewFunction = preview;
-        return this;
-    }
-
-    @NotNull
     public CommandArgument<SenderT> size(int size) {
         this.size = size;
         return this;
@@ -161,19 +144,28 @@ public class CommandArgument<SenderT> {
 
     @NotNull
     public CommandArgument<SenderT> type(@NotNull ArgumentType type) {
-        this.type = type;
+        if (type.getType() == null && !Types.contains(type)) {
+            throw new IllegalArgumentException("There's no type parser for argument type " + type.name());
+        }
+        if (type == ArgumentType.GREEDY_STRING) {
+            this.array = true;
+        }
+        this.typeParser = Types.of(type.getType() != null ? type.getType() : type);
         return this;
     }
 
     @NotNull
     public CommandArgument<SenderT> type(@NotNull Class<?> type) {
-        this.type = type;
+        if (!Types.contains(type)) {
+            throw new IllegalArgumentException("There's no type parser for class " + type.getName() + ", consider adding your own parser");
+        }
+        this.typeParser = Types.of(type);
         return this;
     }
 
     @NotNull
-    public CommandArgument<SenderT> type(@NotNull Function<String, Object> function) {
-        this.typeFunction = function;
+    public CommandArgument<SenderT> type(@NotNull TypeParser<?> typeParser) {
+        this.typeParser = typeParser;
         return this;
     }
 
