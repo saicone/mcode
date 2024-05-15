@@ -14,6 +14,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
 import java.util.Map;
+import java.util.Set;
 
 public class BukkitCommand {
 
@@ -67,12 +68,16 @@ public class BukkitCommand {
         }
     }
 
-    public static void unregister(@NotNull String name, @NotNull String... aliases) {
-        final Map<String, Command> commands = all();
-        commands.remove(name);
-        for (String alias : aliases) {
-            commands.remove(alias);
-        }
+    public static void unregister(@NotNull String... names) {
+        final Set<String> set = Set.of(names);
+        all().entrySet().removeIf(entry -> {
+            if (set.contains(entry.getValue().getName())) {
+                entry.getValue().unregister(map());
+                return true;
+            } else {
+                return false;
+            }
+        });
     }
 
     public static void unregister(@NotNull Command command) {
