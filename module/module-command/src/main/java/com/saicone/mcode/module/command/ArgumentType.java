@@ -1,5 +1,6 @@
 package com.saicone.mcode.module.command;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public enum ArgumentType {
@@ -44,6 +45,8 @@ public enum ArgumentType {
     SOUND,
     TIME;
 
+    public static final ArgumentType[] VALUES = values();
+
     private final Class<?> type;
 
     ArgumentType() {
@@ -57,5 +60,15 @@ public enum ArgumentType {
     @Nullable
     public Class<?> getType() {
         return type;
+    }
+
+    @Nullable
+    public static ArgumentType of(@NotNull Class<?> type) {
+        for (ArgumentType value : VALUES) {
+            if (value.type.equals(type)) {
+                return value;
+            }
+        }
+        return null;
     }
 }

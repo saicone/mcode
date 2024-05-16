@@ -17,10 +17,10 @@ public class CommandArgument<SenderT> {
 
     private Predicate<SenderT> requiredPredicate;
     private int size = 1;
+    private ArgumentType type;
     private TypeParser<?> typeParser;
     private Predicate<String> typeChecker;
-    private Object mapper = String.class;
-    private Function<String, Object> mapperFunction;
+    private Function<String, String> mapperFunction;
     private List<String> suggestionList;
     private Function<SenderT, Object> suggestionFunction;
 
@@ -62,11 +62,17 @@ public class CommandArgument<SenderT> {
 
     @Nullable
     public Object parse(@NotNull String s) {
-        if (typeChecker != null && !typeChecker.test(s)) {
+        final String arg;
+        if (mapperFunction != null) {
+            arg = mapperFunction.apply(s);
+        } else {
+            arg = s;
+        }
+        if (typeChecker != null && !typeChecker.test(arg)) {
             return null;
         }
         if (typeParser != null) {
-            return typeParser.parse(s);
+            return typeParser.parse(arg);
         }
         return null;
     }
@@ -101,6 +107,11 @@ public class CommandArgument<SenderT> {
     }
 
     @Nullable
+    public ArgumentType getType() {
+        return type;
+    }
+
+    @Nullable
     public TypeParser<?> getTypeParser() {
         return typeParser;
     }
@@ -110,13 +121,8 @@ public class CommandArgument<SenderT> {
         return typeChecker;
     }
 
-    @NotNull
-    public Object getMapper() {
-        return mapper;
-    }
-
     @Nullable
-    public Function<String, Object> getMapperFunction() {
+    public Function<String, String> getMapperFunction() {
         return mapperFunction;
     }
 
@@ -150,6 +156,7 @@ public class CommandArgument<SenderT> {
         if (type == ArgumentType.GREEDY_STRING) {
             this.array = true;
         }
+        this.type = type;
         this.typeParser = Types.of(type.getType() != null ? type.getType() : type);
         return this;
     }
@@ -159,6 +166,7 @@ public class CommandArgument<SenderT> {
         if (!Types.contains(type)) {
             throw new IllegalArgumentException("There's no type parser for class " + type.getName() + ", consider adding your own parser");
         }
+        this.type = ArgumentType.of(type);
         this.typeParser = Types.of(type);
         return this;
     }
@@ -176,19 +184,7 @@ public class CommandArgument<SenderT> {
     }
 
     @NotNull
-    public CommandArgument<SenderT> mapper(@NotNull ArgumentType type) {
-        this.mapper = type;
-        return this;
-    }
-
-    @NotNull
-    public CommandArgument<SenderT> mapper(@NotNull Class<?> type) {
-        this.mapper = type;
-        return this;
-    }
-
-    @NotNull
-    public CommandArgument<SenderT> mapper(@NotNull Function<String, Object> function) {
+    public CommandArgument<SenderT> mapper(@NotNull Function<String, String> function) {
         this.mapperFunction = function;
         return this;
     }

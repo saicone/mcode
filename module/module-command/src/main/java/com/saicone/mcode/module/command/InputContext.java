@@ -196,30 +196,64 @@ public class InputContext<SenderT> {
         inputs.addAll(arguments.values());
         inputs.add(Dual.of(name, null));
         arguments.clear();
-        // Parse args
+
+        final int start = command.getSubStart(user);
+        if (command.hasSubCommands() && start == 0 && args.length > 0) {
+            path.add(name);
+            commands.add(command);
+
+            final String sub = args[start];
+            for (CommandNode<SenderT> node : command.getSubCommands()) {
+                if (node.matches(sub)) {
+                    final InputContext<SenderT> context = then(sub, node, Arrays.copyOfRange(args, 1, args.length));
+                    if (context.getResult() == CommandResult.BREAK) {
+                        break;
+                    } else if (context.getResult() != CommandResult.CONTINUE) {
+                        return this;
+                    }
+                }
+            }
+
+            if (getResult() == CommandResult.BREAK) {
+                setResult(command.execute(this));
+                return this;
+            }
+        }
+
         final int consumedArgs = command.parseInput(args, arguments::put);
-        if (getSize() < command.getMinArgs(user)) {
-            sendUsage();
-            return this;
+        boolean consumed = false;
+        final int minArgs = command.getMinArgs(user);
+        if (getSize() < minArgs) {
+            if (consumedArgs < args.length) {
+                consumed = true;
+                for (int i = getSize(); getSize() < minArgs && i < args.length; i++) {
+                    arguments.put(String.valueOf(i), Dual.of(args[i], null));
+                }
+            }
+            if (getSize() < minArgs) {
+                sendUsage();
+                return this;
+            }
         }
 
         path.add(name);
         commands.add(command);
 
-        if (command.hasSubCommands()) {
-            final int start = command.getSubStart(user) + consumedArgs;
-            if (args.length > start) {
-                final String sub = args[start];
-                for (CommandNode<SenderT> node : command.getSubCommands()) {
-                    if (node.matches(sub)) {
-                        final InputContext<SenderT> context = then(sub, node, Arrays.copyOfRange(args, start + 1, args.length));
-                        if (context.getResult() == CommandResult.BREAK) {
-                            break;
-                        } else if (context.getResult() != CommandResult.CONTINUE) {
-                            return this;
-                        }
+        if (command.hasSubCommands() && getSize() == start) {
+            final String sub = args[start];
+            for (CommandNode<SenderT> node : command.getSubCommands()) {
+                if (node.matches(sub)) {
+                    final InputContext<SenderT> context = then(sub, node, consumedArgs < args.length ? Arrays.copyOfRange(args, consumedArgs + 1, args.length) : new String[0]);
+                    if (context.getResult() == CommandResult.BREAK) {
+                        break;
+                    } else if (context.getResult() != CommandResult.CONTINUE) {
+                        return this;
                     }
                 }
+            }
+        } else if (!consumed && consumedArgs < args.length) {
+            for (int i = getSize(); i < args.length; i++) {
+                arguments.put(String.valueOf(i), Dual.of(args[i], null));
             }
         }
 

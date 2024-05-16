@@ -33,6 +33,10 @@ public abstract class AbstractCommandNode<SenderT> implements CommandNode<Sender
 
     private transient Integer cachedMinArgs;
 
+    public boolean eval(@NotNull SenderT sender) {
+        return predicate == null || predicate.test(sender);
+    }
+
     public void setParent(@Nullable CommandNode<SenderT> parent) {
         this.parent = parent;
     }
@@ -69,11 +73,14 @@ public abstract class AbstractCommandNode<SenderT> implements CommandNode<Sender
     }
 
     public void addArgument(@NotNull CommandArgument<SenderT> argument) {
+        if (subCommands != null && !subCommands.isEmpty()) {
+            throw new IllegalArgumentException("Cannot add arguments after sub command");
+        }
         if (arguments == null) {
             arguments = new ArrayList<>();
         }
         if (!arguments.isEmpty() && arguments.get(arguments.size() - 1).isArray()) {
-            throw new IllegalArgumentException("Cannot add ");
+            throw new IllegalArgumentException("Cannot add arguments after final array argument");
         }
         arguments.add(argument);
     }
@@ -167,6 +174,6 @@ public abstract class AbstractCommandNode<SenderT> implements CommandNode<Sender
 
     @Override
     public @NotNull CommandResult execute(@NotNull InputContext<SenderT> input) {
-        return execution.run(input);
+        return execution == null ? CommandResult.DONE : execution.run(input);
     }
 }

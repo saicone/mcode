@@ -35,7 +35,7 @@ public interface CommandNode<SenderT> {
         final Collection<CommandNode<SenderT>> nodes = getSubCommands();
         if (nodes != null) {
             for (CommandNode<SenderT> node : nodes) {
-                if (node.getName().equals(s) || node.getNodeAliases().contains(s)) {
+                if (node.matches(s)) {
                     return node;
                 }
             }
