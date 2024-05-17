@@ -180,7 +180,7 @@ public class BungeeCommandBuilder implements CommandBuilder<CommandSender, Bunge
         }
     }
 
-    public class Bridge extends Command implements TabExecutor, BungeeCommand.Executor {
+    public class Bridge extends Command implements TabExecutor, CommandExecutor<CommandSender> {
         public Bridge(String name) {
             super(name);
         }
@@ -222,13 +222,13 @@ public class BungeeCommandBuilder implements CommandBuilder<CommandSender, Bunge
 
         @Override
         public void execute(CommandSender sender, String[] args) {
-            result(sender, args);
+            result(sender, getName(), args);
         }
 
         @Override
-        public @NotNull CommandResult result(@NotNull CommandSender sender, @NotNull String... args) {
+        public @NotNull CommandResult result(@NotNull CommandSender sender, @NotNull String id, @NotNull String... args) {
             if (node.eval(sender)) {
-                return new InputContext<>(sender, throwable).then(getName(), node, args).getResult();
+                return new InputContext<>(sender, throwable).then(id, node, args).getResult();
             } else {
                 return CommandResult.FAIL_EVAL;
             }

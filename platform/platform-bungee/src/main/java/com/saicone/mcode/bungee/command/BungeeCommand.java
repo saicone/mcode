@@ -1,6 +1,7 @@
 package com.saicone.mcode.bungee.command;
 
 import com.saicone.mcode.module.command.CommandBuilder;
+import com.saicone.mcode.module.command.CommandExecutor;
 import com.saicone.mcode.module.command.CommandResult;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;
@@ -81,6 +82,7 @@ public class BungeeCommand {
     }
 
     @NotNull
+    @SuppressWarnings("unchecked")
     public static CommandResult dispatch(@NotNull CommandSender user, @NotNull String id, @NotNull String input, boolean log, boolean silent) {
         if (user instanceof ProxiedPlayer && ProxyServer.getInstance().getDisabledCommands().contains(id.toLowerCase())) {
             return CommandResult.NOT_FOUND;
@@ -106,8 +108,8 @@ public class BungeeCommand {
             if (log && ProxyServer.getInstance().getConfig().isLogCommands()) {
                 ProxyServer.getInstance().getLogger().log(Level.INFO, "{0} executed command: /{1}", new Object[] { user.getName(), id + ' ' + input });
             }
-            if (command instanceof Executor executor) {
-                return executor.result(user, input.split(" "));
+            if (command instanceof CommandExecutor executor) {
+                return executor.result(user, id, input.split(" "));
             }
             command.execute(user, input.split(" "));
             return CommandResult.DONE;
@@ -125,10 +127,5 @@ public class BungeeCommand {
     @NotNull
     public static <BuilderT extends CommandBuilder<CommandSender, BuilderT>> BuilderT builder(@NotNull Command command) {
 
-    }
-
-    public interface Executor {
-        @NotNull
-        CommandResult result(@NotNull CommandSender sender, @NotNull String... args);
     }
 }

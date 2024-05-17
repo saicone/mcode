@@ -150,7 +150,7 @@ public class BukkitCommandBuilder implements CommandBuilder<CommandSender, Bukki
         }
     }
 
-    public class Bridge extends Command implements TabCompleter {
+    public class Bridge extends Command implements TabCompleter, CommandExecutor<CommandSender> {
         protected Bridge(@NotNull String name) {
             super(name);
         }
@@ -161,10 +161,17 @@ public class BukkitCommandBuilder implements CommandBuilder<CommandSender, Bukki
 
         @Override
         public boolean execute(@NotNull CommandSender sender, @NotNull String commandLabel, @NotNull String[] args) {
-            if (node.eval(sender)) {
-                new InputContext<>(sender, throwable).then(commandLabel, node, args);
-            }
+            result(sender, commandLabel, args);
             return true;
+        }
+
+        @Override
+        public @NotNull CommandResult result(@NotNull CommandSender sender, @NotNull String commandLabel, @NotNull String... args) {
+            if (node.eval(sender)) {
+                return new InputContext<>(sender, throwable).then(commandLabel, node, args).getResult();
+            } else {
+                return CommandResult.FAIL_EVAL;
+            }
         }
 
         @Nullable
