@@ -2,6 +2,7 @@ package com.saicone.mcode.bungee.command;
 
 import com.saicone.mcode.module.command.CommandBuilder;
 import com.saicone.mcode.module.command.CommandResult;
+import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -13,6 +14,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
 import java.util.Map;
+import java.util.logging.Level;
 
 public class BungeeCommand {
 
@@ -64,7 +66,22 @@ public class BungeeCommand {
     }
 
     @NotNull
+    public static CommandResult dispatch(@NotNull CommandSender user, @NotNull String command) {
+        final int index = command.indexOf(' ');
+        if (index > 0 && index + 1 < command.length()) {
+            return dispatch(user, command.substring(0, index), command.substring(index + 1));
+        } else {
+            return dispatch(user, command.trim(), "");
+        }
+    }
+
+    @NotNull
     public static CommandResult dispatch(@NotNull CommandSender user, @NotNull String id, @NotNull String input) {
+        return dispatch(user, id, input, true, false);
+    }
+
+    @NotNull
+    public static CommandResult dispatch(@NotNull CommandSender user, @NotNull String id, @NotNull String input, boolean log, boolean silent) {
         if (user instanceof ProxiedPlayer && ProxyServer.getInstance().getDisabledCommands().contains(id.toLowerCase())) {
             return CommandResult.NOT_FOUND;
         }
@@ -75,22 +92,32 @@ public class BungeeCommand {
         }
 
         if (!command.hasPermission(user)) {
-            if (command.getPermissionMessage() == null) {
-                user.sendMessage(TextComponent.fromLegacyText(ProxyServer.getInstance().getTranslation("no_permission")));
-            } else {
-                user.sendMessage(TextComponent.fromLegacyText(command.getPermissionMessage()));
+            if (!silent) {
+                if (command.getPermissionMessage() == null) {
+                    user.sendMessage(TextComponent.fromLegacy(ProxyServer.getInstance().getTranslation("no_permission")));
+                } else {
+                    user.sendMessage(TextComponent.fromLegacy(command.getPermissionMessage()));
+                }
             }
             return CommandResult.NO_PERMISSION;
         }
 
         try {
+            if (log && ProxyServer.getInstance().getConfig().isLogCommands()) {
+                ProxyServer.getInstance().getLogger().log(Level.INFO, "{0} executed command: /{1}", new Object[] { user.getName(), id + ' ' + input });
+            }
             if (command instanceof Executor executor) {
                 return executor.result(user, input.split(" "));
             }
             command.execute(user, input.split(" "));
             return CommandResult.DONE;
         } catch (Throwable t) {
-            t.printStackTrace();
+            if (!silent) {
+                user.sendMessage(TextComponent.fromLegacy(ChatColor.RED + "An internal error occurred whilst executing this command, please check the console log for details."));
+            }
+            if (log) {
+                ProxyServer.getInstance().getLogger().log(Level.WARNING, "Error in dispatching command", t);
+            }
             return CommandResult.FAIL_EXECUTION;
         }
     }
