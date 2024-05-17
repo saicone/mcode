@@ -21,8 +21,7 @@ public class CommandArgument<SenderT> {
     private TypeParser<?> typeParser;
     private Predicate<String> typeChecker;
     private Function<String, String> mapperFunction;
-    private List<String> suggestionList;
-    private Function<SenderT, Object> suggestionFunction;
+    private CommandSuggestion<SenderT> suggestion;
 
     @NotNull
     public static <T> CommandArgument<T> of(@NotNull String name) {
@@ -77,6 +76,15 @@ public class CommandArgument<SenderT> {
         return null;
     }
 
+    @NotNull
+    public String compile(@NotNull String s) {
+        if (mapperFunction != null) {
+            return mapperFunction.apply(s);
+        } else {
+            return s;
+        }
+    }
+
     public boolean isRequired() {
         return isRequired(null);
     }
@@ -127,13 +135,8 @@ public class CommandArgument<SenderT> {
     }
 
     @Nullable
-    public List<String> getSuggestionList() {
-        return suggestionList;
-    }
-
-    @Nullable
-    public Function<SenderT, Object> getSuggestionFunction() {
-        return suggestionFunction;
+    public CommandSuggestion<SenderT> getSuggestion() {
+        return suggestion;
     }
 
     @NotNull
@@ -191,18 +194,12 @@ public class CommandArgument<SenderT> {
 
     @NotNull
     public CommandArgument<SenderT> suggests(@NotNull List<String> list) {
-        this.suggestionList = list;
-        return this;
+        return suggests(CommandSuggestion.of(list));
     }
 
     @NotNull
-    public CommandArgument<SenderT> suggests(@NotNull Object object) {
-        return suggests(sender -> object);
-    }
-
-    @NotNull
-    public CommandArgument<SenderT> suggests(@NotNull Function<SenderT, Object> function) {
-        this.suggestionFunction = function;
+    public CommandArgument<SenderT> suggests(@NotNull CommandSuggestion<SenderT> suggestion) {
+        this.suggestion = suggestion;
         return this;
     }
 }

@@ -156,14 +156,16 @@ public class BukkitCommandBuilder implements CommandBuilder<CommandSender, Bukki
 
         @Override
         public boolean execute(@NotNull CommandSender sender, @NotNull String commandLabel, @NotNull String[] args) {
-            new InputContext<>(sender, throwable).then(commandLabel, node, args);
+            if (node.eval(sender)) {
+                new InputContext<>(sender, throwable).then(commandLabel, node, args);
+            }
             return true;
         }
 
         @Nullable
         @Override
         public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-            return null;
+            return new InputContext<>(sender, throwable).suggest(label, node, args).list();
         }
 
         @Override

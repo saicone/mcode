@@ -2,14 +2,11 @@ package com.saicone.mcode.module.command.impl;
 
 import com.google.common.base.Suppliers;
 import com.saicone.mcode.module.command.*;
-import com.saicone.mcode.util.Dual;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -142,34 +139,6 @@ public abstract class AbstractCommandNode<SenderT> implements CommandNode<Sender
             return arguments.size();
         }
         return CommandNode.super.getSubStart(sender);
-    }
-
-    @Override
-    public int parseInput(@NotNull String[] args, @NotNull BiConsumer<String, Dual<String, Object>> consumer) {
-        if (arguments == null || args.length < 1) {
-            return 0;
-        }
-        int index = 0;
-        for (CommandArgument<SenderT> argument : arguments) {
-            final int end;
-            if (argument.isArray()) {
-                if (index < args.length) {
-                    end = args.length;
-                } else {
-                    break;
-                }
-            } else {
-                end = index + argument.getSize();
-                if (end > args.length) {
-                    break;
-                }
-            }
-            final String input = String.join(" ", Arrays.copyOfRange(args, index, end));
-            final Object parsed = argument.parse(input);
-            consumer.accept(argument.getName(), Dual.of(input, parsed));
-            index = end;
-        }
-        return index;
     }
 
     @Override

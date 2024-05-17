@@ -4,6 +4,7 @@ import com.saicone.mcode.util.Dual;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -46,6 +47,11 @@ public interface CommandNode<SenderT> {
     Collection<CommandNode<SenderT>> getSubCommands();
 
     @NotNull
+    default CommandSuggestion<SenderT> getSubCommandsSuggestion() {
+        return CommandSuggestion.of(getSubCommands(), CommandNode::getName);
+    }
+
+    @NotNull
     String getName();
 
     @NotNull
@@ -69,6 +75,14 @@ public interface CommandNode<SenderT> {
         return arguments != null ? arguments.size() : 0;
     }
 
+    @Nullable
+    default CommandArgument<SenderT> getArgument(int index) {
+        if (getArguments() == null || index >= getArguments().size()) {
+            return null;
+        }
+        return getArguments().get(index);
+    }
+
     default List<CommandArgument<SenderT>> getArguments() {
         return null;
     }
@@ -89,7 +103,58 @@ public interface CommandNode<SenderT> {
         return 0;
     }
 
-    int parseInput(@NotNull String[] args, @NotNull BiConsumer<String, Dual<String, Object>> consumer);
+    default int parseInput(@NotNull String[] args, @NotNull BiConsumer<String, Dual<String, Object>> consumer) {
+        if (getArguments() == null || args.length < 1) {
+            return 0;
+        }
+        int index = 0;
+        for (CommandArgument<SenderT> argument : getArguments()) {
+            final int end;
+            if (argument.isArray()) {
+                if (index < args.length) {
+                    end = args.length;
+                } else {
+                    break;
+                }
+            } else {
+                end = index + argument.getSize();
+                if (end > args.length) {
+                    break;
+                }
+            }
+            final String input = String.join(" ", Arrays.copyOfRange(args, index, end));
+            final Object parsed = argument.parse(input);
+            consumer.accept(argument.getName(), Dual.of(input, parsed));
+            index = end;
+        }
+        return index;
+    }
+
+    default int compileInput(@NotNull String[] args, @NotNull BiConsumer<String, String> consumer) {
+        if (getArguments() == null || args.length < 1) {
+            return 0;
+        }
+        int index = 0;
+        for (CommandArgument<SenderT> argument : getArguments()) {
+            final int end;
+            if (argument.isArray()) {
+                if (index < args.length) {
+                    end = args.length;
+                } else {
+                    break;
+                }
+            } else {
+                end = index + argument.getSize();
+                if (end > args.length) {
+                    break;
+                }
+            }
+            final String input = String.join(" ", Arrays.copyOfRange(args, index, end));
+            consumer.accept(argument.getName(), argument.compile(input));
+            index = end;
+        }
+        return index;
+    }
 
     @NotNull
     CommandResult execute(@NotNull InputContext<SenderT> input);

@@ -10,6 +10,8 @@ import java.util.*;
 
 public class InputContext<SenderT> {
 
+    static final CommandSuggestion<?> EMPTY_SUGGESTION = context -> null;
+
     // Sender instances
     private final SenderT user;
     private final SenderT agent;
@@ -259,6 +261,70 @@ public class InputContext<SenderT> {
 
         setResult(command.execute(this));
         return this;
+    }
+
+    @NotNull
+    public CommandSuggestion<SenderT> suggest(@NotNull CommandNode<SenderT> command, @NotNull String... args) {
+        return suggest(command.getName(), command, args);
+    }
+
+    @NotNull
+    public CommandSuggestion<SenderT> suggest(@NotNull String name, @NotNull CommandNode<SenderT> command, @NotNull String... args) {
+        inputs.addAll(arguments.values());
+        inputs.add(Dual.of(name, null));
+        arguments.clear();
+        path.add(name);
+        commands.add(command);
+
+        final int start = command.getSubStart(user);
+        if (command.hasSubCommands() && start == 0) {
+            if (args.length < 1) {
+                return command.getSubCommandsSuggestion();
+            } else {
+                final CommandNode<SenderT> node = command.getSubCommand(args[0]);
+                if (node == null) {
+                    return CommandSuggestion.empty();
+                } else {
+                    return suggest(node, args.length > 1 ? Arrays.copyOfRange(args, 1, args.length) : new String[0]);
+                }
+            }
+        }
+
+        final int consumedArgs = command.compileInput(args, (key, input) -> arguments.put(key, Dual.of(input, null)));
+        if (getSize() < command.getMinArgs(user)) {
+            final CommandArgument<SenderT> argument = command.getArgument(getSize());
+            if (argument == null) {
+                return CommandSuggestion.empty();
+            } else {
+                final CommandSuggestion<SenderT> suggestion = argument.getSuggestion();
+                if (suggestion == null) {
+                    return CommandSuggestion.empty();
+                }
+                return new CommandSuggestion<>() {
+                    @Override
+                    public @Nullable Map<String, String> suggest(@NotNull InputContext<SenderT> context) {
+                        return suggestion.suggest(context);
+                    }
+                    @Override
+                    public @Nullable Map<String, String> get() {
+                        return suggestion.suggest(InputContext.this);
+                    }
+                };
+            }
+        } else if (command.hasSubCommands() && getSize() == start) {
+            if (args.length <= consumedArgs + 1) {
+                return command.getSubCommandsSuggestion();
+            } else {
+                final CommandNode<SenderT> node = command.getSubCommand(args[consumedArgs + 1]);
+                if (node == null) {
+                    return CommandSuggestion.empty();
+                } else {
+                    return suggest(node, args.length > consumedArgs + 2 ? Arrays.copyOfRange(args, consumedArgs + 1, args.length) : new String[0]);
+                }
+            }
+        }
+
+        return CommandSuggestion.empty();
     }
 
     public void sendMessage(@NotNull String msg) {
