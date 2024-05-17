@@ -32,6 +32,11 @@ public class BukkitCommandBuilder implements CommandBuilder<CommandSender, Bukki
     }
 
     @Override
+    public @NotNull BukkitCommandBuilder builder(@NotNull String name) {
+        return new BukkitCommandBuilder(name);
+    }
+
+    @Override
     public @NotNull BukkitCommandBuilder alias(@NotNull String... aliases) {
         bridge.setAliases(List.of(aliases));
         return this;
@@ -87,7 +92,7 @@ public class BukkitCommandBuilder implements CommandBuilder<CommandSender, Bukki
 
     @Override
     public @NotNull BukkitCommandBuilder subCommand(@NotNull String name, @NotNull Consumer<BukkitCommandBuilder> consumer) {
-        final BukkitCommandBuilder builder = new BukkitCommandBuilder(name);
+        final BukkitCommandBuilder builder = builder(name);
         builder.node.setParent(this.node);
         consumer.accept(builder);
         return subCommand(builder.build());

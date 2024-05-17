@@ -17,7 +17,7 @@ public interface CommandThrowable<SenderT> {
     }
 
     default void sendPermissionMessage(@NotNull SenderT sender, @NotNull String permission) {
-        sendColoredMessage(sender, "&cYou do not have permission &6" + permission + " &cto perform this command.Please contact the server administrators if you believe that this is a mistake.");
+        sendColoredMessage(sender, "&cYou do not have permission &6" + permission + " &cto perform this command. Please contact the server administrators if you believe that this is a mistake.");
     }
 
     default void sendDelayMessage(@NotNull SenderT sender, float seconds) {

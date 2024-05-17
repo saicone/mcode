@@ -12,6 +12,9 @@ public interface CommandBuilder<SenderT, BuilderT extends CommandBuilder<SenderT
     BuilderT builder();
 
     @NotNull
+    BuilderT builder(@NotNull String name);
+
+    @NotNull
     BuilderT alias(@NotNull String... aliases);
 
     @NotNull

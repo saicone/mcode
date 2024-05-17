@@ -1,6 +1,5 @@
 package com.saicone.mcode.bungee.command;
 
-import com.saicone.mcode.module.command.CommandNode;
 import com.saicone.mcode.module.command.CommandBuilder;
 import com.saicone.mcode.module.command.CommandResult;
 import net.md_5.bungee.api.CommandSender;
@@ -41,14 +40,27 @@ public class BungeeCommand {
         }
     }
 
-    @NotNull
-    public static CommandBuilder<CommandSender> builder(@NotNull CommandNode<CommandSender> command) {
-
+    public static void register(@NotNull Command command) {
+        final Map<String, Command> commands = all();
+        commands.put(command.getName(), command);
+        for (String alias : command.getAliases()) {
+            commands.put(alias, command);
+        }
     }
 
-    @NotNull
-    public static CommandBuilder<CommandSender> builder(@NotNull Command command) {
+    public static void unregister(@NotNull String... names) {
+        final Map<String, Command> commands = all();
+        for (String name : names) {
+            commands.remove(name);
+        }
+    }
 
+    public static void unregister(@NotNull Command command) {
+        final Map<String, Command> commands = all();
+        commands.remove(command.getName());
+        for (String alias : command.getAliases()) {
+            commands.remove(alias);
+        }
     }
 
     @NotNull
@@ -72,6 +84,9 @@ public class BungeeCommand {
         }
 
         try {
+            if (command instanceof Executor executor) {
+                return executor.result(user, input.split(" "));
+            }
             command.execute(user, input.split(" "));
             return CommandResult.DONE;
         } catch (Throwable t) {
@@ -80,41 +95,13 @@ public class BungeeCommand {
         }
     }
 
-    public static void register(@NotNull Command command) {
-        final Map<String, Command> commands = all();
-        commands.put(command.getName(), command);
-        for (String alias : command.getAliases()) {
-            commands.put(alias, command);
-        }
+    @NotNull
+    public static <BuilderT extends CommandBuilder<CommandSender, BuilderT>> BuilderT builder(@NotNull Command command) {
+
     }
 
-    public static void register(@NotNull CommandNode<CommandSender> node) {
-        if (node instanceof Command) {
-            register((Command) node);
-            return;
-        }
-        final Command command = new Command(node.getName(), null, node.getNodeAliases().toArray(new String[0])) {
-            @Override
-            public void execute(CommandSender commandSender, String[] strings) {
-
-            }
-        };
-        final Map<String, Command> commands = all();
-        commands.put(command.getName(), command);
-        for (String alias : command.getAliases()) {
-            commands.put(alias, command);
-        }
-    }
-
-    public static void unregister(@NotNull Command command) {
-        final Map<String, Command> commands = all();
-        commands.remove(command.getName());
-        for (String alias : command.getAliases()) {
-            commands.remove(alias);
-        }
-    }
-
-    public static void unregister(@NotNull String name) {
-        all().remove(name);
+    public interface Executor {
+        @NotNull
+        CommandResult result(@NotNull CommandSender sender, @NotNull String... args);
     }
 }
