@@ -8,7 +8,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public abstract class AbstractCommandNode<SenderT> implements CommandNode<SenderT> {
@@ -22,16 +21,11 @@ public abstract class AbstractCommandNode<SenderT> implements CommandNode<Sender
         }
     });
     private Function<SenderT, String> description;
-    private Predicate<SenderT> predicate;
     private Function<SenderT, Integer> minArgs;
     private List<Argument<SenderT, ?, ?>> arguments;
     private CommandExecution<SenderT> execution;
 
     private transient Integer cachedMinArgs;
-
-    public boolean eval(@NotNull SenderT sender) {
-        return predicate == null || predicate.test(sender);
-    }
 
     public void setParent(@Nullable CommandNode<SenderT> parent) {
         this.parent = parent;
@@ -39,14 +33,6 @@ public abstract class AbstractCommandNode<SenderT> implements CommandNode<Sender
 
     public void setDescription(@Nullable Function<SenderT, String> description) {
         this.description = description;
-    }
-
-    public void setPredicate(@Nullable Predicate<SenderT> predicate) {
-        if (this.predicate == null || predicate == null) {
-            this.predicate = predicate;
-        } else {
-            this.predicate = this.predicate.and(predicate);
-        }
     }
 
     public void setArguments(@Nullable List<Argument<SenderT, ?, ?>> arguments) {
@@ -111,11 +97,6 @@ public abstract class AbstractCommandNode<SenderT> implements CommandNode<Sender
             return description.apply(sender);
         }
         return CommandNode.super.getDescription(sender);
-    }
-
-    @Nullable
-    public Predicate<SenderT> getPredicate() {
-        return predicate;
     }
 
     @Nullable

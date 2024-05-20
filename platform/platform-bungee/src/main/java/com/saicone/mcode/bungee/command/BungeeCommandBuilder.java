@@ -150,7 +150,20 @@ public class BungeeCommandBuilder implements CommandBuilder<CommandSender, Bunge
         private String[] aliases = new String[0];
         private String permission;
         private String permissionMessage;
+        private Predicate<CommandSender> predicate;
         private String description = "";
+
+        public boolean eval(@NotNull CommandSender sender) {
+            return predicate == null || predicate.test(sender);
+        }
+
+        public void setPredicate(@Nullable Predicate<CommandSender> predicate) {
+            if (this.predicate == null || predicate == null) {
+                this.predicate = predicate;
+            } else {
+                this.predicate = this.predicate.and(predicate);
+            }
+        }
 
         @Override
         public @NotNull String getName() {

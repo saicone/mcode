@@ -121,6 +121,20 @@ public class BukkitCommandBuilder implements CommandBuilder<CommandSender, Bukki
 
     public class Node extends AbstractCommandNode<CommandSender> {
 
+        private Predicate<CommandSender> predicate;
+
+        public boolean eval(@NotNull CommandSender sender) {
+            return predicate == null || predicate.test(sender);
+        }
+
+        public void setPredicate(@Nullable Predicate<CommandSender> predicate) {
+            if (this.predicate == null || predicate == null) {
+                this.predicate = predicate;
+            } else {
+                this.predicate = this.predicate.and(predicate);
+            }
+        }
+
         @Override
         public @NotNull String getName() {
             return bridge.getName();
