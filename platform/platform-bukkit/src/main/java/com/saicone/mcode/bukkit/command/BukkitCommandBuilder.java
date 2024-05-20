@@ -55,7 +55,7 @@ public class BukkitCommandBuilder implements CommandBuilder<CommandSender, Bukki
 
     @Override
     public @NotNull BukkitCommandBuilder description(@NotNull Function<CommandSender, String> description) {
-        node.description = description;
+        node.setDescription(description);
         return this;
     }
 
@@ -121,8 +121,6 @@ public class BukkitCommandBuilder implements CommandBuilder<CommandSender, Bukki
 
     public class Node extends AbstractCommandNode<CommandSender> {
 
-        private Function<CommandSender, String> description;
-
         @Override
         public @NotNull String getName() {
             return bridge.getName();
@@ -135,10 +133,12 @@ public class BukkitCommandBuilder implements CommandBuilder<CommandSender, Bukki
 
         @Override
         public @NotNull String getDescription(@Nullable CommandSender sender) {
-            if (sender != null && description != null) {
-                return description.apply(sender);
+            final String description = super.getDescription(sender);
+            if (description.isEmpty()) {
+                return bridge.getDescription();
+            } else {
+                return description;
             }
-            return bridge.getDescription();
         }
     }
 

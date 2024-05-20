@@ -21,6 +21,7 @@ public abstract class AbstractCommandNode<SenderT> implements CommandNode<Sender
             return getName();
         }
     });
+    private Function<SenderT, String> description;
     private Predicate<SenderT> predicate;
     private Function<SenderT, Integer> minArgs;
     private List<Argument<SenderT, ?, ?>> arguments;
@@ -34,6 +35,10 @@ public abstract class AbstractCommandNode<SenderT> implements CommandNode<Sender
 
     public void setParent(@Nullable CommandNode<SenderT> parent) {
         this.parent = parent;
+    }
+
+    public void setDescription(@Nullable Function<SenderT, String> description) {
+        this.description = description;
     }
 
     public void setPredicate(@Nullable Predicate<SenderT> predicate) {
@@ -98,6 +103,14 @@ public abstract class AbstractCommandNode<SenderT> implements CommandNode<Sender
     @Override
     public String getPath() {
         return path.get();
+    }
+
+    @Override
+    public @NotNull String getDescription(@Nullable SenderT sender) {
+        if (description != null) {
+            return description.apply(sender);
+        }
+        return CommandNode.super.getDescription(sender);
     }
 
     @Nullable

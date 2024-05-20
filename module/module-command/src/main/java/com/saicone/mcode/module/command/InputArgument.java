@@ -12,7 +12,7 @@ public class InputArgument<SenderT, T> extends Argument<SenderT, T, InputArgumen
 
     private boolean array;
     @NotNull
-    public static <SenderT> InputArgument<SenderT, ?> of(@NotNull String name) {
+    public static <SenderT> InputArgument<SenderT, String> of(@NotNull String name) {
         return of(name, String.class);
     }
 

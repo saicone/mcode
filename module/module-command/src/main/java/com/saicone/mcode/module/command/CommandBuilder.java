@@ -74,6 +74,7 @@ public interface CommandBuilder<SenderT, BuilderT extends CommandBuilder<SenderT
 
     @NotNull
     BuilderT sub(@NotNull Consumer<NodeArgument<SenderT>> consumer);
+
     @NotNull
     BuilderT sub(@NotNull CommandNode<SenderT> node);
 

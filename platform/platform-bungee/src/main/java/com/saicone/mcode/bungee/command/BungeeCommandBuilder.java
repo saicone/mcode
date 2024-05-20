@@ -78,7 +78,7 @@ public class BungeeCommandBuilder implements CommandBuilder<CommandSender, Bunge
 
     @Override
     public @NotNull BungeeCommandBuilder description(@NotNull Function<CommandSender, String> description) {
-        node.descriptionFunction = description;
+        node.setDescription(description);
         return this;
     }
 
@@ -151,7 +151,6 @@ public class BungeeCommandBuilder implements CommandBuilder<CommandSender, Bunge
         private String permission;
         private String permissionMessage;
         private String description = "";
-        private Function<CommandSender, String> descriptionFunction;
 
         @Override
         public @NotNull String getName() {
@@ -165,10 +164,12 @@ public class BungeeCommandBuilder implements CommandBuilder<CommandSender, Bunge
 
         @Override
         public @NotNull String getDescription(@Nullable CommandSender sender) {
-            if (sender != null && descriptionFunction != null) {
-                return descriptionFunction.apply(sender);
+            final String description = super.getDescription(sender);
+            if (description.isEmpty()) {
+                return this.description;
+            } else {
+                return description;
             }
-            return description;
         }
     }
 
