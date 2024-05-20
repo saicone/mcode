@@ -37,6 +37,11 @@ public class BukkitCommandBuilder implements CommandBuilder<CommandSender, Bukki
     }
 
     @Override
+    public @NotNull Node node() {
+        return node;
+    }
+
+    @Override
     public @NotNull BukkitCommandBuilder alias(@NotNull String... aliases) {
         bridge.setAliases(List.of(aliases));
         return this;
@@ -67,35 +72,27 @@ public class BukkitCommandBuilder implements CommandBuilder<CommandSender, Bukki
     }
 
     @Override
-    public @NotNull BukkitCommandBuilder argument(@NotNull CommandArgument<CommandSender> argument) {
-        node.addArgument(argument);
-        return this;
-    }
-
-    @Override
     public @NotNull BukkitCommandBuilder minArgs(@NotNull Function<CommandSender, Integer> minArgs) {
         node.setMinArgs(minArgs);
         return this;
     }
 
     @Override
-    public @NotNull BukkitCommandBuilder subStart(@NotNull Function<CommandSender, Integer> subStart) {
-        node.setSubStart(subStart);
+    public @NotNull BukkitCommandBuilder with(@NotNull InputArgument<CommandSender, ?> argument) {
+        node.addArgument(argument);
         return this;
     }
 
     @Override
-    public @NotNull BukkitCommandBuilder subCommand(@NotNull CommandNode<CommandSender> node) {
+    public @NotNull BukkitCommandBuilder sub(@NotNull Consumer<NodeArgument<CommandSender>> consumer) {
+        consumer.accept(node.getCommandArgument());
+        return this;
+    }
+
+    @Override
+    public @NotNull BukkitCommandBuilder sub(@NotNull CommandNode<CommandSender> node) {
         this.node.addSubCommand(node);
         return this;
-    }
-
-    @Override
-    public @NotNull BukkitCommandBuilder subCommand(@NotNull String name, @NotNull Consumer<BukkitCommandBuilder> consumer) {
-        final BukkitCommandBuilder builder = builder(name);
-        builder.node.setParent(this.node);
-        consumer.accept(builder);
-        return subCommand(builder.build());
     }
 
     @Override
@@ -120,11 +117,6 @@ public class BukkitCommandBuilder implements CommandBuilder<CommandSender, Bukki
     public @NotNull BukkitCommandBuilder unregister() {
         BukkitCommand.unregister(bridge);
         return this;
-    }
-
-    @Override
-    public @NotNull Node build() {
-        return node;
     }
 
     public class Node extends AbstractCommandNode<CommandSender> {

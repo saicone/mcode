@@ -18,6 +18,21 @@ public interface CommandSuggestion<SenderT> {
     }
 
     @NotNull
+    default CommandSuggestion<SenderT> completed(@NotNull InputContext<SenderT> context) {
+        return new CommandSuggestion<>() {
+            @Override
+            public @Nullable Map<String, String> suggest(@NotNull InputContext<SenderT> context) {
+                return CommandSuggestion.this.suggest(context);
+            }
+
+            @Override
+            public @Nullable Map<String, String> get() {
+                return suggest(context);
+            }
+        };
+    }
+
+    @NotNull
     static <SenderT> CommandSuggestion<SenderT> of(@NotNull Iterable<String> list) {
         final Map<String, String> map = new LinkedHashMap<>();
         for (String key : list) {

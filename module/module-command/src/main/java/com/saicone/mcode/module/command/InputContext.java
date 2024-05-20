@@ -38,6 +38,14 @@ public class InputContext<SenderT> {
         this.throwable = throwable;
     }
 
+    public boolean hasAgent() {
+        return agent != null;
+    }
+
+    public boolean hasArgument(@NotNull String name) {
+        return arguments.containsKey(name);
+    }
+
     @NotNull
     @SuppressWarnings("unchecked")
     public <T extends SenderT> T getUser() {
@@ -176,12 +184,16 @@ public class InputContext<SenderT> {
         return result;
     }
 
-    public boolean hasAgent() {
-        return agent != null;
+    public void addArgument(@NotNull String input) {
+        addArgument(input, null);
     }
 
-    public boolean hasArgument(@NotNull String name) {
-        return arguments.containsKey(name);
+    public <T> void addArgument(@NotNull String input, @Nullable T type) {
+        addArgument(String.valueOf(getSize()), input, type);
+    }
+
+    public <T> void addArgument(@NotNull String name, @NotNull String input, @Nullable T type) {
+        arguments.put(name, Dual.of(input, type));
     }
 
     public void setResult(@NotNull CommandResult result) {
@@ -198,68 +210,14 @@ public class InputContext<SenderT> {
         inputs.addAll(arguments.values());
         inputs.add(Dual.of(name, null));
         arguments.clear();
-
-        final int start = command.getSubStart(user);
-        if (command.hasSubCommands() && start == 0 && args.length > 0) {
-            path.add(name);
-            commands.add(command);
-
-            final String sub = args[start];
-            for (CommandNode<SenderT> node : command.getSubCommands()) {
-                if (node.matches(sub)) {
-                    final InputContext<SenderT> context = then(sub, node, Arrays.copyOfRange(args, 1, args.length));
-                    if (context.getResult() == CommandResult.BREAK) {
-                        break;
-                    } else if (context.getResult() != CommandResult.CONTINUE) {
-                        return this;
-                    }
-                }
-            }
-
-            if (getResult() == CommandResult.BREAK) {
-                setResult(command.execute(this));
-                return this;
-            }
-        }
-
-        final int consumedArgs = command.parseInput(args, arguments::put);
-        boolean consumed = false;
-        final int minArgs = command.getMinArgs(user);
-        if (getSize() < minArgs) {
-            if (consumedArgs < args.length) {
-                consumed = true;
-                for (int i = getSize(); getSize() < minArgs && i < args.length; i++) {
-                    arguments.put(String.valueOf(i), Dual.of(args[i], null));
-                }
-            }
-            if (getSize() < minArgs) {
-                sendUsage();
-                return this;
-            }
-        }
-
         path.add(name);
         commands.add(command);
 
-        if (command.hasSubCommands() && getSize() == start) {
-            final String sub = args[start];
-            for (CommandNode<SenderT> node : command.getSubCommands()) {
-                if (node.matches(sub)) {
-                    final InputContext<SenderT> context = then(sub, node, consumedArgs < args.length ? Arrays.copyOfRange(args, consumedArgs + 1, args.length) : new String[0]);
-                    if (context.getResult() == CommandResult.BREAK) {
-                        break;
-                    } else if (context.getResult() != CommandResult.CONTINUE) {
-                        return this;
-                    }
-                }
-            }
-        } else if (!consumed && consumedArgs < args.length) {
-            for (int i = getSize(); i < args.length; i++) {
-                arguments.put(String.valueOf(i), Dual.of(args[i], null));
-            }
+        final CommandResult result = command.then(this, args);
+        if (result == CommandResult.FAIL_SYNTAX) {
+            sendUsage();
         }
-
-        setResult(command.execute(this));
+        setResult(result);
         return this;
     }
 
@@ -276,55 +234,7 @@ public class InputContext<SenderT> {
         path.add(name);
         commands.add(command);
 
-        final int start = command.getSubStart(user);
-        if (command.hasSubCommands() && start == 0) {
-            if (args.length < 1) {
-                return command.getSubCommandsSuggestion();
-            } else {
-                final CommandNode<SenderT> node = command.getSubCommand(args[0]);
-                if (node == null) {
-                    return CommandSuggestion.empty();
-                } else {
-                    return suggest(node, args.length > 1 ? Arrays.copyOfRange(args, 1, args.length) : new String[0]);
-                }
-            }
-        }
-
-        final int consumedArgs = command.compileInput(args, (key, input) -> arguments.put(key, Dual.of(input, null)));
-        if (getSize() < command.getMinArgs(user)) {
-            final CommandArgument<SenderT> argument = command.getArgument(getSize());
-            if (argument == null) {
-                return CommandSuggestion.empty();
-            } else {
-                final CommandSuggestion<SenderT> suggestion = argument.getSuggestion();
-                if (suggestion == null) {
-                    return CommandSuggestion.empty();
-                }
-                return new CommandSuggestion<>() {
-                    @Override
-                    public @Nullable Map<String, String> suggest(@NotNull InputContext<SenderT> context) {
-                        return suggestion.suggest(context);
-                    }
-                    @Override
-                    public @Nullable Map<String, String> get() {
-                        return suggestion.suggest(InputContext.this);
-                    }
-                };
-            }
-        } else if (command.hasSubCommands() && getSize() == start) {
-            if (args.length <= consumedArgs + 1) {
-                return command.getSubCommandsSuggestion();
-            } else {
-                final CommandNode<SenderT> node = command.getSubCommand(args[consumedArgs + 1]);
-                if (node == null) {
-                    return CommandSuggestion.empty();
-                } else {
-                    return suggest(node, args.length > consumedArgs + 2 ? Arrays.copyOfRange(args, consumedArgs + 1, args.length) : new String[0]);
-                }
-            }
-        }
-
-        return CommandSuggestion.empty();
+        return command.suggest(this, args);
     }
 
     public void sendMessage(@NotNull String msg) {

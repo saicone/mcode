@@ -1,19 +1,17 @@
 package com.saicone.mcode.module.command;
 
-import com.saicone.mcode.util.Dual;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.BiConsumer;
 
 public interface CommandNode<SenderT> {
 
     default boolean hasSubCommands() {
-        final Collection<CommandNode<SenderT>> nodes = getSubCommands();
-        return nodes != null && !nodes.isEmpty();
+        final var arguments = getArguments();
+        return arguments != null && !arguments.isEmpty() && arguments.get(arguments.size() - 1) instanceof NodeArgument;
     }
 
     default boolean matches(@NotNull String s) {
@@ -31,26 +29,6 @@ public interface CommandNode<SenderT> {
     @Nullable
     CommandNode<SenderT> getParent();
 
-    @Nullable
-    default CommandNode<SenderT> getSubCommand(@NotNull String s) {
-        final Collection<CommandNode<SenderT>> nodes = getSubCommands();
-        if (nodes != null) {
-            for (CommandNode<SenderT> node : nodes) {
-                if (node.matches(s)) {
-                    return node;
-                }
-            }
-        }
-        return null;
-    }
-
-    Collection<CommandNode<SenderT>> getSubCommands();
-
-    @NotNull
-    default CommandSuggestion<SenderT> getSubCommandsSuggestion() {
-        return CommandSuggestion.of(getSubCommands(), CommandNode::getName);
-    }
-
     @NotNull
     String getName();
 
@@ -59,6 +37,13 @@ public interface CommandNode<SenderT> {
 
     @NotNull
     Collection<String> getNodeAliases();
+
+    @NotNull
+    @SuppressWarnings("unchecked")
+    default NodeArgument<SenderT> getNodeArgument() {
+        final var arguments = getArguments();
+        return (NodeArgument<SenderT>) arguments.get(arguments.size() - 1);
+    }
 
     @NotNull
     default String getDescription() {
@@ -70,23 +55,6 @@ public interface CommandNode<SenderT> {
         return "";
     }
 
-    default int getSize() {
-        final Collection<CommandArgument<SenderT>> arguments = getArguments();
-        return arguments != null ? arguments.size() : 0;
-    }
-
-    @Nullable
-    default CommandArgument<SenderT> getArgument(int index) {
-        if (getArguments() == null || index >= getArguments().size()) {
-            return null;
-        }
-        return getArguments().get(index);
-    }
-
-    default List<CommandArgument<SenderT>> getArguments() {
-        return null;
-    }
-
     default int getMinArgs() {
         return getMinArgs(null);
     }
@@ -95,22 +63,91 @@ public interface CommandNode<SenderT> {
         return 0;
     }
 
-    default int getSubStart() {
-        return getSubStart(null);
+    default int getSize() {
+        final Collection<Argument<SenderT, ?, ?>> arguments = getArguments();
+        return arguments != null ? arguments.size() : 0;
     }
 
-    default int getSubStart(@Nullable SenderT sender) {
-        return 0;
+    @Nullable
+    default Argument<SenderT, ?, ?> getArgument(int index) {
+        if (getArguments() == null || index >= getArguments().size()) {
+            return null;
+        }
+        return getArguments().get(index);
     }
 
-    default int parseInput(@NotNull String[] args, @NotNull BiConsumer<String, Dual<String, Object>> consumer) {
-        if (getArguments() == null || args.length < 1) {
-            return 0;
+    @Nullable
+    default List<Argument<SenderT, ?, ?>> getArguments() {
+        return null;
+    }
+
+    @NotNull
+    @SuppressWarnings("unchecked")
+    default CommandResult then(@NotNull InputContext<SenderT> context, @NotNull String... args) {
+        int index = 0;
+        final var arguments = getArguments();
+        if (arguments != null) {
+            for (var argument : arguments) {
+                final int end;
+                if (argument instanceof InputArgument && ((InputArgument<?, ?>) argument).isArray()) {
+                    if (index < args.length) {
+                        end = args.length;
+                    } else {
+                        break;
+                    }
+                } else {
+                    end = index + argument.getSize();
+                    if (end > args.length) {
+                        return CommandResult.FAIL_SYNTAX;
+                    }
+                }
+                final String input = String.join(" ", Arrays.copyOfRange(args, index, end));
+                if (argument instanceof NodeArgument) {
+                    final String name = argument.compile(input);
+                    if (name == null) {
+                        return CommandResult.FAIL_SYNTAX;
+                    }
+                    for (CommandNode<SenderT> node : ((NodeArgument<SenderT>) argument).getNodes()) {
+                        if (node.matches(name)) {
+                            final InputContext<SenderT> subContext = context.then(input, node, end < args.length ? Arrays.copyOfRange(args, end, args.length) : new String[0]);
+                            if (subContext.getResult() == CommandResult.BREAK) {
+                                break;
+                            } else if (subContext.getResult() != CommandResult.CONTINUE) {
+                                return subContext.getResult();
+                            }
+                        }
+                    }
+                } else if (argument instanceof InputArgument) {
+                    context.addArgument(((InputArgument<?, ?>) argument).getName(), input, argument.apply(input));
+                }
+                index = end;
+            }
+        }
+        final int minArgs = getMinArgs(context.getUser());
+        if (context.getSize() < minArgs) {
+            if (index < args.length) {
+                for (int i = context.getSize(); context.getSize() < minArgs && i < args.length; i++) {
+                    context.addArgument(args[i]);
+                }
+            }
+            if (context.getSize() < minArgs) {
+                return CommandResult.FAIL_SYNTAX;
+            }
+        }
+        return execute(context);
+    }
+
+    @NotNull
+    @SuppressWarnings("unchecked")
+    default CommandSuggestion<SenderT> suggest(@NotNull InputContext<SenderT> context, @NotNull String... args) {
+        if (getArguments() == null) {
+            return CommandSuggestion.empty();
         }
         int index = 0;
-        for (CommandArgument<SenderT> argument : getArguments()) {
+        int arg = 0;
+        for (var argument : getArguments()) {
             final int end;
-            if (argument.isArray()) {
+            if (argument instanceof InputArgument && ((InputArgument<?, ?>) argument).isArray()) {
                 if (index < args.length) {
                     end = args.length;
                 } else {
@@ -123,37 +160,30 @@ public interface CommandNode<SenderT> {
                 }
             }
             final String input = String.join(" ", Arrays.copyOfRange(args, index, end));
-            final Object parsed = argument.parse(input);
-            consumer.accept(argument.getName(), Dual.of(input, parsed));
-            index = end;
-        }
-        return index;
-    }
-
-    default int compileInput(@NotNull String[] args, @NotNull BiConsumer<String, String> consumer) {
-        if (getArguments() == null || args.length < 1) {
-            return 0;
-        }
-        int index = 0;
-        for (CommandArgument<SenderT> argument : getArguments()) {
-            final int end;
-            if (argument.isArray()) {
-                if (index < args.length) {
-                    end = args.length;
-                } else {
+            if (argument instanceof NodeArgument) {
+                final String name = argument.compile(input);
+                if (name == null) {
                     break;
                 }
-            } else {
-                end = index + argument.getSize();
-                if (end > args.length) {
-                    break;
+                for (CommandNode<SenderT> node : ((NodeArgument<SenderT>) argument).getNodes()) {
+                    if (node.matches(name)) {
+                        return context.suggest(input, node, end < args.length ? Arrays.copyOfRange(args, end, args.length) : new String[0]);
+                    }
                 }
+            } else if (argument instanceof InputArgument) {
+                context.addArgument(((InputArgument<?, ?>) argument).getName(), input, null);
+                arg++;
             }
-            final String input = String.join(" ", Arrays.copyOfRange(args, index, end));
-            consumer.accept(argument.getName(), argument.compile(input));
             index = end;
         }
-        return index;
+
+        final CommandSuggestion<SenderT> suggestion;
+        if (arg < getArguments().size()) {
+            suggestion = getArguments().get(arg).getSuggestion();
+        } else {
+            suggestion = null;
+        }
+        return suggestion == null ? CommandSuggestion.empty() : suggestion.completed(context);
     }
 
     @NotNull

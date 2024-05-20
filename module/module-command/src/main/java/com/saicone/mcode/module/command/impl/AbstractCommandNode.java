@@ -14,7 +14,6 @@ import java.util.function.Supplier;
 public abstract class AbstractCommandNode<SenderT> implements CommandNode<SenderT> {
 
     private CommandNode<SenderT> parent;
-    private List<CommandNode<SenderT>> subCommands;
     private final Supplier<String> path = Suppliers.memoize(() -> {
         if (getParent() != null) {
             return getParent().getPath() + "." + getName();
@@ -23,9 +22,8 @@ public abstract class AbstractCommandNode<SenderT> implements CommandNode<Sender
         }
     });
     private Predicate<SenderT> predicate;
-    private List<CommandArgument<SenderT>> arguments;
     private Function<SenderT, Integer> minArgs;
-    private Function<SenderT, Integer> subStart;
+    private List<Argument<SenderT, ?, ?>> arguments;
     private CommandExecution<SenderT> execution;
 
     private transient Integer cachedMinArgs;
@@ -38,15 +36,15 @@ public abstract class AbstractCommandNode<SenderT> implements CommandNode<Sender
         this.parent = parent;
     }
 
-    public void setSubCommands(@Nullable List<CommandNode<SenderT>> subCommands) {
-        this.subCommands = subCommands;
-    }
-
     public void setPredicate(@Nullable Predicate<SenderT> predicate) {
-        this.predicate = predicate;
+        if (this.predicate == null || predicate == null) {
+            this.predicate = predicate;
+        } else {
+            this.predicate = this.predicate.and(predicate);
+        }
     }
 
-    public void setArguments(@Nullable List<CommandArgument<SenderT>> arguments) {
+    public void setArguments(@Nullable List<Argument<SenderT, ?, ?>> arguments) {
         this.arguments = arguments;
     }
 
@@ -58,26 +56,34 @@ public abstract class AbstractCommandNode<SenderT> implements CommandNode<Sender
         this.minArgs = minArgs;
     }
 
-    public void setSubStart(@Nullable Function<SenderT, Integer> subStart) {
-        this.subStart = subStart;
-    }
-
+    @SuppressWarnings("unchecked")
     public void addSubCommand(@NotNull CommandNode<SenderT> subCommand) {
-        if (subCommands == null) {
-            subCommands = new ArrayList<>();
-        }
-        subCommands.add(subCommand);
-    }
-
-    public void addArgument(@NotNull CommandArgument<SenderT> argument) {
-        if (subCommands != null && !subCommands.isEmpty()) {
-            throw new IllegalArgumentException("Cannot add arguments after sub command");
-        }
         if (arguments == null) {
             arguments = new ArrayList<>();
+        } else if (!arguments.isEmpty()) {
+            final Argument<SenderT, ?, ?> last = arguments.get(arguments.size() - 1);
+            if (last instanceof NodeArgument) {
+                ((NodeArgument<SenderT>) last).getNodes().add(subCommand);
+                return;
+            } else if (last instanceof InputArgument && ((InputArgument<?, ?>) last).isArray()) {
+                throw new IllegalArgumentException("Cannot sub command after final array argument");
+            }
         }
-        if (!arguments.isEmpty() && arguments.get(arguments.size() - 1).isArray()) {
-            throw new IllegalArgumentException("Cannot add arguments after final array argument");
+        final NodeArgument<SenderT> nodeArgument = new NodeArgument<SenderT>().required(true);
+        nodeArgument.getNodes().add(subCommand);
+        arguments.add(nodeArgument);
+    }
+
+    public void addArgument(@NotNull Argument<SenderT, ?, ?> argument) {
+        if (arguments == null) {
+            arguments = new ArrayList<>();
+        } else if (!arguments.isEmpty()) {
+            final Argument<SenderT, ?, ?> last = arguments.get(arguments.size() - 1);
+            if (last instanceof NodeArgument) {
+                throw new IllegalArgumentException("Cannot add arguments after sub command");
+            } else if (last instanceof InputArgument && ((InputArgument<?, ?>) last).isArray()) {
+                throw new IllegalArgumentException("Cannot add arguments after final array argument");
+            }
         }
         arguments.add(argument);
     }
@@ -86,12 +92,6 @@ public abstract class AbstractCommandNode<SenderT> implements CommandNode<Sender
     @Override
     public CommandNode<SenderT> getParent() {
         return parent;
-    }
-
-    @Nullable
-    @Override
-    public List<CommandNode<SenderT>> getSubCommands() {
-        return subCommands;
     }
 
     @NotNull
@@ -107,8 +107,24 @@ public abstract class AbstractCommandNode<SenderT> implements CommandNode<Sender
 
     @Nullable
     @Override
-    public List<CommandArgument<SenderT>> getArguments() {
+    public List<Argument<SenderT, ?, ?>> getArguments() {
         return arguments;
+    }
+
+    @NotNull
+    @SuppressWarnings("unchecked")
+    public NodeArgument<SenderT> getCommandArgument() {
+        if (arguments == null) {
+            arguments = new ArrayList<>();
+        } else if (!arguments.isEmpty()) {
+            final Argument<SenderT, ?, ?> last = arguments.get(arguments.size() - 1);
+            if (last instanceof NodeArgument) {
+                return (NodeArgument<SenderT>) last;
+            }
+        }
+        final NodeArgument<SenderT> nodeArgument = new NodeArgument<SenderT>().required(true);
+        arguments.add(nodeArgument);
+        return nodeArgument;
     }
 
     @Override
@@ -118,27 +134,18 @@ public abstract class AbstractCommandNode<SenderT> implements CommandNode<Sender
         }
         if (cachedMinArgs == null) {
             int count = 0;
-            for (CommandArgument<SenderT> argument : getArguments()) {
-                if (argument.isRequired(sender)) {
-                    count++;
-                } else {
-                    break;
+            if (getArguments() != null) {
+                for (Argument<SenderT, ?, ?> argument : getArguments()) {
+                    if (argument.isRequired(sender)) {
+                        count++;
+                    } else {
+                        break;
+                    }
                 }
             }
             cachedMinArgs = count;
         }
         return cachedMinArgs;
-    }
-
-    @Override
-    public int getSubStart(@Nullable SenderT sender) {
-        if (subStart != null) {
-            return subStart.apply(sender);
-        }
-        if (arguments != null) {
-            return arguments.size();
-        }
-        return CommandNode.super.getSubStart(sender);
     }
 
     @Override

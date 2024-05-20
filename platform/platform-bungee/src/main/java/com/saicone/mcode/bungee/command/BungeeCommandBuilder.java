@@ -55,6 +55,11 @@ public class BungeeCommandBuilder implements CommandBuilder<CommandSender, Bunge
     }
 
     @Override
+    public @NotNull CommandNode<CommandSender> node() {
+        return node;
+    }
+
+    @Override
     public @NotNull BungeeCommandBuilder alias(@NotNull String... aliases) {
         node.aliases = aliases;
         final Map<String, Bridge> map = new HashMap<>();
@@ -90,35 +95,27 @@ public class BungeeCommandBuilder implements CommandBuilder<CommandSender, Bunge
     }
 
     @Override
-    public @NotNull BungeeCommandBuilder argument(@NotNull CommandArgument<CommandSender> argument) {
-        node.addArgument(argument);
-        return this;
-    }
-
-    @Override
     public @NotNull BungeeCommandBuilder minArgs(@NotNull Function<CommandSender, Integer> minArgs) {
         node.setMinArgs(minArgs);
         return this;
     }
 
     @Override
-    public @NotNull BungeeCommandBuilder subStart(@NotNull Function<CommandSender, Integer> subStart) {
-        node.setSubStart(subStart);
+    public @NotNull BungeeCommandBuilder with(@NotNull InputArgument<CommandSender, ?> argument) {
+        node.addArgument(argument);
         return this;
     }
 
     @Override
-    public @NotNull BungeeCommandBuilder subCommand(@NotNull CommandNode<CommandSender> node) {
+    public @NotNull BungeeCommandBuilder sub(@NotNull Consumer<NodeArgument<CommandSender>> consumer) {
+        consumer.accept(node.getCommandArgument());
+        return this;
+    }
+
+    @Override
+    public @NotNull BungeeCommandBuilder sub(@NotNull CommandNode<CommandSender> node) {
         this.node.addSubCommand(node);
         return this;
-    }
-
-    @Override
-    public @NotNull BungeeCommandBuilder subCommand(@NotNull String name, @NotNull Consumer<BungeeCommandBuilder> consumer) {
-        final BungeeCommandBuilder builder = builder(name);
-        builder.node.setParent(this.node);
-        consumer.accept(builder);
-        return subCommand(builder.build());
     }
 
     @Override
@@ -147,11 +144,6 @@ public class BungeeCommandBuilder implements CommandBuilder<CommandSender, Bunge
     public @NotNull BungeeCommandBuilder unregister() {
         BungeeCommand.unregister(mainBridge);
         return this;
-    }
-
-    @Override
-    public @NotNull CommandNode<CommandSender> build() {
-        return node;
     }
 
     public class Node extends AbstractCommandNode<CommandSender> {

@@ -45,17 +45,19 @@ public interface CommandThrowable<SenderT> {
             final var arguments = context.getCommand().getArguments();
             for (int i = context.getSize(); i < arguments.size(); i++) {
                 final var argument = arguments.get(i);
-                if (argument.isRequired(sender)) {
-                    usage.add(out + '<' + in + argument.getName() + out + '>');
-                } else {
-                    usage.add(out + '[' + in + argument.getName() + out + ']');
+                if (argument instanceof InputArgument) {
+                    if (argument.isRequired(sender)) {
+                        usage.add(out + '<' + in + ((InputArgument<?, ?>) argument).getName() + out + '>');
+                    } else {
+                        usage.add(out + '[' + in + ((InputArgument<?, ?>) argument).getName() + out + ']');
+                    }
                 }
             }
         }
 
         if (node.hasSubCommands()) {
             sendColoredMessage(sender, "&e" + Strings.capitalize(context.getCommand().getName()) + " commands: &7(/" + usage + " <command>...)");
-            for (CommandNode<SenderT> sub : node.getSubCommands()) {
+            for (CommandNode<SenderT> sub : node.getNodeArgument().getNodes()) {
                 sendSubUsage(sender, sub);
             }
         } else {

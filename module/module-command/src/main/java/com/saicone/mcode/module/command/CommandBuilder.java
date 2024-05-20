@@ -1,5 +1,6 @@
 package com.saicone.mcode.module.command;
 
+import com.saicone.types.TypeParser;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
@@ -13,6 +14,9 @@ public interface CommandBuilder<SenderT, BuilderT extends CommandBuilder<SenderT
 
     @NotNull
     BuilderT builder(@NotNull String name);
+
+    @NotNull
+    CommandNode<SenderT> node();
 
     @NotNull
     BuilderT alias(@NotNull String... aliases);
@@ -32,6 +36,55 @@ public interface CommandBuilder<SenderT, BuilderT extends CommandBuilder<SenderT
     BuilderT eval(@NotNull Predicate<SenderT> predicate);
 
     @NotNull
+    default BuilderT minArgs(int minArgs) {
+        return minArgs(sender -> minArgs);
+    }
+
+    @NotNull
+    BuilderT minArgs(@NotNull Function<SenderT, Integer> minArgs);
+
+    @NotNull
+    BuilderT with(@NotNull InputArgument<SenderT, ?> argument);
+
+    @NotNull
+    default <T> BuilderT with(@NotNull InputArgument<SenderT, T> argument, @NotNull Consumer<InputArgument<SenderT, T>> consumer) {
+        consumer.accept(argument);
+        return with(argument);
+    }
+
+    @NotNull
+    default BuilderT with(@NotNull String name) {
+        return with(InputArgument.of(name));
+    }
+
+    @NotNull
+    default BuilderT with(@NotNull String name, @NotNull ArgumentType type) {
+        return with(InputArgument.of(name, type));
+    }
+
+    @NotNull
+    default <T> BuilderT with(@NotNull String name, @NotNull Class<T> type) {
+        return with(InputArgument.of(name, type));
+    }
+
+    @NotNull
+    default <T> BuilderT with(@NotNull String name, @NotNull TypeParser<T> typeParser) {
+        return with(InputArgument.of(name, typeParser));
+    }
+
+    @NotNull
+    BuilderT sub(@NotNull Consumer<NodeArgument<SenderT>> consumer);
+    @NotNull
+    BuilderT sub(@NotNull CommandNode<SenderT> node);
+
+    @NotNull
+    default BuilderT sub(@NotNull String name, @NotNull Consumer<BuilderT> consumer) {
+        final BuilderT builder = builder(name);
+        consumer.accept(builder);
+        return sub(builder.node());
+    }
+
+    @NotNull
     default BuilderT syntax(@NotNull String syntax) {
         final char[] chars = syntax.toCharArray();
         int mark = 0;
@@ -39,12 +92,12 @@ public interface CommandBuilder<SenderT, BuilderT extends CommandBuilder<SenderT
         for (int i = 0; i < chars.length; i++) {
             final char c = chars[i];
             if (i + 1 >= chars.length) {
-                argument(syntax.substring(mark, i + 1));
+                with(syntax.substring(mark, i + 1));
             }
             if (looking != null) {
                 if (looking == c && (i + 1 >= chars.length || chars[i + 1] == ' ')) {
                     i++;
-                    argument(syntax.substring(mark, i));
+                    with(syntax.substring(mark, i));
                     mark = i;
                     looking = null;
                 }
@@ -60,63 +113,12 @@ public interface CommandBuilder<SenderT, BuilderT extends CommandBuilder<SenderT
                 }
             }
             if (c == ' ' && mark < i) {
-                argument(syntax.substring(mark, i + 1));
+                with(syntax.substring(mark, i + 1));
                 mark = i + 1;
             }
         }
         return builder();
     }
-
-    @NotNull
-    BuilderT argument(@NotNull CommandArgument<SenderT> argument);
-
-    @NotNull
-    default BuilderT argument(@NotNull String name) {
-        return argument(CommandArgument.of(name));
-    }
-
-    @NotNull
-    default BuilderT argument(@NotNull String name, @NotNull ArgumentType type) {
-        final CommandArgument<SenderT> argument = CommandArgument.of(name);
-        argument.type(type);
-        return argument(argument);
-    }
-
-    @NotNull
-    default BuilderT argument(@NotNull String name, @NotNull Class<?> type) {
-        final CommandArgument<SenderT> argument = CommandArgument.of(name);
-        argument.type(type);
-        return argument(argument);
-    }
-
-    @NotNull
-    default BuilderT argument(@NotNull String name, @NotNull Consumer<CommandArgument<SenderT>> consumer) {
-        final CommandArgument<SenderT> argument = CommandArgument.of(name);
-        consumer.accept(argument);
-        return argument(argument);
-    }
-
-    @NotNull
-    default BuilderT minArgs(int minArgs) {
-        return minArgs(sender -> minArgs);
-    }
-
-    @NotNull
-    BuilderT minArgs(@NotNull Function<SenderT, Integer> minArgs);
-
-    @NotNull
-    default BuilderT subStart(int subStart) {
-        return subStart(sender -> subStart);
-    }
-
-    @NotNull
-    BuilderT subStart(@NotNull Function<SenderT, Integer> subStart);
-
-    @NotNull
-    BuilderT subCommand(@NotNull CommandNode<SenderT> node);
-
-    @NotNull
-    BuilderT subCommand(@NotNull String name, @NotNull Consumer<BuilderT> consumer);
 
     @NotNull
     BuilderT throwable(@NotNull CommandThrowable<SenderT> throwable);
@@ -139,7 +141,4 @@ public interface CommandBuilder<SenderT, BuilderT extends CommandBuilder<SenderT
 
     @NotNull
     BuilderT unregister();
-
-    @NotNull
-    CommandNode<SenderT> build();
 }
