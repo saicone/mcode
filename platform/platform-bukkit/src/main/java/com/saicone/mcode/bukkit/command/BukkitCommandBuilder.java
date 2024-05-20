@@ -153,13 +153,18 @@ public class BukkitCommandBuilder implements CommandBuilder<CommandSender, Bukki
 
         @Override
         public boolean execute(@NotNull CommandSender sender, @NotNull String commandLabel, @NotNull String[] args) {
-            result(sender, commandLabel, args);
+            if (!testPermission(sender)) {
+                return true;
+            }
+            new InputContext<>(sender, throwable).then(commandLabel, node, args);
             return true;
         }
 
         @Override
         public @NotNull CommandResult result(@NotNull CommandSender sender, @NotNull String commandLabel, @NotNull String... args) {
-            if (node.eval(sender)) {
+            if (!testPermission(sender)) {
+                return CommandResult.NO_PERMISSION;
+            } else if (node.eval(sender)) {
                 return new InputContext<>(sender, throwable).then(commandLabel, node, args).getResult();
             } else {
                 return CommandResult.FAIL_EVAL;

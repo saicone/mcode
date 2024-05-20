@@ -110,6 +110,7 @@ public class BukkitCommand {
         if (command == null) {
             if (!silent) {
                 if (user instanceof Player) {
+                    // TODO: Send translation "command.unknown.command"
                     user.sendMessage("Unknown command. Type \"/help\" for help.");
                 } else {
                     user.sendMessage("Unknown command. Type \"help\" for help.");
