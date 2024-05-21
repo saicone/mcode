@@ -37,10 +37,14 @@ public enum CommandResult {
     /**
      * Execution must continue with parent command execution.
      */
-    BREAK;
+    BREAK,
+    /**
+     * Command must be sent to backend or proxy server.
+     */
+    PROXY;
 
     public boolean isDone() {
-        return this == DONE || this == RETURN;
+        return this == DONE || this == RETURN || this == PROXY;
     }
 
     public boolean isUnknown() {

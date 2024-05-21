@@ -8,20 +8,24 @@ import org.jetbrains.annotations.Nullable;
 public class InputArgument<SenderT, T> extends Argument<SenderT, T, InputArgument<SenderT, T>> {
 
     private final String name;
+    private final ArgumentType type;
     private final TypeParser<T> typeParser;
 
     private boolean array;
+    private T min;
+    private T max;
+
     @NotNull
     public static <SenderT> InputArgument<SenderT, String> of(@NotNull String name) {
         return of(name, String.class);
     }
 
     @NotNull
-    public static <SenderT> InputArgument<SenderT, ?> of(@NotNull String name, @NotNull ArgumentType type) {
+    public static <SenderT, T> InputArgument<SenderT, T> of(@NotNull String name, @NotNull ArgumentType type) {
         if (!Types.contains(type)) {
             throw new IllegalArgumentException("There's no type parser for argument type " + type.name());
         }
-        final InputArgument<SenderT, ?> argument = of(name, Types.of(type));
+        final InputArgument<SenderT, T> argument = of(name, type, Types.of(type));
         if (type == ArgumentType.GREEDY_STRING) {
             argument.array = true;
         }
@@ -38,6 +42,11 @@ public class InputArgument<SenderT, T> extends Argument<SenderT, T, InputArgumen
 
     @NotNull
     public static <SenderT, T> InputArgument<SenderT, T> of(@NotNull String name, @NotNull TypeParser<T> typeParser) {
+        return of(name, null, typeParser);
+    }
+
+    @NotNull
+    public static <SenderT, T> InputArgument<SenderT, T> of(@NotNull String name, @Nullable ArgumentType type, @NotNull TypeParser<T> typeParser) {
         String s = name;
         boolean required = false;
         boolean array = false;
@@ -55,11 +64,12 @@ public class InputArgument<SenderT, T> extends Argument<SenderT, T, InputArgumen
             s = s.substring(0, s.length() - 3);
             array = true;
         }
-        return new InputArgument<SenderT, T>(s, typeParser).required(required).array(array);
+        return new InputArgument<SenderT, T>(s, type, typeParser).required(required).array(array);
     }
 
-    public InputArgument(@NotNull String name, @Nullable TypeParser<T> typeParser) {
+    public InputArgument(@NotNull String name, @Nullable ArgumentType type, @Nullable TypeParser<T> typeParser) {
         this.name = name;
+        this.type = type;
         this.typeParser = typeParser;
     }
 
@@ -73,8 +83,23 @@ public class InputArgument<SenderT, T> extends Argument<SenderT, T, InputArgumen
     }
 
     @Nullable
+    public ArgumentType getType() {
+        return type;
+    }
+
+    @Nullable
     public TypeParser<T> getTypeParser() {
         return typeParser;
+    }
+
+    @Nullable
+    public T getMin() {
+        return min;
+    }
+
+    @Nullable
+    public T getMax() {
+        return max;
     }
 
     @Override
@@ -94,5 +119,28 @@ public class InputArgument<SenderT, T> extends Argument<SenderT, T, InputArgumen
     public InputArgument<SenderT, T> array(boolean array) {
         this.array = array;
         return this;
+    }
+
+    @NotNull
+    public InputArgument<SenderT, T> min(@Nullable T min) {
+        this.min = min;
+        return this;
+    }
+
+    @NotNull
+    public InputArgument<SenderT, T> max(@Nullable T max) {
+        this.max = max;
+        return this;
+    }
+
+    @Override
+    public String toString() {
+        if (min != null) {
+            if (max != null) {
+                return min + ", " + max;
+            }
+            return name + "(" + min + ")";
+        }
+        return name;
     }
 }

@@ -47,9 +47,9 @@ public interface CommandThrowable<SenderT> {
                 final var argument = arguments.get(i);
                 if (argument instanceof InputArgument) {
                     if (argument.isRequired(sender)) {
-                        usage.add(out + '<' + in + ((InputArgument<?, ?>) argument).getName() + out + '>');
+                        usage.add(out + '<' + in + argument + out + '>');
                     } else {
-                        usage.add(out + '[' + in + ((InputArgument<?, ?>) argument).getName() + out + ']');
+                        usage.add(out + '[' + in + argument + out + ']');
                     }
                 }
             }

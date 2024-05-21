@@ -1,0 +1,11 @@
+repositories {
+    maven { url 'https://libraries.minecraft.net' }
+}
+
+dependencies {
+    api project(':module:module-command')
+    compileOnly 'com.google.guava:guava:32.1.2-jre'
+    compileOnly 'com.saicone:types:1.0'
+
+    compileOnly 'com.mojang:brigadier:1.0.18'
+}

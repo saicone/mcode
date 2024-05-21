@@ -9,6 +9,7 @@ dependencies {
     implementation project(':module:module-lang-adventure')
     compileOnly project(':module:module-script')
     compileOnly project(':module:module-command')
+    compileOnly project(':module:module-command-brigadier')
     compileOnly 'com.saicone.delivery4j:delivery4j:1.0'
     compileOnly 'com.saicone.settings:settings:0d340f8961'
 }

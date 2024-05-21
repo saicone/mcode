@@ -6,6 +6,7 @@ include 'common'
 // Modules
 include(
 	'module:module-command',
+	'module:module-command-brigadier',
 	'module:module-lang',
 	'module:module-lang-adventure',
 	'module:module-script',

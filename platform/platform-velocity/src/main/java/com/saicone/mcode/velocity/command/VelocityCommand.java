@@ -72,7 +72,7 @@ public class VelocityCommand {
     }
 
     @NotNull
-    public static CommandBuilder<CommandSource> builder(@NotNull CommandNode<CommandSource> command) {
+    public static <BuilderT extends CommandBuilder<CommandSource, BuilderT>> BuilderT builder(@NotNull CommandNode<CommandSource> command) {
 
     }
 
