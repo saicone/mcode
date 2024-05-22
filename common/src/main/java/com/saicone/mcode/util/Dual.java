@@ -25,6 +25,21 @@ public class Dual<A, B> {
     }
 
     @NotNull
+    public static <T, A, B> Dual<A, B> of(@NotNull T t, @NotNull Function<T, A> a, @NotNull Function<T, B> b) {
+        return new Dual<>() {
+            @Override
+            public A getLeft() {
+                return super.getLeft() != null ? super.getLeft() : a.apply(t);
+            }
+
+            @Override
+            public B getRight() {
+                return super.getRight() != null ? super.getRight() : b.apply(t);
+            }
+        };
+    }
+
+    @NotNull
     public static Dual<String, String> ofSplit(@Nullable String s, @Language(value = "RegExp") @NotNull String regex) {
         if (s == null || s.isBlank()) {
             return new Dual<>();
@@ -51,7 +66,7 @@ public class Dual<A, B> {
     }
 
     public Object getLeftOrRight() {
-        return left != null ? left : right;
+        return getLeft() != null ? getLeft() : getRight();
     }
 
     public B getRight() {
@@ -59,7 +74,7 @@ public class Dual<A, B> {
     }
 
     public Object getRightOrLeft() {
-        return right != null ? right : left;
+        return getRight() != null ? getRight() : getLeft();
     }
 
     public void setLeft(@Nullable A left) {
@@ -71,14 +86,14 @@ public class Dual<A, B> {
     }
 
     public boolean isEmpty() {
-        return left == null && right == null;
+        return getLeft() == null && getRight() == null;
     }
 
     @Override
     public String toString() {
         return "Dual{" +
-                "left=" + left +
-                ", right=" + right +
+                "left=" + getLeft() +
+                ", right=" + getRight() +
                 '}';
     }
 
@@ -89,51 +104,51 @@ public class Dual<A, B> {
 
     @NotNull
     public String join(@NotNull String delimiter) {
-        return left + delimiter + right;
+        return getLeft() + delimiter + getRight();
     }
 
     public <R> R join(@NotNull BiFunction<A, B, R> consumer) {
-        return consumer.apply(left, right);
+        return consumer.apply(getLeft(), getRight());
     }
 
     @NotNull
     public Dual<A, B> copy() {
-        return new Dual<>(left, right);
+        return new Dual<>(getLeft(), getRight());
     }
 
     @NotNull
     public <L, R> Dual<L, R> by(@NotNull Function<A, L> leftFunction, @NotNull Function<B, R> rightFunction) {
-        return new Dual<>(leftFunction.apply(left), rightFunction.apply(right));
+        return new Dual<>(leftFunction.apply(getLeft()), rightFunction.apply(getRight()));
     }
 
     @NotNull
     public <L> Dual<L, B> byLeft(@NotNull Function<A, L> leftFunction) {
-        return new Dual<>(leftFunction.apply(left), right);
+        return new Dual<>(leftFunction.apply(getLeft()), getRight());
     }
 
     @NotNull
     public <R> Dual<A, R> byRight(@NotNull Function<B, R> rightFunction) {
-        return new Dual<>(left, rightFunction.apply(right));
+        return new Dual<>(getLeft(), rightFunction.apply(getRight()));
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) {
-            return Objects.equals(left, o) || Objects.equals(right, o);
+            return Objects.equals(getLeft(), o) || Objects.equals(getRight(), o);
         }
 
         return equals((Dual<?, ?>) o);
     }
 
     public boolean equals(@NotNull Dual<?, ?> dual) {
-        return Objects.equals(left, dual.left) && Objects.equals(right, dual.right);
+        return Objects.equals(getLeft(), dual.getLeft()) && Objects.equals(getRight(), dual.getRight());
     }
 
     @Override
     public int hashCode() {
-        int result = left != null ? left.hashCode() : 0;
-        result = 31 * result + (right != null ? right.hashCode() : 0);
+        int result = getLeft() != null ? getLeft().hashCode() : 0;
+        result = 31 * result + (getRight() != null ? getRight().hashCode() : 0);
         return result;
     }
 }
