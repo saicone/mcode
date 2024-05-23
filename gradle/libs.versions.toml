@@ -18,7 +18,7 @@ settings = "1.0"
 delivery4j = "1.0"
 
 # Platforms
-bukkit = "1.20.6-R0.1-SNAPSHOT"
+spigot = "1.20.6-R0.1-SNAPSHOT"
 bungeecord = "1.20-R0.2-SNAPSHOT"
 velocity = "3.3.0-SNAPSHOT"
 
@@ -44,7 +44,7 @@ types = { module = "com.saicone:types", version.ref = "types" }
 settings = { module = "com.saicone.settings:settings", version.ref = "settings" }
 delivery4j = { module = "com.saicone.delivery4j:delivery4j", version.ref = "delivery4j" }
 
-bukkit-api = { module = "org.spigotmc:spigot-api", version.ref = "bukkit" }
+spigot-api = { module = "org.spigotmc:spigot-api", version.ref = "spigot" }
 bungeecord-api = { module = "net.md-5:bungeecord-api", version.ref = "bungeecord" }
 velocity-api = { module = "com.velocitypowered:velocity-api", version.ref = "velocity" }
 

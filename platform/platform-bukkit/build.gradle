@@ -7,7 +7,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly libs.bukkit.api
+    compileOnly libs.spigot.api
     compileOnly libs.authlib
     compileOnly project(':module:module-task')
 
