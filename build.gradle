@@ -2,6 +2,14 @@ subprojects {
     apply plugin: 'java'
     apply plugin: 'java-library'
     apply plugin: 'maven-publish'
+    apply plugin: 'idea'
+
+    idea {
+        module {
+            downloadJavadoc = true
+            downloadSources = true
+        }
+    }
 
     repositories {
         maven { url 'https://jitpack.io' }
@@ -9,7 +17,7 @@ subprojects {
     }
 
     dependencies {
-        compileOnly 'org.jetbrains:annotations:24.0.1'
+        compileOnly libs.annotations
     }
 
     compileJava {
