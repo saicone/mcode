@@ -72,8 +72,9 @@ public class VelocityCommand {
     }
 
     @NotNull
-    public static <BuilderT extends CommandBuilder<CommandSource, BuilderT>> BuilderT builder(@NotNull CommandNode<CommandSource> command) {
-
+    @SuppressWarnings("unchecked")
+    public static <BuilderT extends CommandBuilder<CommandSource, BuilderT>> BuilderT builder(@NotNull String name) {
+        return (BuilderT) new VelocityCommandBuilder(name);
     }
 
     @NotNull

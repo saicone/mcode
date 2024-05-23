@@ -125,7 +125,8 @@ public class BungeeCommand {
     }
 
     @NotNull
-    public static <BuilderT extends CommandBuilder<CommandSender, BuilderT>> BuilderT builder(@NotNull Command command) {
-
+    @SuppressWarnings("unchecked")
+    public static <BuilderT extends CommandBuilder<CommandSender, BuilderT>> BuilderT builder(@NotNull String name) {
+        return (BuilderT) new BungeeCommandBuilder(name);
     }
 }

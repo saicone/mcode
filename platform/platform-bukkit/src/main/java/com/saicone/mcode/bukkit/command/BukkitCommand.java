@@ -133,22 +133,20 @@ public class BukkitCommand {
     }
 
     @NotNull
-    public static <BuilderT extends CommandBuilder<CommandSender, BuilderT>> BuilderT builder(@NotNull CommandNode<CommandSender> command) {
-
+    @SuppressWarnings("unchecked")
+    public static <BuilderT extends CommandBuilder<CommandSender, BuilderT>> BuilderT builder(@NotNull String name) {
+        return (BuilderT) new BukkitCommandBuilder(name);
     }
 
     @NotNull
-    public static <BuilderT extends CommandBuilder<CommandSender, BuilderT>> BuilderT builder(@NotNull Command command) {
-
-    }
-
-    @NotNull
+    @SuppressWarnings("unchecked")
     public static <BuilderT extends CommandBuilder<CommandSender, BuilderT>> BuilderT builder(@NotNull PluginCommand command) {
-
+        return (BuilderT) new BukkitCommandBuilder(command);
     }
 
     @NotNull
     public static <BuilderT extends CommandBuilder<CommandSender, BuilderT>> BuilderT builder(@NotNull JavaPlugin plugin, @NotNull String name) {
-
+        final PluginCommand command = plugin.getCommand(name);
+        return command == null ? builder(name) : builder(command);
     }
 }

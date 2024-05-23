@@ -17,13 +17,18 @@ import java.util.function.Predicate;
 public class BukkitCommandBuilder implements CommandBuilder<CommandSender, BukkitCommandBuilder> {
 
     private final Node node;
-    private final Bridge bridge;
+    private final Command bridge;
 
     private CommandThrowable<CommandSender> throwable = CommandSender::sendMessage;
 
     public BukkitCommandBuilder(@NotNull String name) {
         this.node = new Node();
         this.bridge = new Bridge(name);
+    }
+
+    public BukkitCommandBuilder(@NotNull Command command) {
+        this.node = new Node();
+        this.bridge = command;
     }
 
     @Override

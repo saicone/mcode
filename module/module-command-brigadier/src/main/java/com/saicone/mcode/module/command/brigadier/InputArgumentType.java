@@ -22,7 +22,7 @@ public abstract class InputArgumentType<SenderT, T> implements ArgumentType<T> {
     private final InputArgument<SenderT, T> argument;
     private final ArgumentType<T> delegate;
 
-    private InputArgumentType(@NotNull InputArgument<SenderT, T> argument, @Nullable ArgumentType<T> delegate) {
+    public InputArgumentType(@NotNull InputArgument<SenderT, T> argument, @Nullable ArgumentType<T> delegate) {
         this.argument = argument;
         this.delegate = delegate;
     }
