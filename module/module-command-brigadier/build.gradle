@@ -4,8 +4,8 @@ repositories {
 
 dependencies {
     api project(':module:module-command')
-    compileOnly 'com.google.guava:guava:32.1.2-jre'
-    compileOnly 'com.saicone:types:1.0'
+    compileOnly libs.guava
+    compileOnly libs.types
 
-    compileOnly 'com.mojang:brigadier:1.0.18'
+    compileOnly libs.brigadier
 }

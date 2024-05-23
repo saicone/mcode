@@ -7,16 +7,16 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'org.spigotmc:spigot-api:1.20.4-R0.1-SNAPSHOT'
-    compileOnly 'com.mojang:authlib:1.5.26' // 3.11.50
+    compileOnly libs.bukkit.api
+    compileOnly libs.authlib
     compileOnly project(':module:module-task')
 
     // Lang module
     compileOnly project(':module:module-lang')
     compileOnly project(':module:module-lang-adventure')
-    compileOnly 'net.kyori:adventure-api:4.15.0'
-    compileOnly 'net.kyori:adventure-platform-bukkit:4.3.2'
-    compileOnly 'net.kyori:adventure-text-serializer-legacy:4.15.0'
+    compileOnly libs.adventure.api
+    compileOnly libs.adventure.platform.bukkit
+    compileOnly libs.adventure.text.serializer.legacy
 
     compileOnly project(':module:module-script')
 
@@ -24,8 +24,8 @@ dependencies {
     compileOnly project(':module:module-command')
 
     compileOnly project(':extension:extension-lookup')
-    compileOnly 'com.saicone.delivery4j:delivery4j:1.0'
-    compileOnly 'com.saicone.settings:settings:0d340f8961'
+    compileOnly libs.delivery4j
+    compileOnly libs.settings
 
     compileOnly('com.github.MilkBowl:VaultAPI:1.7.1') { transitive = false }
     compileOnly('me.clip:placeholderapi:2.11.5') { transitive = false }

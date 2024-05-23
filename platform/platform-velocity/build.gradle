@@ -3,15 +3,15 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'com.velocitypowered:velocity-api:3.3.0-SNAPSHOT'
+    compileOnly libs.velocity.api
     compileOnly project(':module:module-task')
     compileOnly project(':module:module-lang')
     implementation project(':module:module-lang-adventure')
     compileOnly project(':module:module-script')
     compileOnly project(':module:module-command')
     compileOnly project(':module:module-command-brigadier')
-    compileOnly 'com.saicone.delivery4j:delivery4j:1.0'
-    compileOnly 'com.saicone.settings:settings:0d340f8961'
+    compileOnly libs.delivery4j
+    compileOnly libs.settings
 }
 
 java {

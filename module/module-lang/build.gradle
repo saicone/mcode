@@ -1,4 +1,4 @@
 dependencies {
     api project(':common')
-    compileOnly 'com.saicone.settings:settings:0d340f8961'
+    compileOnly libs.settings
 }
