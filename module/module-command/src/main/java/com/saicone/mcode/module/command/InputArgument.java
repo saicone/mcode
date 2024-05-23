@@ -26,8 +26,18 @@ public class InputArgument<SenderT, T> extends Argument<SenderT, T, InputArgumen
             throw new IllegalArgumentException("There's no type parser for argument type " + type.name());
         }
         final InputArgument<SenderT, T> argument = of(name, type, Types.of(type));
-        if (type == ArgumentType.GREEDY_STRING) {
-            argument.array = true;
+        switch (type) {
+            case GREEDY_STRING:
+            case ENTITIES:
+            case PLAYER_PROFILES:
+            case PLAYERS:
+                argument.array = true;
+                break;
+            case BLOCK_POSITION:
+                argument.size(3);
+                break;
+            default:
+                break;
         }
         return argument;
     }

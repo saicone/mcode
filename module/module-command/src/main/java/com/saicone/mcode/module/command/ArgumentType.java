@@ -24,15 +24,23 @@ public enum ArgumentType {
     BLOCK_POSITION,
     BLOCK_STATE,
     ITEM_STACK,
+    ITEM_STACK_PREDICATE,
     NAMED_COLOR,
     COMPONENT,
+    STYLE,
     SIGNED_MESSAGE,
     SCOREBOARD_DISPLAY_SLOT,
     NAMESPACED_KEY,
+    KEY,
     WORLD,
     GAME_MODE,
     HEIGHT_MAP,
     UNIQUE_ID,
+    OBJECTIVE_CRITERIA,
+    ENTITY_ANCHOR,
+    TIME,
+    TEMPLATE_MIRROR,
+    TEMPLATE_ROTATION,
     // Custom arguments (Taken from CommandAPI library)
     AXIS,
     CHAT_COLOR,
@@ -42,8 +50,7 @@ public enum ArgumentType {
     PARTICLE,
     POTION_EFFECT,
     RECIPE,
-    SOUND,
-    TIME;
+    SOUND;
 
     public static final ArgumentType[] VALUES = values();
 

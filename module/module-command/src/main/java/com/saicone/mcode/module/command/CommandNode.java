@@ -81,6 +81,9 @@ public interface CommandNode<SenderT> {
         return null;
     }
 
+    @Nullable
+    CommandExecution<SenderT> getExecution();
+
     @NotNull
     @SuppressWarnings("unchecked")
     default CommandResult then(@NotNull InputContext<SenderT> context, @NotNull String... args) {

@@ -1,18 +1,17 @@
 package com.saicone.mcode.velocity.command;
 
+import com.mojang.brigadier.Message;
 import com.mojang.brigadier.arguments.ArgumentType;
-import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
-import com.mojang.brigadier.tree.ArgumentCommandNode;
-import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.saicone.mcode.module.command.*;
 import com.saicone.mcode.module.command.impl.AbstractCommandNode;
-import com.saicone.mcode.module.command.impl.BrigadierCommandBuilder;
+import com.saicone.mcode.module.command.brigadier.BrigadierCommandBuilder;
 import com.saicone.mcode.velocity.VelocityPlatform;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandMeta;
 import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.command.VelocityBrigadierMessage;
 import com.velocitypowered.api.proxy.ProxyServer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.jetbrains.annotations.NotNull;
@@ -24,24 +23,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class VelocityCommandBuilder implements BrigadierCommandBuilder<CommandSource, VelocityCommandBuilder> {
-
-    static {
-        // builder
-        // - main<SenderT>
-        ArgumentBuilder.class;
-        // - command<SenderT>
-        LiteralArgumentBuilder.class;
-        // - argument<SenderT, ArgumentType>
-        RequiredArgumentBuilder.class;
-
-        // node
-        // - main<SenderT>
-        com.mojang.brigadier.tree.CommandNode.class;
-        // - command<SenderT>
-        LiteralCommandNode.class;
-        // - argument<SenderT, ArgumentType>
-        ArgumentCommandNode.class;
-    }
 
     private final ProxyServer proxy;
     private CommandMeta.Builder metaBuilder;
@@ -105,8 +86,21 @@ public class VelocityCommandBuilder implements BrigadierCommandBuilder<CommandSo
     }
 
     @Override
-    public @NotNull <T> RequiredArgumentBuilder<CommandSource, T> argument(@NotNull String name, @NotNull ArgumentType<T> type) {
+    public @NotNull <T> RequiredArgumentBuilder<CommandSource, T> required(@NotNull String name, @NotNull ArgumentType<T> type) {
         return BrigadierCommand.requiredArgumentBuilder(name, type);
+    }
+
+    @Override
+    public @NotNull Message tooltip(@NotNull String msg) {
+        return VelocityBrigadierMessage.tooltip(LegacyComponentSerializer.legacyAmpersand().deserialize(msg));
+    }
+
+    @Override
+    public int result(@NotNull CommandResult result) {
+        if (result == CommandResult.PROXY) {
+            return BrigadierCommand.FORWARD;
+        }
+        return BrigadierCommandBuilder.super.result(result);
     }
 
     @Override
@@ -183,7 +177,7 @@ public class VelocityCommandBuilder implements BrigadierCommandBuilder<CommandSo
 
     @Override
     public @NotNull VelocityCommandBuilder register() {
-        proxy.getCommandManager().register(getMeta(), new BrigadierCommand(build(node.getName())));
+        proxy.getCommandManager().register(getMeta(), new BrigadierCommand(build(node)));
         return this;
     }
 

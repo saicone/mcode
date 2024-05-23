@@ -105,6 +105,12 @@ public abstract class AbstractCommandNode<SenderT> implements CommandNode<Sender
         return arguments;
     }
 
+    @Nullable
+    @Override
+    public CommandExecution<SenderT> getExecution() {
+        return execution;
+    }
+
     @NotNull
     @SuppressWarnings("unchecked")
     public NodeArgument<SenderT> getCommandArgument() {

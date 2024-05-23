@@ -1,4 +1,5 @@
 dependencies {
+    api project(':common')
     compileOnly project(':module:module-script')
     compileOnly 'com.google.guava:guava:32.1.2-jre'
     compileOnly 'com.saicone:types:1.0'

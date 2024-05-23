@@ -33,7 +33,7 @@ public interface CommandSuggestion<SenderT> {
     }
 
     @NotNull
-    static <SenderT> CommandSuggestion<SenderT> of(@NotNull Iterable<String> list) {
+    static <SenderT> CommandSuggestion<SenderT> of(@NotNull List<String> list) {
         final Map<String, String> map = new LinkedHashMap<>();
         for (String key : list) {
             map.put(key, null);
@@ -46,6 +46,10 @@ public interface CommandSuggestion<SenderT> {
             @Override
             public @NotNull Map<String, String> get() {
                 return map;
+            }
+            @Override
+            public @NotNull List<String> list() {
+                return list;
             }
         };
     }

@@ -185,7 +185,7 @@ public class InputContext<SenderT> {
     }
 
     public void addArgument(@NotNull String input) {
-        addArgument(input, null);
+        addArgument(input, (Object) null);
     }
 
     public <T> void addArgument(@NotNull String input, @Nullable T type) {
@@ -193,7 +193,11 @@ public class InputContext<SenderT> {
     }
 
     public <T> void addArgument(@NotNull String name, @NotNull String input, @Nullable T type) {
-        arguments.put(name, Dual.of(input, type));
+        addArgument(name, Dual.of(input, type));
+    }
+
+    public void addArgument(@NotNull String name, @NotNull Dual<String, Object> argument) {
+        arguments.put(name, argument);
     }
 
     public void setResult(@NotNull CommandResult result) {
