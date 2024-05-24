@@ -8,20 +8,18 @@ import com.saicone.mcode.velocity.VelocityPlatform;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
-import ninja.leaping.configurate.ConfigurationNode;
-import ninja.leaping.configurate.gson.GsonConfigurationLoader;
-import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
-import ninja.leaping.configurate.loader.ConfigurationLoader;
-import ninja.leaping.configurate.yaml.YAMLConfigurationLoader;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
+import org.spongepowered.configurate.ConfigurationNode;
+import org.spongepowered.configurate.gson.GsonConfigurationLoader;
+import org.spongepowered.configurate.hocon.HoconConfigurationLoader;
+import org.spongepowered.configurate.loader.ConfigurationLoader;
+import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
 import java.io.*;
 import java.nio.file.Files;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class VelocityLang extends AbstractLang<CommandSource> implements AdventureLang<CommandSource> {
 
@@ -151,25 +149,46 @@ public class VelocityLang extends AbstractLang<CommandSource> implements Adventu
                 return new Toml().read(file).toMap();
             case "yml":
             case "yaml":
-                loader = YAMLConfigurationLoader.builder().setFile(file).build();
+                loader = YamlConfigurationLoader.builder().file(file).build();
                 break;
             case "json":
-                loader = GsonConfigurationLoader.builder().setFile(file).build();
+                loader = GsonConfigurationLoader.builder().file(file).build();
                 break;
             case "hocon":
-                loader = HoconConfigurationLoader.builder().setFile(file).build();
+                loader = HoconConfigurationLoader.builder().file(file).build();
                 break;
             default:
                 return new HashMap<>();
         }
         try {
-            final Object value = loader.load().getValue();
-            if (value instanceof Map) {
-                return (Map<?, ?>) value;
+            final ConfigurationNode value = loader.load();
+            if (value.isMap()) {
+                return (Map<?, ?>) asObject(value);
             }
         } catch (IOException e) {
             sendLog(2, e, "Cannot load displays from configuration at file " + file.getName());
         }
         return new HashMap<>();
+    }
+
+    @Nullable
+    private Object asObject(@NotNull ConfigurationNode node) {
+        if (node.isMap()) {
+            final Map<Object, Object> map = new HashMap<>();
+            for (Map.Entry<Object, ? extends ConfigurationNode> entry : node.childrenMap().entrySet()) {
+                map.put(entry.getKey(), asObject(entry.getValue()));
+            }
+            return map;
+        } else if (node.isList()) {
+            final List<Object> list = new ArrayList<>();
+            for (ConfigurationNode child : node.childrenList()) {
+                list.add(asObject(child));
+            }
+            return list;
+        } else if (node.isNull()) {
+            return null;
+        } else {
+            return node.raw();
+        }
     }
 }
