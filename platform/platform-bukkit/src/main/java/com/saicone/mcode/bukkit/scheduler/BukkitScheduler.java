@@ -1,13 +1,10 @@
 package com.saicone.mcode.bukkit.scheduler;
 
 import com.saicone.mcode.scheduler.Scheduler;
-import com.saicone.mcode.scheduler.TaskTimer;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.TimeUnit;
 
@@ -20,7 +17,7 @@ public class BukkitScheduler implements Scheduler<BukkitTask> {
     }
 
     public long ticks(long duration, @NotNull TimeUnit unit) {
-        return unit.toMillis(duration) * 20000 / 1000;
+        return (long) (unit.toMillis(duration) * 0.02);
     }
 
     @Override
@@ -59,79 +56,7 @@ public class BukkitScheduler implements Scheduler<BukkitTask> {
     }
 
     @Override
-    public BukkitTimer timer(@NotNull String id) {
-        return new BukkitTimer(id);
-    }
-
-    @Override
     public boolean isMainThread() {
         return Bukkit.isPrimaryThread();
-    }
-
-    public class BukkitTimer extends TaskTimer<BukkitTask> {
-
-        private BukkitRunnable bukkitRunnable;
-
-        public BukkitTimer(@NotNull String id) {
-            super(id);
-        }
-
-        @Nullable
-        public BukkitRunnable getBukkitRunnable() {
-            return bukkitRunnable;
-        }
-
-        public void setBukkitRunnable(@Nullable BukkitRunnable bukkitRunnable) {
-            this.bukkitRunnable = bukkitRunnable;
-        }
-
-        public void setBukkitRunnable(@NotNull Runnable runnable) {
-            this.bukkitRunnable = new BukkitRunnable() {
-                @Override
-                public void run() {
-                    runnable.run();
-                }
-            };
-        }
-
-        @Override
-        public boolean isRunning() {
-            return super.isRunning() || !bukkitRunnable.isCancelled();
-        }
-
-        @Override
-        protected BukkitTask run(boolean async, long delay, long period, @NotNull TimeUnit unit, @NotNull Runnable runnable) {
-            if (period > 0) {
-                setBukkitRunnable(runnable);
-                return async
-                        ? bukkitRunnable.runTaskTimerAsynchronously(plugin, ticks(delay, unit), ticks(period, unit))
-                        : bukkitRunnable.runTaskTimer(plugin, ticks(delay, unit), ticks(period, unit));
-            }
-            if (delay > 0) {
-                setBukkitRunnable(runnable);
-                return async
-                        ? bukkitRunnable.runTaskLaterAsynchronously(plugin, ticks(delay, unit))
-                        : bukkitRunnable.runTaskLater(plugin, ticks(delay, unit));
-            }
-            return async ? runAsync(runnable) : BukkitScheduler.this.run(runnable);
-        }
-
-        @Override
-        public boolean stop() {
-            boolean result = super.stop();
-            if (bukkitRunnable != null) {
-                if (!result) {
-                    result = !bukkitRunnable.isCancelled();
-                }
-                bukkitRunnable.cancel();
-                bukkitRunnable = null;
-            }
-            return result;
-        }
-
-        @Override
-        protected void stop(BukkitTask task) {
-            BukkitScheduler.this.stop(task);
-        }
     }
 }

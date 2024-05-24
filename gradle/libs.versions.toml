@@ -20,6 +20,8 @@ delivery4j = "1.0"
 # Platforms
 spigot = "1.20.6-R0.1-SNAPSHOT"
 bungeecord = "1.20-R0.2-SNAPSHOT"
+folia = "1.20.4-R0.1-SNAPSHOT"
+paper = "1.20.6-R0.1-SNAPSHOT"
 velocity = "3.3.0-SNAPSHOT"
 
 # Plugins
@@ -46,6 +48,8 @@ delivery4j = { module = "com.saicone.delivery4j:delivery4j", version.ref = "deli
 
 spigot-api = { module = "org.spigotmc:spigot-api", version.ref = "spigot" }
 bungeecord-api = { module = "net.md-5:bungeecord-api", version.ref = "bungeecord" }
+folia-api = { module = "dev.folia:folia-api", version.ref = "folia" }
+paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
 velocity-api = { module = "com.velocitypowered:velocity-api", version.ref = "velocity" }
 
 [plugins]

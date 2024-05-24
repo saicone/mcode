@@ -18,6 +18,7 @@ include(
 include(
 	'platform:platform-bukkit',
 	'platform:platform-bungee',
+	'platform:platform-paper',
 	'platform:platform-velocity'
 	)
 
