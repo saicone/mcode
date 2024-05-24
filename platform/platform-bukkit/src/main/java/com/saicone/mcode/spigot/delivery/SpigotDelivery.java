@@ -1,4 +1,4 @@
-package com.saicone.mcode.bukkit.delivery;
+package com.saicone.mcode.spigot.delivery;
 
 import com.google.common.collect.Iterables;
 import com.saicone.delivery4j.DeliveryClient;

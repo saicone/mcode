@@ -1,5 +1,7 @@
-package com.saicone.mcode.bukkit.lang;
+package com.saicone.mcode.paper.lang;
 
+import com.saicone.mcode.bukkit.lang.BukkitLang;
+import com.saicone.mcode.bukkit.lang.BukkitTextEvent;
 import com.saicone.mcode.module.lang.AdventureLang;
 import com.saicone.mcode.module.lang.Displays;
 import com.saicone.mcode.module.lang.display.TextDisplay;

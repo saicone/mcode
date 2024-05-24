@@ -8,6 +8,7 @@ import com.saicone.mcode.bukkit.util.ServerInstance;
 import com.saicone.mcode.module.lang.AbstractLang;
 import com.saicone.mcode.module.lang.Displays;
 import com.saicone.mcode.module.lang.display.*;
+import com.saicone.mcode.paper.lang.PaperLang;
 import com.saicone.mcode.util.DMap;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;

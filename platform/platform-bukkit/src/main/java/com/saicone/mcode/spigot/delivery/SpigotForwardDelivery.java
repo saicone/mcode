@@ -1,4 +1,4 @@
-package com.saicone.mcode.bukkit.delivery;
+package com.saicone.mcode.spigot.delivery;
 
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteArrayDataOutput;
