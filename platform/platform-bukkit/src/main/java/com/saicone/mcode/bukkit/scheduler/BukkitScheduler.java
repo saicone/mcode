@@ -5,12 +5,13 @@ import com.saicone.mcode.scheduler.TaskTimer;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.TimeUnit;
 
-public class BukkitScheduler implements Scheduler<Integer> {
+public class BukkitScheduler implements Scheduler<BukkitTask> {
 
     private final Plugin plugin;
 
@@ -23,38 +24,38 @@ public class BukkitScheduler implements Scheduler<Integer> {
     }
 
     @Override
-    public Integer sync(@NotNull Runnable runnable) {
-        return Bukkit.getScheduler().runTask(plugin, runnable).getTaskId();
+    public BukkitTask run(@NotNull Runnable runnable) {
+        return Bukkit.getScheduler().runTask(plugin, runnable);
     }
 
     @Override
-    public Integer syncLater(@NotNull Runnable runnable, long delay, @NotNull TimeUnit unit) {
-        return Bukkit.getScheduler().runTaskLater(plugin, runnable, ticks(delay, unit)).getTaskId();
+    public BukkitTask later(@NotNull Runnable runnable, long delay, @NotNull TimeUnit unit) {
+        return Bukkit.getScheduler().runTaskLater(plugin, runnable, ticks(delay, unit));
     }
 
     @Override
-    public Integer syncTimer(@NotNull Runnable runnable, long delay, long period, @NotNull TimeUnit unit) {
-        return Bukkit.getScheduler().runTaskTimer(plugin, runnable, ticks(delay, unit), ticks(period, unit)).getTaskId();
+    public BukkitTask timer(@NotNull Runnable runnable, long delay, long period, @NotNull TimeUnit unit) {
+        return Bukkit.getScheduler().runTaskTimer(plugin, runnable, ticks(delay, unit), ticks(period, unit));
     }
 
     @Override
-    public Integer async(@NotNull Runnable runnable) {
-        return Bukkit.getScheduler().runTaskAsynchronously(plugin, runnable).getTaskId();
+    public BukkitTask runAsync(@NotNull Runnable runnable) {
+        return Bukkit.getScheduler().runTaskAsynchronously(plugin, runnable);
     }
 
     @Override
-    public Integer asyncLater(@NotNull Runnable runnable, long delay, @NotNull TimeUnit unit) {
-        return Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, runnable, ticks(delay, unit)).getTaskId();
+    public BukkitTask laterAsync(@NotNull Runnable runnable, long delay, @NotNull TimeUnit unit) {
+        return Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, runnable, ticks(delay, unit));
     }
 
     @Override
-    public Integer asyncTimer(@NotNull Runnable runnable, long delay, long period, @NotNull TimeUnit unit) {
-        return Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, runnable, ticks(delay, unit), ticks(period, unit)).getTaskId();
+    public BukkitTask timerAsync(@NotNull Runnable runnable, long delay, long period, @NotNull TimeUnit unit) {
+        return Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, runnable, ticks(delay, unit), ticks(period, unit));
     }
 
     @Override
-    public void stop(Integer id) {
-        Bukkit.getScheduler().cancelTask(id);
+    public void stop(BukkitTask task) {
+        task.cancel();
     }
 
     @Override
@@ -67,7 +68,7 @@ public class BukkitScheduler implements Scheduler<Integer> {
         return Bukkit.isPrimaryThread();
     }
 
-    public class BukkitTimer extends TaskTimer<Integer> {
+    public class BukkitTimer extends TaskTimer<BukkitTask> {
 
         private BukkitRunnable bukkitRunnable;
 
@@ -99,20 +100,20 @@ public class BukkitScheduler implements Scheduler<Integer> {
         }
 
         @Override
-        protected Integer run(boolean async, long delay, long period, @NotNull TimeUnit unit, @NotNull Runnable runnable) {
+        protected BukkitTask run(boolean async, long delay, long period, @NotNull TimeUnit unit, @NotNull Runnable runnable) {
             if (period > 0) {
                 setBukkitRunnable(runnable);
                 return async
-                        ? bukkitRunnable.runTaskTimerAsynchronously(plugin, ticks(delay, unit), ticks(period, unit)).getTaskId()
-                        : bukkitRunnable.runTaskTimer(plugin, ticks(delay, unit), ticks(period, unit)).getTaskId();
+                        ? bukkitRunnable.runTaskTimerAsynchronously(plugin, ticks(delay, unit), ticks(period, unit))
+                        : bukkitRunnable.runTaskTimer(plugin, ticks(delay, unit), ticks(period, unit));
             }
             if (delay > 0) {
                 setBukkitRunnable(runnable);
                 return async
-                        ? bukkitRunnable.runTaskLaterAsynchronously(plugin, ticks(delay, unit)).getTaskId()
-                        : bukkitRunnable.runTaskLater(plugin, ticks(delay, unit)).getTaskId();
+                        ? bukkitRunnable.runTaskLaterAsynchronously(plugin, ticks(delay, unit))
+                        : bukkitRunnable.runTaskLater(plugin, ticks(delay, unit));
             }
-            return async ? async(runnable) : sync(runnable);
+            return async ? runAsync(runnable) : BukkitScheduler.this.run(runnable);
         }
 
         @Override
@@ -129,8 +130,8 @@ public class BukkitScheduler implements Scheduler<Integer> {
         }
 
         @Override
-        protected void stop(Integer id) {
-            BukkitScheduler.this.stop(id);
+        protected void stop(BukkitTask task) {
+            BukkitScheduler.this.stop(task);
         }
     }
 }

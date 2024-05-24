@@ -8,152 +8,132 @@ import java.util.concurrent.TimeUnit;
 
 public class Task {
 
-    private static Scheduler<Object> scheduler = null;
-    private static final Map<String, TaskTimer<Object>> timers = new HashMap<>();
+    private static Scheduler<Object> SCHEDULER = null;
+    private static final Map<String, TaskTimer<Object>> TIMERS = new HashMap<>();
 
     Task() {
     }
 
     @NotNull
     public static Scheduler<Object> getScheduler() {
-        return scheduler;
+        return SCHEDULER;
     }
 
     public static void setScheduler(@NotNull Scheduler<Object> scheduler) {
-        if (Task.scheduler == null) {
-            Task.scheduler = scheduler;
+        if (Task.SCHEDULER == null) {
+            Task.SCHEDULER = scheduler;
         }
     }
 
     public static Object run(@NotNull Runnable runnable) {
-        return sync(runnable);
-    }
-
-    public static Object run(long delay, @NotNull Runnable runnable) {
-        return run(delay, TimeUnit.SECONDS, runnable);
-    }
-
-    public static Object run(long delay, @NotNull TimeUnit unit, @NotNull Runnable runnable) {
-        return run(!isMainThread(), delay, unit, runnable);
-    }
-
-    public static Object run(long delay, long period, @NotNull Runnable runnable) {
-        return run(delay, period, TimeUnit.SECONDS, runnable);
-    }
-
-    public static Object run(long delay, long period, @NotNull TimeUnit unit, @NotNull Runnable runnable) {
-        return run(!isMainThread(), delay, period, unit, runnable);
+        return SCHEDULER.run(runnable);
     }
 
     public static Object run(boolean async, @NotNull Runnable runnable) {
         if (async) {
-            return async(runnable);
+            return runAsync(runnable);
         } else {
-            return sync(runnable);
+            return run(runnable);
         }
     }
 
-    public static Object run(boolean async, long delay, @NotNull Runnable runnable) {
-        return run(async, delay, TimeUnit.SECONDS, runnable);
+    public static Object run(@NotNull Object provider, @NotNull Runnable runnable) {
+        return runBy(provider, runnable);
     }
 
     public static Object run(boolean async, long delay, @NotNull TimeUnit unit, @NotNull Runnable runnable) {
         if (async) {
-            return asyncLater(runnable, delay, unit);
+            return laterAsync(runnable, delay, unit);
         } else {
-            return syncLater(runnable, delay, unit);
+            return later(runnable, delay, unit);
         }
     }
 
-    public static Object run(boolean async, long delay, long period, @NotNull Runnable runnable) {
-        return run(async, delay, period, TimeUnit.SECONDS, runnable);
+    public static Object run(@NotNull Object provider, long delay, @NotNull TimeUnit unit, @NotNull Runnable runnable) {
+        return laterBy(provider, runnable, delay, unit);
     }
 
     public static Object run(boolean async, long delay, long period, @NotNull TimeUnit unit, @NotNull Runnable runnable) {
         if (async) {
-            return asyncTimer(runnable, delay, period, unit);
+            return timerAsync(runnable, delay, period, unit);
         } else {
-            return syncTimer(runnable, delay, period, unit);
+            return timer(runnable, delay, period, unit);
         }
     }
 
-    public static Object sync(@NotNull Runnable runnable) {
-        return scheduler.sync(runnable);
+    public static Object run(@NotNull Object provider, long delay, long period, @NotNull TimeUnit unit, @NotNull Runnable runnable) {
+        return timerBy(provider, runnable, delay, period, unit);
     }
 
-    public static Object syncLater(@NotNull Runnable runnable, long delay) {
-        return syncLater(runnable, delay, TimeUnit.SECONDS);
+    public static Object later(@NotNull Runnable runnable, long delay, @NotNull TimeUnit unit) {
+        return SCHEDULER.later(runnable, delay, unit);
     }
 
-    public static Object syncLater(@NotNull Runnable runnable, long delay, @NotNull TimeUnit unit) {
-        return scheduler.syncLater(runnable, delay, unit);
+    public static Object timer(@NotNull Runnable runnable, long delay, long period, @NotNull TimeUnit unit) {
+        return SCHEDULER.timer(runnable, delay, period, unit);
     }
 
-    public static Object syncTimer(@NotNull Runnable runnable, long delay, long period) {
-        return syncTimer(runnable, delay, period, TimeUnit.SECONDS);
+    public static Object runAsync(@NotNull Runnable runnable) {
+        return SCHEDULER.runAsync(runnable);
     }
 
-    public static Object syncTimer(@NotNull Runnable runnable, long delay, long period, @NotNull TimeUnit unit) {
-        return scheduler.syncTimer(runnable, delay, period, unit);
+    public static Object laterAsync(@NotNull Runnable runnable, long delay, @NotNull TimeUnit unit) {
+        return SCHEDULER.laterAsync(runnable, delay, unit);
     }
 
-    public static Object async(@NotNull Runnable runnable) {
-        return scheduler.async(runnable);
+    public static Object timerAsync(@NotNull Runnable runnable, long delay, long period, @NotNull TimeUnit unit) {
+        return SCHEDULER.timerAsync(runnable, delay, period, unit);
     }
 
-    public static Object asyncLater(@NotNull Runnable runnable, long delay) {
-        return asyncLater(runnable, delay, TimeUnit.SECONDS);
+    public static Object runBy(@NotNull Object provider, @NotNull Runnable runnable) {
+        return SCHEDULER.runBy(provider, runnable);
     }
 
-    public static Object asyncLater(@NotNull Runnable runnable, long delay, @NotNull TimeUnit unit) {
-        return scheduler.asyncLater(runnable, delay, unit);
+    public static Object laterBy(@NotNull Object provider, @NotNull Runnable runnable, long delay, @NotNull TimeUnit unit) {
+        return SCHEDULER.laterBy(provider, runnable, delay, unit);
     }
 
-    public static Object asyncTimer(@NotNull Runnable runnable, long delay, long period) {
-        return asyncTimer(runnable, delay, period, TimeUnit.SECONDS);
-    }
-
-    public static Object asyncTimer(@NotNull Runnable runnable, long delay, long period, @NotNull TimeUnit unit) {
-        return scheduler.asyncTimer(runnable, delay, period, unit);
+    public static Object timerBy(@NotNull Object provider, @NotNull Runnable runnable, long delay, long period, @NotNull TimeUnit unit) {
+        return SCHEDULER.timerBy(provider, runnable, delay, period, unit);
     }
 
     @NotNull
     public static TaskTimer<Object> timer(@NotNull String id) {
-        return scheduler.timer(id).onClear(timer -> timers.remove(timer.getId()));
+        return SCHEDULER.timer(id).onClear(timer -> TIMERS.remove(timer.getId()));
     }
 
     public static boolean isMainThread() {
-        return scheduler.isMainThread();
+        return SCHEDULER.isMainThread();
     }
 
     public static void stop(Object id) {
-        scheduler.stop(id);
+        SCHEDULER.stop(id);
     }
 
     public static boolean stop(@NotNull String id) {
-        if (timers.containsKey(id)) {
-            return timers.get(id).stop();
+        if (TIMERS.containsKey(id)) {
+            return TIMERS.get(id).stop();
         }
         return false;
     }
 
     public static boolean stopAndClear(@NotNull String id) {
-        if (timers.containsKey(id)) {
-            timers.get(id).stop();
-            timers.remove(id);
+        if (TIMERS.containsKey(id)) {
+            TIMERS.get(id).stop();
+            TIMERS.remove(id);
             return true;
         }
         return false;
     }
 
     public static void stopAll() {
-        for (String key : timers.keySet()) {
+        for (String key : TIMERS.keySet()) {
             stop(key);
         }
     }
 
     public static void stopAllAndClear() {
         stopAll();
-        timers.clear();
+        TIMERS.clear();
     }
 }

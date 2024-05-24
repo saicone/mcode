@@ -4,44 +4,62 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.TimeUnit;
 
-public interface Scheduler<T> {
+public interface Scheduler<TaskT> {
 
-    default T sync(@NotNull Runnable runnable) {
-        return async(runnable);
+    // Synchronously
+
+    default TaskT run(@NotNull Runnable runnable) {
+        return runAsync(runnable);
     }
 
-    default T syncLater(@NotNull Runnable runnable, long delay, @NotNull TimeUnit unit) {
-        return asyncLater(runnable, delay, unit);
+    default TaskT later(@NotNull Runnable runnable, long delay, @NotNull TimeUnit unit) {
+        return laterAsync(runnable, delay, unit);
     }
 
-    default T syncTimer(@NotNull Runnable runnable, long delay, long period, @NotNull TimeUnit unit) {
-        return asyncTimer(runnable, delay, period, unit);
+    default TaskT timer(@NotNull Runnable runnable, long delay, long period, @NotNull TimeUnit unit) {
+        return timerAsync(runnable, delay, period, unit);
     }
 
-    T async(@NotNull Runnable runnable);
+    // Asynchronously
 
-    T asyncLater(@NotNull Runnable runnable, long delay, @NotNull TimeUnit unit);
+    TaskT runAsync(@NotNull Runnable runnable);
 
-    T asyncTimer(@NotNull Runnable runnable, long delay, long period, @NotNull TimeUnit unit);
+    TaskT laterAsync(@NotNull Runnable runnable, long delay, @NotNull TimeUnit unit);
 
-    void stop(T id);
+    TaskT timerAsync(@NotNull Runnable runnable, long delay, long period, @NotNull TimeUnit unit);
 
-    default TaskTimer<T> timer(@NotNull String id) {
+    // By object that provides a separated scheduler
+
+    default TaskT runBy(@NotNull Object provider, @NotNull Runnable runnable) {
+        return runAsync(runnable);
+    }
+
+    default TaskT laterBy(@NotNull Object provider, @NotNull Runnable runnable, long delay, @NotNull TimeUnit unit) {
+        return laterAsync(runnable, delay, unit);
+    }
+
+    default TaskT timerBy(@NotNull Object provider, @NotNull Runnable runnable, long delay, long period, @NotNull TimeUnit unit) {
+        return timerAsync(runnable, delay, period, unit);
+    }
+
+    void stop(TaskT task);
+
+    default TaskTimer<TaskT> timer(@NotNull String id) {
         return new TaskTimer<>(id) {
             @Override
-            protected T run(boolean async, long delay, long period, @NotNull TimeUnit unit, @NotNull Runnable runnable) {
+            protected TaskT run(boolean async, long delay, long period, @NotNull TimeUnit unit, @NotNull Runnable runnable) {
                 if (period > 0) {
-                    return async ? asyncTimer(runnable, delay, period, unit) : syncTimer(runnable, delay, period, unit);
+                    return async ? timerAsync(runnable, delay, period, unit) : timer(runnable, delay, period, unit);
                 }
                 if (delay > 0) {
-                    return async ? asyncLater(runnable, delay, unit) : syncLater(runnable, delay, unit);
+                    return async ? laterAsync(runnable, delay, unit) : later(runnable, delay, unit);
                 }
-                return async ? async(runnable) : sync(runnable);
+                return async ? runAsync(runnable) : Scheduler.this.run(runnable);
             }
 
             @Override
-            protected void stop(T id) {
-                Scheduler.this.stop(id);
+            protected void stop(TaskT task) {
+                Scheduler.this.stop(task);
             }
         };
     }

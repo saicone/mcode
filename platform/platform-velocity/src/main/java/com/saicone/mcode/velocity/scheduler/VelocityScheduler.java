@@ -28,17 +28,17 @@ public class VelocityScheduler implements Scheduler<ScheduledTask> {
     }
 
     @Override
-    public ScheduledTask async(@NotNull Runnable runnable) {
+    public ScheduledTask runAsync(@NotNull Runnable runnable) {
         return proxy.getScheduler().buildTask(plugin, runnable).schedule();
     }
 
     @Override
-    public ScheduledTask asyncLater(@NotNull Runnable runnable, long delay, @NotNull TimeUnit unit) {
+    public ScheduledTask laterAsync(@NotNull Runnable runnable, long delay, @NotNull TimeUnit unit) {
         return proxy.getScheduler().buildTask(plugin, runnable).delay(delay, unit).schedule();
     }
 
     @Override
-    public ScheduledTask asyncTimer(@NotNull Runnable runnable, long delay, long period, @NotNull TimeUnit unit) {
+    public ScheduledTask timerAsync(@NotNull Runnable runnable, long delay, long period, @NotNull TimeUnit unit) {
         return proxy.getScheduler().buildTask(plugin, runnable).repeat(period, unit).schedule();
     }
 

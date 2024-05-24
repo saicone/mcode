@@ -6,13 +6,14 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.TimeUnit;
 
-public abstract class TaskTimer<T> {
+public abstract class TaskTimer<TaskT> {
 
     // Parameters
     private final String id;
 
     // Mutable parameters
-    private T runningId = null;
+    private TaskT runningTask = null;
+    private Object runningProvider = null;
     private boolean runningAsync = false;
     private long runningDelay = 0;
     private long runningPeriod = 0;
@@ -20,10 +21,10 @@ public abstract class TaskTimer<T> {
     private boolean blocked;
 
     // Timer interactions
-    private Consumer<TaskTimer<T>> onRun;
+    private Consumer<TaskTimer<TaskT>> onRun;
     private Consumer<Throwable> onException;
-    private Consumer<TaskTimer<T>> onStop;
-    private Consumer<TaskTimer<T>> onClear;
+    private Consumer<TaskTimer<TaskT>> onStop;
+    private Consumer<TaskTimer<TaskT>> onClear;
     // Timer options
     private boolean blockingOperation;
     private boolean ignoreException;
@@ -37,8 +38,8 @@ public abstract class TaskTimer<T> {
         return id;
     }
 
-    public T getRunningId() {
-        return runningId;
+    public TaskT getRunningTask() {
+        return runningTask;
     }
 
     public long getRunningDelay() {
@@ -50,7 +51,7 @@ public abstract class TaskTimer<T> {
     }
 
     @Nullable
-    public Consumer<TaskTimer<T>> getOnRun() {
+    public Consumer<TaskTimer<TaskT>> getOnRun() {
         return onRun;
     }
 
@@ -60,17 +61,17 @@ public abstract class TaskTimer<T> {
     }
 
     @Nullable
-    public Consumer<TaskTimer<T>> getOnStop() {
+    public Consumer<TaskTimer<TaskT>> getOnStop() {
         return onStop;
     }
 
     @Nullable
-    public Consumer<TaskTimer<T>> getOnClear() {
+    public Consumer<TaskTimer<TaskT>> getOnClear() {
         return onClear;
     }
 
     public boolean isRunning() {
-        return runningId != null;
+        return runningTask != null;
     }
 
     public boolean isRunningAsync() {
@@ -91,7 +92,7 @@ public abstract class TaskTimer<T> {
 
     @NotNull
     @Contract("_ -> this")
-    public TaskTimer<T> onRun(@Nullable Consumer<TaskTimer<T>> onRun) {
+    public TaskTimer<TaskT> onRun(@Nullable Consumer<TaskTimer<TaskT>> onRun) {
         if (this.onRun == null || onRun == null) {
             this.onRun = onRun;
         } else {
@@ -102,7 +103,7 @@ public abstract class TaskTimer<T> {
 
     @NotNull
     @Contract("_ -> this")
-    public TaskTimer<T> onException(@Nullable Consumer<Throwable> onException) {
+    public TaskTimer<TaskT> onException(@Nullable Consumer<Throwable> onException) {
         if (this.onException == null || onException == null) {
             this.onException = onException;
         } else {
@@ -113,7 +114,7 @@ public abstract class TaskTimer<T> {
 
     @NotNull
     @Contract("_ -> this")
-    public TaskTimer<T> onStop(@Nullable Consumer<TaskTimer<T>> onStop) {
+    public TaskTimer<TaskT> onStop(@Nullable Consumer<TaskTimer<TaskT>> onStop) {
         if (this.onStop == null || onStop == null) {
             this.onStop = onStop;
         } else {
@@ -124,7 +125,7 @@ public abstract class TaskTimer<T> {
 
     @NotNull
     @Contract("_ -> this")
-    public TaskTimer<T> onClear(@Nullable Consumer<TaskTimer<T>> onClear) {
+    public TaskTimer<TaskT> onClear(@Nullable Consumer<TaskTimer<TaskT>> onClear) {
         if (this.onClear == null || onClear == null) {
             this.onClear = onClear;
         } else {
@@ -135,16 +136,21 @@ public abstract class TaskTimer<T> {
 
     @NotNull
     @Contract("_ -> this")
-    public TaskTimer<T> blockingOperation(boolean blockingOperation) {
+    public TaskTimer<TaskT> blockingOperation(boolean blockingOperation) {
         this.blockingOperation = blockingOperation;
         return this;
     }
 
     @NotNull
     @Contract("_ -> this")
-    public TaskTimer<T> ignoreException(boolean ignoreException) {
+    public TaskTimer<TaskT> ignoreException(boolean ignoreException) {
         this.ignoreException = ignoreException;
         return this;
+    }
+
+    public void setRunningProvider(@Nullable Object runningProvider) {
+        this.runningProvider = runningProvider;
+        reset();
     }
 
     public void setRunningAsync(boolean runningAsync) {
@@ -173,32 +179,32 @@ public abstract class TaskTimer<T> {
 
     @NotNull
     @Contract("_ -> this")
-    public TaskTimer<T> run(boolean async) {
-        return run(async, 0, 0, TimeUnit.SECONDS);
+    public TaskTimer<TaskT> run(@NotNull Object operator) {
+        return run(operator, 0, 0, TimeUnit.SECONDS);
     }
 
     @NotNull
     @Contract("_, _ -> this")
-    public TaskTimer<T> run(boolean async, long delay) {
-        return run(async, delay, 0, TimeUnit.SECONDS);
+    public TaskTimer<TaskT> run(@NotNull Object operator, long delay) {
+        return run(operator, delay, 0, TimeUnit.SECONDS);
     }
 
     @NotNull
     @Contract("_, _, _ -> this")
-    public TaskTimer<T> run(boolean async, long delay, long period) {
-        return run(async, delay, period, TimeUnit.SECONDS);
+    public TaskTimer<TaskT> run(@NotNull Object operator, long delay, long period) {
+        return run(operator, delay, period, TimeUnit.SECONDS);
     }
 
     @NotNull
     @Contract("_, _, _, _ -> this")
-    public TaskTimer<T> run(boolean async, long delay, long period, @NotNull TimeUnit unit) {
+    public TaskTimer<TaskT> run(@NotNull Object operator, long delay, long period, @NotNull TimeUnit unit) {
         if (isRunning()) {
             stop();
         }
         if (onRun == null) {
             return this;
         }
-        final Consumer<TaskTimer<T>> consumer;
+        final Consumer<TaskTimer<TaskT>> consumer;
         if (ignoreException) {
             consumer = onRun.ignoreException();
         } else if (onException != null) {
@@ -219,15 +225,24 @@ public abstract class TaskTimer<T> {
         } else {
             runnable = () -> consumer.accept(this);
         }
-        runningAsync = async;
         runningDelay = delay;
         runningPeriod = period;
         runningUnit = unit;
-        runningId = run(async, delay, period, unit, runnable);
+        if (operator instanceof Boolean) {
+            runningAsync = (Boolean) operator;
+            runningTask = run((boolean) operator, delay, period, unit, runnable);
+        } else {
+            runningProvider = operator;
+            runningTask = run(operator, delay, period, unit, runnable);
+        }
         return this;
     }
 
-    protected abstract T run(boolean async, long delay, long period, @NotNull TimeUnit unit, @NotNull Runnable runnable);
+    protected abstract TaskT run(boolean async, long delay, long period, @NotNull TimeUnit unit, @NotNull Runnable runnable);
+
+    protected TaskT run(@NotNull Object provider, long delay, long period, @NotNull TimeUnit unit, @NotNull Runnable runnable) {
+        return run(true, delay, period, unit, runnable);
+    }
 
     public void reset() {
         if (isRunning()) {
@@ -238,17 +253,17 @@ public abstract class TaskTimer<T> {
 
     public boolean stop() {
         if (isRunning()) {
-            stop(runningId);
+            stop(runningTask);
             if (onStop != null) {
                 onStop.accept(this);
             }
-            runningId = null;
+            runningTask = null;
             return true;
         }
         return false;
     }
 
-    protected abstract void stop(T id);
+    protected abstract void stop(TaskT task);
 
     public boolean stopAndClear() {
         if (onClear != null) {
