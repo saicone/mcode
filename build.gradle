@@ -44,11 +44,51 @@ subprojects {
 }
 
 def javadocProjects= [
-        ':common'
+        ':common',
+        // Modules
+        'module:module-command',
+        'module:module-command-brigadier',
+        'module:module-lang',
+        'module:module-lang-adventure',
+        'module:module-script',
+        'module:module-script-js',
+        'module:module-task',
+        // Platforms
+        'platform:platform-bukkit',
+        'platform:platform-bungee',
+        'platform:platform-velocity',
+        // Extensions
+        'extension:extension-cache-set',
+        'extension:extension-lookup',
+        'extension:extension-type'
 ]
 
 task allJavadoc(type: Javadoc) {
     source javadocProjects.collect { project(it).sourceSets.main.allJava }
     classpath = files(javadocProjects.collect { project(it).sourceSets.main.compileClasspath })
-    destinationDir = file(project.buildDir.path + '/docs/all-javadoc')
+    options {
+        // Java
+        links 'https://docs.oracle.com/en/java/javase/11/docs/api/'
+        // Libraries
+        links 'https://javadoc.io/doc/com.google.code.gson/gson/latest/'
+        links 'https://javadoc.io/doc/com.google.guava/guava/latest/'
+        links 'https://javadoc.io/doc/com.github.ben-manes.caffeine/caffeine/latest/'
+        links 'https://javadoc.io/doc/org.jetbrains/annotations/latest/'
+
+        links 'https://jd.advntr.dev/api/latest/'
+        links 'https://jd.advntr.dev/text-minimessage/latest/'
+        links 'https://jd.advntr.dev/text-serializer-legacy/latest/'
+        links 'https://jd.advntr.dev/platform/bukkit/latest/'
+        links 'https://jd.advntr.dev/platform/bungeecord/latest/'
+
+        links 'https://javadoc.saicone.com/types/'
+        links 'https://javadoc.saicone.com/settings/'
+        links 'https://javadoc.saicone.com/delivery4j/'
+
+        // Platforms
+        links 'https://hub.spigotmc.org/javadocs/bukkit/'
+        links 'https://javadoc.io/doc/net.md-5/bungeecord-api/latest/'
+        links 'https://jd.papermc.io/velocity/3.3.0/'
+    }
+    destinationDir = file(project.layout.buildDirectory.dir('docs/all-javadoc'))
 }
