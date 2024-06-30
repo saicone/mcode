@@ -33,9 +33,14 @@ public class EasyLookup {
     static {
         try {
             // Java
+            addClass("boolean[]", "[Z");
             addClass("byte[]", "[B");
+            addClass("short[]", "[S");
             addClass("int[]", "[I");
             addClass("long[]", "[J");
+            addClass("float[]", "[F");
+            addClass("double[]", "[D");
+            addClass("char[]", "[C");
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
@@ -585,7 +590,7 @@ public class EasyLookup {
      * @param isStatic True if field is static.
      * @param name     Field name.
      * @param type     Return type class for provided field name.
-     * @return           A field from provided class.
+     * @return         A field from provided class.
      * @throws NoSuchFieldException   if the field does not exist.
      * @throws IllegalAccessException if access checking fails, or if the field is not static.
      */
@@ -611,8 +616,18 @@ public class EasyLookup {
         throw new NoSuchFieldException("Cannot find a field like '" + (isStatic ? "static " : "") + type.getName() + ' ' + name + "' inside class " + from.getName());
     }
 
-    private static Field field(Class<?> clazz, String field) throws NoSuchFieldException {
-        Field f = clazz.getDeclaredField(field);
+    /**
+     * Get accessible field from provided class.<br>
+     *
+     * Required classes can be Strings to get by {@link #classById(String)}.
+     *
+     * @param clazz Class to find setter.
+     * @param field Field name.
+     * @return      A field from provided class with access permission.
+     * @throws NoSuchFieldException if the field does not exist.
+     */
+    public static Field field(Object clazz, String field) throws NoSuchFieldException {
+        Field f = classOf(clazz).getDeclaredField(field);
         f.setAccessible(true);
         return f;
     }
