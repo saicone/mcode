@@ -58,7 +58,7 @@ def javadocProjects= [
         'platform:platform-bungee',
         'platform:platform-velocity',
         // Extensions
-        'extension:extension-cache-set',
+        'extension:extension-cache',
         'extension:extension-lookup'
 ]
 

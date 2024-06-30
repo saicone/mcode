@@ -24,6 +24,6 @@ include(
 
 // Extensions
 include(
-	'extension:extension-cache-set',
+	'extension:extension-cache',
 	'extension:extension-lookup'
 	)
