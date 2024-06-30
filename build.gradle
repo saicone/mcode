@@ -59,8 +59,7 @@ def javadocProjects= [
         'platform:platform-velocity',
         // Extensions
         'extension:extension-cache-set',
-        'extension:extension-lookup',
-        'extension:extension-type'
+        'extension:extension-lookup'
 ]
 
 task allJavadoc(type: Javadoc) {
