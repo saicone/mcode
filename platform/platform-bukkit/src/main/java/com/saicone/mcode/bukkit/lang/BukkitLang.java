@@ -19,6 +19,7 @@ import net.md_5.bungee.api.chat.hover.content.Entity;
 import net.md_5.bungee.api.chat.hover.content.Item;
 import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Sound;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarFlag;
@@ -405,6 +406,8 @@ public class BukkitLang extends AbstractLang<CommandSender> {
                     ActionBar.sendActionBar((Player) sender, actionbar);
                 } else if (ServerInstance.Platform.SPIGOT) {
                     ((Player) sender).spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR, net.md_5.bungee.api.chat.TextComponent.fromLegacyText(actionbar));
+                } else if (Bukkit.isPrimaryThread() && MinecraftVersion.SERVER.isNewerThanOrEquals(MinecraftVersion.V_1_11)) {
+                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "minecraft:title " + sender.getName() + " actionbar {\"text\":\"" + ChatColor.stripColor(actionbar) + "\"}");
                 } else {
                     sender.sendMessage(actionbar);
                 }
