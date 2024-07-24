@@ -19,9 +19,10 @@ public class Task {
         return SCHEDULER;
     }
 
-    public static void setScheduler(@NotNull Scheduler<Object> scheduler) {
+    @SuppressWarnings("unchecked")
+    public static void setScheduler(@NotNull Scheduler<?> scheduler) {
         if (Task.SCHEDULER == null) {
-            Task.SCHEDULER = scheduler;
+            Task.SCHEDULER = (Scheduler<Object>) scheduler;
         }
     }
 
