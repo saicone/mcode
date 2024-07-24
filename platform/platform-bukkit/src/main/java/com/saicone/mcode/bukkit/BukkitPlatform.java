@@ -2,8 +2,8 @@ package com.saicone.mcode.bukkit;
 
 import com.saicone.mcode.Platform;
 import com.saicone.mcode.util.MStrings;
+import com.saicone.mcode.util.MinecraftVersion;
 import org.bukkit.Bukkit;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -28,6 +28,8 @@ public class BukkitPlatform extends Platform {
         super();
         setInstance(this);
         MStrings.BUNGEE_HEX = true;
+
+        MinecraftVersion.SERVER = MinecraftVersion.fromString(Bukkit.getServer().getBukkitVersion());
     }
 
     @Override

@@ -10,6 +10,7 @@ import com.saicone.mcode.module.lang.Displays;
 import com.saicone.mcode.module.lang.display.*;
 import com.saicone.mcode.paper.lang.PaperLang;
 import com.saicone.mcode.util.DMap;
+import com.saicone.mcode.util.MinecraftVersion;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
@@ -288,7 +289,7 @@ public class BukkitLang extends AbstractLang<CommandSender> {
         @Override
         @SuppressWarnings("unchecked")
         public @Nullable TextDisplay<CommandSender> load(@NotNull DMap map) {
-            if (ServerInstance.isSpigot) {
+            if (ServerInstance.Platform.SPIGOT) {
                 return super.load(map);
             }
             final Object obj = map.getRegex("(?i)value|text");
@@ -384,7 +385,7 @@ public class BukkitLang extends AbstractLang<CommandSender> {
             if (sender instanceof Player) {
                 if (USE_XSERIES) {
                     Titles.sendTitle((Player) sender, fadeIn, stay, fadeOut, title, subtitle);
-                } else if (ServerInstance.verNumber > 8) {
+                } else if (MinecraftVersion.SERVER.isNewerThanOrEquals(MinecraftVersion.V_1_9)) {
                     ((Player) sender).sendTitle(title, subtitle, fadeIn, stay, fadeOut);
                 } else {
                     ((Player) sender).sendTitle(title, subtitle);
@@ -402,7 +403,7 @@ public class BukkitLang extends AbstractLang<CommandSender> {
             if (sender instanceof Player) {
                 if (USE_XSERIES) {
                     ActionBar.sendActionBar((Player) sender, actionbar);
-                } else if (ServerInstance.isSpigot) {
+                } else if (ServerInstance.Platform.SPIGOT) {
                     ((Player) sender).spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR, net.md_5.bungee.api.chat.TextComponent.fromLegacyText(actionbar));
                 } else {
                     sender.sendMessage(actionbar);

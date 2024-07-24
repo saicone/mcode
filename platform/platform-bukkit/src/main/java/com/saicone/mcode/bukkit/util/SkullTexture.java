@@ -6,6 +6,7 @@ import com.google.gson.JsonParser;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import com.saicone.mcode.util.EasyLookup;
+import com.saicone.mcode.util.MinecraftVersion;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -51,7 +52,7 @@ public class SkullTexture {
     private static final Map<String, ItemStack> cache = new HashMap<>();
 
     static {
-        if (ServerInstance.verNumber >= 13) {
+        if (MinecraftVersion.SERVER.isFlat()) {
             PLAYER_HEAD = new ItemStack(Material.PLAYER_HEAD);
         } else {
             PLAYER_HEAD = new ItemStack(Material.getMaterial("SKULL_ITEM"), 1, (short) 3);

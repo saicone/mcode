@@ -1,6 +1,7 @@
 package com.saicone.mcode.bukkit.util;
 
 import com.saicone.mcode.util.EasyLookup;
+import com.saicone.mcode.util.MinecraftVersion;
 
 public class BukkitLookup extends EasyLookup {
 
@@ -17,7 +18,7 @@ public class BukkitLookup extends EasyLookup {
             addNMSClass("nbt.NBTTagIntArray");
             addNMSClass("nbt.NBTTagList");
             addNMSClass("nbt.NBTTagLong");
-            if (ServerInstance.verNumber >= 12) {
+            if (MinecraftVersion.SERVER.isNewerThanOrEquals(MinecraftVersion.V_1_12)) {
                 addNMSClass("nbt.NBTTagLongArray");
             }
             addNMSClass("nbt.NBTTagShort");
@@ -73,16 +74,16 @@ public class BukkitLookup extends EasyLookup {
     }
 
     private static String nmsClass(String name) {
-        if (ServerInstance.isUniversal) {
+        if (MinecraftVersion.SERVER.isUniversal()) {
             return "net.minecraft." + name;
         } else {
-            return "net.minecraft.server." + ServerInstance.version + "." + (name.contains(".") ? name.substring(name.lastIndexOf('.') + 1) : name);
+            return "net.minecraft.server." + MinecraftVersion.SERVER.getBukkitPackage() + "." + (name.contains(".") ? name.substring(name.lastIndexOf('.') + 1) : name);
         }
     }
 
     /**
      * Save the typically org.bukkit.craftbukkit class into memory.<br>
-     * Name must be the full path after "org.bukkit.craftbukkit.{@link ServerInstance#version}."
+     * Name must be the full path after "org.bukkit.craftbukkit.{@link MinecraftVersion#getBukkitPackage()}."
      *
      * @param name Class name.
      * @return     Added class.
@@ -94,7 +95,7 @@ public class BukkitLookup extends EasyLookup {
 
     /**
      * Save the typically org.bukkit.craftbukkit class into memory with specified ID.<br>
-     * Name must be the full path after "org.bukkit.craftbukkit.{@link ServerInstance#version}."
+     * Name must be the full path after "org.bukkit.craftbukkit.{@link MinecraftVersion#getBukkitPackage()}."
      *
      * @param id   Class ID.
      * @param name Class name.
@@ -106,6 +107,6 @@ public class BukkitLookup extends EasyLookup {
     }
 
     private static String obcClass(String name) {
-        return "org.bukkit.craftbukkit." + ServerInstance.version + "." + name;
+        return "org.bukkit.craftbukkit." + MinecraftVersion.SERVER.getBukkitPackage() + "." + name;
     }
 }

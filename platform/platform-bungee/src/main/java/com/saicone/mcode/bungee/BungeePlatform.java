@@ -2,12 +2,14 @@ package com.saicone.mcode.bungee;
 
 import com.saicone.mcode.Platform;
 import com.saicone.mcode.util.MStrings;
-import net.md_5.bungee.api.CommandSender;
+import com.saicone.mcode.util.MinecraftVersion;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
+import net.md_5.bungee.protocol.ProtocolConstants;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.UUID;
 
@@ -24,10 +26,22 @@ public class BungeePlatform extends Platform {
         return Platform.get();
     }
 
+
     BungeePlatform() {
         super();
         setInstance(this);
         MStrings.BUNGEE_HEX = true;
+        // Ser current version
+        MinecraftVersion version = MinecraftVersion.VALUES[MinecraftVersion.VALUES.length - 1];
+        final Field[] fields = ProtocolConstants.class.getDeclaredFields();
+        for (int i = fields.length; i-- > 0; ) {
+            final Field field = fields[i];
+            if (field.getName().startsWith("MINECRAFT_")) {
+                version = MinecraftVersion.fromString(field.getName().substring(10).replace('_', '.'));
+                break;
+            }
+        }
+        MinecraftVersion.SERVER = version;
     }
 
     @Override

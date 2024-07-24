@@ -1,6 +1,8 @@
 package com.saicone.mcode.velocity;
 
 import com.saicone.mcode.Platform;
+import com.saicone.mcode.util.MinecraftVersion;
+import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import org.jetbrains.annotations.NotNull;
@@ -27,6 +29,9 @@ public class VelocityPlatform extends Platform {
     VelocityPlatform(@NotNull ProxyServer proxy) {
         super();
         setInstance(this);
+        final ProtocolVersion[] versions = ProtocolVersion.values();
+        MinecraftVersion.SERVER = MinecraftVersion.fromString(versions[versions.length - 1].getMostRecentSupportedVersion());
+
         this.proxy = proxy;
     }
 
