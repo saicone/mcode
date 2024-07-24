@@ -33,20 +33,35 @@ public class EasyLookup {
     static {
         try {
             // Java
-            addClass("boolean[]", "[Z");
-            addClass("byte[]", "[B");
-            addClass("short[]", "[S");
-            addClass("int[]", "[I");
-            addClass("long[]", "[J");
-            addClass("float[]", "[F");
-            addClass("double[]", "[D");
-            addClass("char[]", "[C");
+            addClassId("boolean[]", "[Z");
+            addClassId("byte[]", "[B");
+            addClassId("short[]", "[S");
+            addClassId("int[]", "[I");
+            addClassId("long[]", "[J");
+            addClassId("float[]", "[F");
+            addClassId("double[]", "[D");
+            addClassId("char[]", "[C");
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
     }
 
     protected EasyLookup() {
+    }
+
+    /**
+     * Test the availability of provided class name using {@link Class#forName(String)}.
+     *
+     * @param name Class name.
+     * @return     true if the provided class exists.
+     */
+    public static boolean testClass(String name) {
+        boolean test = false;
+        try {
+            Class.forName(name);
+            test = true;
+        } catch (Throwable ignored) { }
+        return test;
     }
 
     /**
@@ -92,25 +107,55 @@ public class EasyLookup {
     /**
      * Same has {@link Class#forName(String)} but save the class into memory.
      *
-     * @param name Class name.
-     * @return     Added class.
+     * @param name    Class name.
+     * @return        Added class.
      * @throws ClassNotFoundException if the class cannot be located.
      */
     public static Class<?> addClass(String name) throws ClassNotFoundException {
-        return addClass(name.contains(".") ? name.substring(name.lastIndexOf('.') + 1) : name, name);
+        return addClass(name, new String[0]);
+    }
+
+    /**
+     * Same has {@link Class#forName(String)} but save the class into memory.
+     *
+     * @param name    Class name.
+     * @param aliases Alternative class names.
+     * @return        Added class.
+     * @throws ClassNotFoundException if the class cannot be located.
+     */
+    public static Class<?> addClass(String name, String... aliases) throws ClassNotFoundException {
+        return addClassId(name.contains(".") ? name.substring(name.lastIndexOf('.') + 1) : name, name, aliases);
     }
 
     /**
      * Same has {@link Class#forName(String)} but save the class into memory
      * with provided ID to get from {@link #classById(String)}.
      *
-     * @param id   Class ID.
-     * @param name Class name.
-     * @return     Added class.
+     * @param id      Class ID.
+     * @param name    Class name.
+     * @param aliases Alternative class names.
+     * @return        Added class.
      * @throws ClassNotFoundException if the class cannot be located.
      */
-    public static Class<?> addClass(String id, String name) throws ClassNotFoundException {
-        return addClass(id, Class.forName(name));
+    public static Class<?> addClassId(String id, String name, String... aliases) throws ClassNotFoundException {
+        String finalName = null;
+        if (testClass(name)) {
+            finalName = name;
+        } else if (aliases.length > 0) {
+            final String pkg = name.contains(".") ? name.substring(0, name.lastIndexOf('.') + 1) : "";
+            for (String alias : aliases) {
+                final String aliasName = (alias.contains(".") ? "" : pkg) + alias;
+                if (testClass(aliasName)) {
+                    finalName = aliasName;
+                    break;
+                }
+            }
+        }
+
+        if (finalName == null) {
+            throw new ClassNotFoundException(name);
+        }
+        return addClassId(id, Class.forName(finalName));
     }
 
     /**
@@ -120,7 +165,7 @@ public class EasyLookup {
      * @param clazz Class object.
      * @return      Added class.
      */
-    public static Class<?> addClass(String id, Class<?> clazz) {
+    public static Class<?> addClassId(String id, Class<?> clazz) {
         if (!classes.containsKey(id)) {
             classes.put(id, clazz);
         }
