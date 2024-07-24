@@ -4,21 +4,19 @@ import com.saicone.mcode.module.script.Condition;
 import com.saicone.mcode.module.script.EvalUser;
 import com.saicone.mcode.module.script.ScriptFunction;
 import com.saicone.mcode.module.script.action.Delay;
-import com.saicone.mcode.util.CacheSet;
+import com.saicone.mcode.util.cache.Cache;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class Cooldown extends Condition {
 
-    private static final Map<String, CacheSet<String>> CACHES = new HashMap<>();
-
-    static {
-        CACHES.put("main", CacheSet.of(10, TimeUnit.SECONDS));
-    }
+    private static final Map<String, Set<String>> CACHES = new HashMap<>();
 
     public Cooldown(@Nullable String value) {
         super(value);
@@ -31,40 +29,37 @@ public class Cooldown extends Condition {
         }
         final String[] split = getValue().split(" ", 3);
         final TimeUnit unit = split.length > 1 ? Delay.parseUnit(split[1]) : TimeUnit.SECONDS;
-        final long time = unit.toMillis(Delay.parseTime(split[0]));
-        if (time < 1) {
+        final long duration = Delay.parseTime(split[0]);
+        if (duration < 1) {
             return null;
-        }
-        final String id;
-        if (split[split.length - 1].contains(":")) {
-            id = split[split.length - 1].trim();
-        } else {
-            id = "main";
         }
         return (user) -> {
             final String userId = user.getId();
             if (userId == null) {
                 return true;
             }
-            return !getCacheOrCreate(id).containsOrAdd(user.getId(), time);
+            final Set<String> cache = getCacheOrCreate(duration, unit);
+            if (cache.contains(userId)) {
+                return false;
+            } else {
+                cache.add(userId);
+                return true;
+            }
         };
     }
 
-    @NotNull
-    public static CacheSet<String> getCache(@NotNull String s) {
-        return CACHES.getOrDefault(s, CACHES.get("main"));
+    @Nullable
+    public static Set<String> getCache(long duration, @NotNull TimeUnit unit) {
+        return CACHES.get(String.valueOf(unit.toMillis(duration)));
     }
 
     @NotNull
-    public static CacheSet<String> getCacheOrCreate(@NotNull String s) {
-        CacheSet<String> cache = CACHES.get(s);
+    public static Set<String> getCacheOrCreate(long duration, @NotNull TimeUnit unit) {
+        final String key = String.valueOf(unit.toMillis(duration));
+        Set<String> cache = CACHES.get(key);
         if (cache == null) {
-            if (s.contains(":")) {
-                cache = CacheSet.of(10, TimeUnit.SECONDS);
-                CACHES.put(s, cache);
-            } else {
-                cache = CACHES.get("main");
-            }
+            cache = Collections.newSetFromMap(Cache.<String, Boolean>newBuilder().expireAfterWrite(duration, unit).build().asMap());
+            CACHES.put(key, cache);
         }
         return cache;
     }

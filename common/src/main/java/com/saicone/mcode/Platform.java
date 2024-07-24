@@ -15,7 +15,7 @@ public abstract class Platform {
 
     static {
         // Extension
-        NAMES.put("cacheset", "com.saicone.mcode.util.CacheSet");
+        NAMES.put("cache", "com.saicone.mcode.util.cache.Cache");
         NAMES.put("lookup", "com.saicone.mcode.util.EasyLookup");
         NAMES.put("type", "com.saicone.mcode.util.OptionalType");
         // Module

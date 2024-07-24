@@ -23,7 +23,7 @@ public class Script {
             BroadcastDisplay.BUILDER.register();
         }
         REGISTRY.putCondition(EvalKey.regex("(?i)compare|eval"), object -> new Compare(String.valueOf(object)));
-        if (Platform.isAvailable("CacheSet")) {
+        if (Platform.isAvailable("Cache")) {
             REGISTRY.putCondition(EvalKey.regex("(?i)cooldown"), object -> new Cooldown(String.valueOf(object)));
         }
     }
