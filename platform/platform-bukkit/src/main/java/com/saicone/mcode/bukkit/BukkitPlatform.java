@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
+import java.util.UUID;
 
 public class BukkitPlatform extends Platform {
 
@@ -46,14 +47,11 @@ public class BukkitPlatform extends Platform {
     }
 
     @Override
-    public @Nullable String getUserId(@Nullable Object user) {
-        if (user instanceof CommandSender) {
-            if (user instanceof Entity) {
-                return ((Entity) user).getUniqueId().toString();
-            }
-            return ((CommandSender) user).getName();
+    public @NotNull UUID getUserId(@Nullable Object user) {
+        if (user instanceof Entity) {
+            return ((Entity) user).getUniqueId();
         }
-        return null;
+        return super.getUserId(user);
     }
 
     @Override

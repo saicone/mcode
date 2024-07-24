@@ -7,8 +7,11 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 public abstract class Platform {
+
+    private static final UUID CONSOLE_ID = new UUID(0, 0);
 
     protected static Platform INSTANCE;
     protected static final Map<String, String> NAMES = new HashMap<>();
@@ -78,9 +81,9 @@ public abstract class Platform {
         }
     }
 
-    @Nullable
-    public String getUserId(@Nullable Object user) {
-        return null;
+    @NotNull
+    public UUID getUserId(@Nullable Object user) {
+        return CONSOLE_ID;
     }
 
     @NotNull

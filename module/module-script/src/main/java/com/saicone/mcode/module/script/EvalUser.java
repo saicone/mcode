@@ -7,12 +7,13 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class EvalUser {
 
-    private String id;
+    private UUID uniqueId;
     private Object subject;
     private Object agent;
     private Object[] indexedArgs;
@@ -20,8 +21,8 @@ public class EvalUser {
 
     @NotNull
     @Contract("_ -> this")
-    public EvalUser id(@NotNull String id) {
-        this.id = id;
+    public EvalUser uniqueId(@NotNull UUID uniqueId) {
+        this.uniqueId = uniqueId;
         return this;
     }
 
@@ -51,9 +52,9 @@ public class EvalUser {
     }
 
     @Nullable
-    public String getId() {
-        if (id != null) {
-            return id;
+    public UUID getUniqueId() {
+        if (uniqueId != null) {
+            return uniqueId;
         }
         return Platform.getInstance().getUserId(getAgent());
     }

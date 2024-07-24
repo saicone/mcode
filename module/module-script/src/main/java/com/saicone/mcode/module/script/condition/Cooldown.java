@@ -12,11 +12,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class Cooldown extends Condition {
 
-    private static final Map<String, Set<String>> CACHES = new HashMap<>();
+    private static final Map<String, Set<UUID>> CACHES = new HashMap<>();
 
     public Cooldown(@Nullable String value) {
         super(value);
@@ -34,11 +35,11 @@ public class Cooldown extends Condition {
             return null;
         }
         return (user) -> {
-            final String userId = user.getId();
+            final UUID userId = user.getUniqueId();
             if (userId == null) {
                 return true;
             }
-            final Set<String> cache = getCacheOrCreate(duration, unit);
+            final Set<UUID> cache = getCacheOrCreate(duration, unit);
             if (cache.contains(userId)) {
                 return false;
             } else {
@@ -49,16 +50,16 @@ public class Cooldown extends Condition {
     }
 
     @Nullable
-    public static Set<String> getCache(long duration, @NotNull TimeUnit unit) {
+    public static Set<UUID> getCache(long duration, @NotNull TimeUnit unit) {
         return CACHES.get(String.valueOf(unit.toMillis(duration)));
     }
 
     @NotNull
-    public static Set<String> getCacheOrCreate(long duration, @NotNull TimeUnit unit) {
+    public static Set<UUID> getCacheOrCreate(long duration, @NotNull TimeUnit unit) {
         final String key = String.valueOf(unit.toMillis(duration));
-        Set<String> cache = CACHES.get(key);
+        Set<UUID> cache = CACHES.get(key);
         if (cache == null) {
-            cache = Collections.newSetFromMap(Cache.<String, Boolean>newBuilder().expireAfterWrite(duration, unit).build().asMap());
+            cache = Collections.newSetFromMap(Cache.<UUID, Boolean>newBuilder().expireAfterWrite(duration, unit).build().asMap());
             CACHES.put(key, cache);
         }
         return cache;

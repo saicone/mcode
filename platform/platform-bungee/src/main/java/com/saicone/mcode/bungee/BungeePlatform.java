@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
+import java.util.UUID;
 
 public class BungeePlatform extends Platform {
 
@@ -43,14 +44,11 @@ public class BungeePlatform extends Platform {
     }
 
     @Override
-    public @Nullable String getUserId(@Nullable Object user) {
-        if (user instanceof CommandSender) {
-            if (user instanceof ProxiedPlayer) {
-                return ((ProxiedPlayer) user).getUniqueId().toString();
-            }
-            return ((CommandSender) user).getName();
+    public @NotNull UUID getUserId(@Nullable Object user) {
+        if (user instanceof ProxiedPlayer) {
+            return ((ProxiedPlayer) user).getUniqueId();
         }
-        return null;
+        return super.getUserId(user);
     }
 
     @Override
