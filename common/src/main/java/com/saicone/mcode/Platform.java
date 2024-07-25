@@ -41,7 +41,7 @@ public abstract class Platform {
 
     protected void initModule(@NotNull String name, @NotNull String... methods) {
         try {
-            final Class<?> clazz = Class.forName(name);
+            final Class<?> clazz = Class.forName(name, false, this.getClass().getClassLoader());
             for (String method : methods) {
                 clazz.getDeclaredMethod(method).invoke(null);
             }
