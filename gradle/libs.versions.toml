@@ -18,10 +18,10 @@ settings = "1.0"
 delivery4j = "1.0"
 
 # Platforms
-spigot = "1.20.6-R0.1-SNAPSHOT"
+spigot = "1.21.1-R0.1-SNAPSHOT"
 bungeecord = "1.20-R0.2-SNAPSHOT"
 folia = "1.20.4-R0.1-SNAPSHOT"
-paper = "1.20.6-R0.1-SNAPSHOT"
+paper = "1.21.1-R0.1-SNAPSHOT"
 velocity = "3.3.0-SNAPSHOT"
 
 # Plugins

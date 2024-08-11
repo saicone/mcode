@@ -91,7 +91,8 @@ public enum MinecraftVersion {
     V_1_20_5(3837, 766, 32, 41, 4),
     V_1_20_6(3839, 766, 32, 41, 4),
 
-    V_1_21(3953, 767, 34, 48, 1);
+    V_1_21(3953, 767, 34, 48, 1),
+    V_1_21_1(3955, 767, 34, 48, 1);
 
     public static final MinecraftVersion[] VALUES = values();
     public static MinecraftVersion SERVER = VALUES[VALUES.length - 1];
@@ -217,8 +218,15 @@ public enum MinecraftVersion {
             return null;
         }
         final int major = Integer.parseInt(split[0]);
-        final int minor = Integer.parseInt(split[1].split("[-_]")[0]);
-        final int patch = split.length > 2 ? Integer.parseInt(split[2].split("[-_]")[0]) : 0;
+        final int minor;
+        final int patch;
+        if (split[1].contains("-") || split[1].contains("_")) {
+            minor = Integer.parseInt(split[1].split("[-_]")[0]);
+            patch = 0;
+        } else {
+            minor = Integer.parseInt(split[1]);
+            patch = split.length > 2 ? Integer.parseInt(split[2].split("[-_]")[0]) : 0;
+        }
         for (MinecraftVersion value : VALUES) {
             if (value.majorVersion == major && value.minorVersion == minor && value.patchVersion == patch) {
                 return value;
