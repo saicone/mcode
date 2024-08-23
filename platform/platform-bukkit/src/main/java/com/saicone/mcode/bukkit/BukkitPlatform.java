@@ -2,7 +2,7 @@ package com.saicone.mcode.bukkit;
 
 import com.saicone.mcode.Platform;
 import com.saicone.mcode.util.MStrings;
-import com.saicone.mcode.util.MinecraftVersion;
+import com.saicone.mcode.platform.MinecraftVersion;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.jetbrains.annotations.NotNull;

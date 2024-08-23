@@ -1,7 +1,7 @@
 package com.saicone.mcode.velocity;
 
 import com.saicone.mcode.Platform;
-import com.saicone.mcode.util.MinecraftVersion;
+import com.saicone.mcode.platform.MinecraftVersion;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;

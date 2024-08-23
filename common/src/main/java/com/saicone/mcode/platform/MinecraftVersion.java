@@ -1,4 +1,4 @@
-package com.saicone.mcode.util;
+package com.saicone.mcode.platform;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

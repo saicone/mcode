@@ -10,7 +10,7 @@ import com.saicone.mcode.module.lang.Displays;
 import com.saicone.mcode.module.lang.display.*;
 import com.saicone.mcode.paper.lang.PaperLang;
 import com.saicone.mcode.util.DMap;
-import com.saicone.mcode.util.MinecraftVersion;
+import com.saicone.mcode.platform.MinecraftVersion;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;

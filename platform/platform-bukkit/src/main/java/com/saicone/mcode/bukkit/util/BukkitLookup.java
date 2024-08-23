@@ -1,7 +1,7 @@
 package com.saicone.mcode.bukkit.util;
 
 import com.saicone.mcode.util.EasyLookup;
-import com.saicone.mcode.util.MinecraftVersion;
+import com.saicone.mcode.platform.MinecraftVersion;
 import org.bukkit.Bukkit;
 
 public class BukkitLookup extends EasyLookup {

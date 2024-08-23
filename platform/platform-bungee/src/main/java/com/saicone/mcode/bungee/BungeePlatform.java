@@ -2,7 +2,7 @@ package com.saicone.mcode.bungee;
 
 import com.saicone.mcode.Platform;
 import com.saicone.mcode.util.MStrings;
-import com.saicone.mcode.util.MinecraftVersion;
+import com.saicone.mcode.platform.MinecraftVersion;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.protocol.ProtocolConstants;
