@@ -5,6 +5,8 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -44,13 +46,16 @@ public class Strings {
             return false;
         }
         String str = s.trim();
-        if (str.charAt(0) == '-') {
+        if (str.charAt(0) == '-' || str.charAt(0) == '+') {
             if (str.length() == 1) {
                 return false;
             }
             str = str.substring(1);
         }
         if (numberClass != null) {
+            if (numberClass.isPrimitive()) {
+                throw new IllegalArgumentException("Cannot compare primitive number type, use a number type instead");
+            }
             switch (str.charAt(str.length() - 1)) {
                 case 'L':
                 case 'l':
@@ -80,15 +85,48 @@ public class Strings {
                     break;
             }
         }
+        int integerPart = 0;
+        int decimalPart = 0;
         boolean decimal = false;
         for (char c : str.toCharArray()) {
-            if (!Character.isDigit(c) && c != ' ') {
-                if (!decimal && c == '.') {
-                    decimal = true;
-                    continue;
+            if (decimal) {
+                if (Character.isDigit(c)) {
+                    decimalPart++;
+                } else {
+                    return false;
                 }
+            } else if (Character.isDigit(c)) {
+                integerPart++;
+            } else if (c == '.') {
+                decimal = true;
+            } else {
                 return false;
             }
+        }
+        if (numberClass != null) {
+            if (decimalPart > 0 && numberClass != BigDecimal.class && numberClass != Double.class && numberClass != Float.class) {
+                return false;
+            }
+            if (numberClass == BigDecimal.class || numberClass == BigInteger.class) {
+                return true;
+            }
+            final int max;
+            if (numberClass == Double.class) {
+                max = 309;
+            } else if (numberClass == Float.class) {
+                max = 39;
+            } else if (numberClass == Long.class) {
+                max = 19;
+            } else if (numberClass == Integer.class) {
+                max = 10;
+            } else if (numberClass == Short.class) {
+                max = 5;
+            } else if (numberClass == Byte.class) {
+                max = 3;
+            } else {
+                return true;
+            }
+            return integerPart <= max;
         }
         return true;
     }
