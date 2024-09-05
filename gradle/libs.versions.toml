@@ -4,6 +4,7 @@ metadata.format.version = "1.1"
 
 # Libraries
 gson = "2.10.1"
+snakeyaml = "2.2"
 guava = "32.1.2-jre"
 caffeine = "3.1.5"
 annotations = "24.1.0"
@@ -11,16 +12,17 @@ annotations = "24.1.0"
 adventure = "4.15.0"
 adventure-platform = "4.3.2"
 
-brigadier = "1.0.18"
 authlib = "1.5.26" # 3.11.50
-types = "1.1"
-settings = "1.0"
+brigadier = "1.0.18"
+ezlib = "1.2.3"
 delivery4j = "1.0"
+settings = "1.0"
+types = "1.1"
 
 # Platforms
 spigot = "1.21.1-R0.1-SNAPSHOT"
-bungeecord = "1.20-R0.2-SNAPSHOT"
-folia = "1.20.4-R0.1-SNAPSHOT"
+bungeecord = "1.21-R0.1-SNAPSHOT"
+folia = "1.20.6-R0.1-SNAPSHOT"
 paper = "1.21.1-R0.1-SNAPSHOT"
 velocity = "3.3.0-SNAPSHOT"
 
@@ -30,6 +32,7 @@ shadow = "8.1.1"
 [libraries]
 
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "caffeine" }
 annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
@@ -40,11 +43,12 @@ adventure-text-serializer-legacy = { module = "net.kyori:adventure-text-serializ
 adventure-platform-bukkit = { module = "net.kyori:adventure-platform-bukkit", version.ref = "adventure-platform" }
 adventure-platform-bungeecord = { module = "net.kyori:adventure-platform-bungeecord", version.ref = "adventure-platform" }
 
-brigadier = { module = "com.mojang:brigadier", version.ref = "brigadier" }
 authlib = { module = "com.mojang:authlib", version.ref = "authlib" }
-types = { module = "com.saicone:types", version.ref = "types" }
-settings = { module = "com.saicone.settings:settings", version.ref = "settings" }
+brigadier = { module = "com.mojang:brigadier", version.ref = "brigadier" }
+ezlib = { module = "com.saicone.ezlib:loader", version.ref = "ezlib" }
 delivery4j = { module = "com.saicone.delivery4j:delivery4j", version.ref = "delivery4j" }
+settings = { module = "com.saicone.settings:settings", version.ref = "settings" }
+types = { module = "com.saicone:types", version.ref = "types" }
 
 spigot-api = { module = "org.spigotmc:spigot-api", version.ref = "spigot" }
 bungeecord-api = { module = "net.md-5:bungeecord-api", version.ref = "bungeecord" }

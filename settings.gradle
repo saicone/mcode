@@ -22,6 +22,12 @@ include(
 	'platform:platform-velocity'
 	)
 
+// Bootstrap
+include(
+		'bootstrap',
+		'bootstrap:bootstrap-annotations'
+)
+
 // Extensions
 include(
 	'extension:extension-cache',

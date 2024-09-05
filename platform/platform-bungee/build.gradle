@@ -5,6 +5,8 @@ repositories {
 
 dependencies {
     compileOnly libs.bungeecord.api
+
+    // Task module
     compileOnly project(':module:module-task')
 
     // Lang module
@@ -15,8 +17,13 @@ dependencies {
     compileOnly libs.adventure.text.minimessage
     compileOnly libs.adventure.text.serializer.legacy
 
+    // Script module
     compileOnly project(':module:module-script')
+
+    // Command module
     compileOnly project(':module:module-command')
+
+    // Compatibility
     compileOnly libs.delivery4j
     compileOnly libs.settings
 }

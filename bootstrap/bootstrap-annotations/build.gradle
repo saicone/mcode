@@ -1,0 +1,18 @@
+java {
+    sourceSets.named('main').get().java {
+        srcDir('src/ap/java')
+    }
+
+    sourceSets.named('main').get().resources {
+        srcDir('src/ap/resources')
+    }
+}
+
+dependencies {
+    api libs.gson
+    api libs.snakeyaml
+}
+
+javadoc {
+    exclude('com/saicone/ezlib/ap/**')
+}

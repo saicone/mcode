@@ -56,7 +56,15 @@ def javadocProjects= [
         // Platforms
         'platform:platform-bukkit',
         'platform:platform-bungee',
+        'platform:platform-paper',
         'platform:platform-velocity',
+        // Bootstrap
+        'bootstrap',
+        'bootstrap:bootstrap-annotations',
+        'bootstrap:bootstrap-bukkit',
+        'bootstrap:bootstrap-bungee',
+        'bootstrap:bootstrap-paper',
+        'bootstrap:bootstrap-velocity',
         // Extensions
         'extension:extension-cache',
         'extension:extension-lookup'

@@ -1,0 +1,25 @@
+plugins {
+    id 'net.kyori.blossom' version '1.3.1'
+}
+
+allprojects {
+    dependencies {
+        compileOnlyApi project(':common')
+    }
+}
+
+subprojects {
+    dependencies {
+        compileOnly project(':bootstrap')
+    }
+}
+
+blossom {
+    replaceTokenIn('src/main/java/com/saicone/mcode/bootstrap/Addon.java')
+    replaceToken '${mcode_group}', System.getenv("GROUP") ?: 'com.saicone.mcode'
+    replaceToken '${mcode_version}', System.getenv("VERSION") ?: project.version
+}
+
+dependencies {
+    api libs.ezlib
+}

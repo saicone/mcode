@@ -9,6 +9,8 @@ repositories {
 dependencies {
     compileOnly libs.spigot.api
     compileOnly libs.authlib
+
+    // Task module
     compileOnly project(':module:module-task')
 
     // Lang module
@@ -18,11 +20,13 @@ dependencies {
     compileOnly libs.adventure.platform.bukkit
     compileOnly libs.adventure.text.serializer.legacy
 
+    // Script module
     compileOnly project(':module:module-script')
 
     // Command module
     compileOnly project(':module:module-command')
 
+    // Compatibility
     compileOnly project(':extension:extension-lookup')
     compileOnly libs.delivery4j
     compileOnly libs.settings
