@@ -103,9 +103,9 @@ public enum MinecraftVersion {
     private final Integer dataPackFormat;
     private final int revision;
 
-    private final int majorVersion;
-    private final int minorVersion;
-    private final int patchVersion;
+    private final int major;
+    private final int feature;
+    private final int minor;
 
     private final float floatVersion;
     private final int fullVersion;
@@ -120,28 +120,28 @@ public enum MinecraftVersion {
 
         final String[] split = this.name().split("_");
 
-        this.majorVersion = Integer.parseInt(split[1]);
-        this.minorVersion = Integer.parseInt(split[2]);
-        this.patchVersion = split.length > 3 ? Integer.parseInt(split[3]) : 0;
+        this.major = Integer.parseInt(split[1]);
+        this.feature = Integer.parseInt(split[2]);
+        this.minor = split.length > 3 ? Integer.parseInt(split[3]) : 0;
 
-        final String minorFormatted = minorVersion >= 10 ? String.valueOf(minorVersion) : "0" + minorVersion;
-        final String patchFormatted = patchVersion >= 10 ? String.valueOf(patchVersion) : "0" + patchVersion;
+        final String featureFormatted = feature >= 10 ? String.valueOf(feature) : "0" + feature;
+        final String minorFormatted = minor >= 10 ? String.valueOf(minor) : "0" + minor;
 
-        this.floatVersion = Float.parseFloat(minorVersion + "." + patchFormatted);
-        this.fullVersion = Integer.parseInt(split[1] + minorFormatted + patchFormatted);
-        this.bukkitPackage = "v" + split[1] + "_" + minorVersion + "_R" + revision;
+        this.floatVersion = Float.parseFloat(feature + "." + minorFormatted);
+        this.fullVersion = Integer.parseInt(split[1] + featureFormatted + minorFormatted);
+        this.bukkitPackage = "v" + split[1] + "_" + feature + "_R" + revision;
     }
 
     public boolean isLegacy() {
-        return majorVersion <= 12;
+        return major <= 12;
     }
 
     public boolean isFlat() {
-        return majorVersion >= 13;
+        return major >= 13;
     }
 
     public boolean isUniversal() {
-        return majorVersion >= 17;
+        return major >= 17;
     }
 
     public boolean isDataComponent() {
@@ -165,37 +165,37 @@ public enum MinecraftVersion {
     }
 
     @Nullable
-    public Integer getDataVersion() {
+    public Integer dataVersion() {
         return dataVersion;
     }
 
-    public int getProtocol() {
+    public int protocol() {
         return protocol;
     }
 
-    public int getResourcePackFormat() {
+    public int resourcePackFormat() {
         return resourcePackFormat;
     }
 
     @Nullable
-    public Integer getDataPackFormat() {
+    public Integer dataPackFormat() {
         return dataPackFormat;
     }
 
-    public int getRevision() {
+    public int revision() {
         return revision;
     }
 
-    public int getMajorVersion() {
-        return majorVersion;
+    public int major() {
+        return major;
     }
 
-    public int getMinorVersion() {
-        return minorVersion;
+    public int feature() {
+        return feature;
     }
 
-    public int getPatchVersion() {
-        return patchVersion;
+    public int minor() {
+        return minor;
     }
 
     public float getFloatVersion() {
@@ -218,17 +218,17 @@ public enum MinecraftVersion {
             return null;
         }
         final int major = Integer.parseInt(split[0]);
+        final int feature;
         final int minor;
-        final int patch;
         if (split[1].contains("-") || split[1].contains("_")) {
-            minor = Integer.parseInt(split[1].split("[-_]")[0]);
-            patch = 0;
+            feature = Integer.parseInt(split[1].split("[-_]")[0]);
+            minor = 0;
         } else {
-            minor = Integer.parseInt(split[1]);
-            patch = split.length > 2 ? Integer.parseInt(split[2].split("[-_]")[0]) : 0;
+            feature = Integer.parseInt(split[1]);
+            minor = split.length > 2 ? Integer.parseInt(split[2].split("[-_]")[0]) : 0;
         }
         for (MinecraftVersion value : VALUES) {
-            if (value.majorVersion == major && value.minorVersion == minor && value.patchVersion == patch) {
+            if (value.major == major && value.feature == feature && value.minor == minor) {
                 return value;
             }
         }

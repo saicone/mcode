@@ -63,7 +63,7 @@ public class PaperPluginSerializer extends YamlSerializer {
                 if (version.isOlderThan(MinecraftVersion.V_1_19)) {
                     map.put("api-version", "1.19");
                 } else {
-                    map.put("api-version", version.getMajorVersion() + "." + version.getMinorVersion() + "." + version.getPatchVersion());
+                    map.put("api-version", version.major() + "." + version.feature() + "." + version.minor());
                 }
             }
         }

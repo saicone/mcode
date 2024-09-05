@@ -62,9 +62,9 @@ public class BukkitPluginSerializer extends YamlSerializer {
                 if (version.isOlderThan(MinecraftVersion.V_1_13)) {
                     map.put("api-version", "1.13");
                 } else if (version.isOlderThan(MinecraftVersion.V_1_20_5)) {
-                    map.put("api-version", version.getMajorVersion() + "." + version.getMinorVersion());
+                    map.put("api-version", version.major() + "." + version.feature());
                 } else {
-                    map.put("api-version", version.getMajorVersion() + "." + version.getMinorVersion() + "." + version.getPatchVersion());
+                    map.put("api-version", version.major() + "." + version.feature() + "." + version.minor());
                 }
             }
         }
