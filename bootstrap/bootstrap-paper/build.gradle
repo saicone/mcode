@@ -1,0 +1,14 @@
+repositories {
+    maven { url 'https://repo.papermc.io/repository/maven-public/' }
+}
+
+dependencies {
+    compileOnly libs.paper.api
+    compileOnly libs.folia.api
+    compileOnly project(':platform:platform-paper')
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}

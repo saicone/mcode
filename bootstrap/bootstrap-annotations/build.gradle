@@ -14,5 +14,5 @@ dependencies {
 }
 
 javadoc {
-    exclude('com/saicone/ezlib/ap/**')
+    exclude('com/saicone/mcode/ap/**')
 }

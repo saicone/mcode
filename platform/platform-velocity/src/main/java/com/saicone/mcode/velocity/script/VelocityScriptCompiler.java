@@ -74,7 +74,7 @@ public class VelocityScriptCompiler extends ScriptCompiler {
     }
 
     protected void registerConditions() {
-
+        // empty default method
     }
 
     public void putSourceCondition(@NotNull Object key, @NotNull Predicate<CommandSource> predicate) {

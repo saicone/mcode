@@ -1,6 +1,7 @@
 package com.saicone.mcode.bungee;
 
 import com.saicone.mcode.Platform;
+import com.saicone.mcode.platform.PlatformType;
 import com.saicone.mcode.util.MStrings;
 import com.saicone.mcode.platform.MinecraftVersion;
 import net.md_5.bungee.api.ProxyServer;
@@ -15,21 +16,13 @@ import java.util.UUID;
 
 public class BungeePlatform extends Platform {
 
-    public static void init() {
-        if (INSTANCE == null) {
-            new BungeePlatform();
-        }
-    }
-
     @NotNull
     public static BungeePlatform get() {
         return Platform.get();
     }
 
-
-    BungeePlatform() {
-        super();
-        setInstance(this);
+    public BungeePlatform() {
+        super(PlatformType.BUNGEECORD);
         MStrings.BUNGEE_HEX = true;
         // Ser current version
         MinecraftVersion version = MinecraftVersion.VALUES[MinecraftVersion.VALUES.length - 1];
@@ -42,19 +35,6 @@ public class BungeePlatform extends Platform {
             }
         }
         MinecraftVersion.SERVER = version;
-    }
-
-    @Override
-    protected void initModules() {
-        if (isAvailable("Command")) {
-            initModule("com.saicone.mcode.bungee.command.BungeeCommand", "init");
-        }
-        if (isAvailable("Script")) {
-            initModule("com.saicone.mcode.bungee.script.BungeeScripts", "registerActions", "registerConditions");
-        }
-        if (isAvailable("Settings")) {
-            initModule("com.saicone.mcode.bungee.settings.BungeeYamlSource");
-        }
     }
 
     @Override

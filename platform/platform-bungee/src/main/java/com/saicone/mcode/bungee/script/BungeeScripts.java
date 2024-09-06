@@ -33,7 +33,12 @@ public class BungeeScripts {
         }
     };
 
-    public static void registerActions() {
+    static {
+        registerActions();
+        registerConditions();
+    }
+
+    private static void registerActions() {
         ListAction.builder("(?i)console(command|cmd)?", String::valueOf).consumer((user, action) -> {
             for (String cmd : action.getList()) {
                 ProxyServer.getInstance().getPluginManager().dispatchCommand(ProxyServer.getInstance().getConsole(), user.parse(cmd));
@@ -56,7 +61,7 @@ public class BungeeScripts {
         Connect.BUILDER.register();
     }
 
-    public static void registerConditions() {
+    private static void registerConditions() {
         REGISTRY.putSenderCondition("player", sender -> sender instanceof ProxiedPlayer);
         REGISTRY.putSenderCondition("console", sender -> !(sender instanceof ProxiedPlayer));
         REGISTRY.putSenderCondition(EvalKey.regex("(?i)perm(ission)?s?"), (sender, perms) -> {

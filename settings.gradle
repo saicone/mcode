@@ -25,7 +25,11 @@ include(
 // Bootstrap
 include(
 		'bootstrap',
-		'bootstrap:bootstrap-annotations'
+		'bootstrap:bootstrap-annotations',
+		'bootstrap:bootstrap-bukkit',
+		'bootstrap:bootstrap-bungee',
+		'bootstrap:bootstrap-paper',
+		'bootstrap:bootstrap-velocity'
 )
 
 // Extensions

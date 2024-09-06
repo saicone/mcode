@@ -2,6 +2,7 @@ package com.saicone.mcode.velocity;
 
 import com.saicone.mcode.Platform;
 import com.saicone.mcode.platform.MinecraftVersion;
+import com.saicone.mcode.platform.PlatformType;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
@@ -13,12 +14,6 @@ import java.util.UUID;
 
 public class VelocityPlatform extends Platform {
 
-    public static void init(@NotNull ProxyServer proxy) {
-        if (INSTANCE == null) {
-            new VelocityPlatform(proxy);
-        }
-    }
-
     @NotNull
     public static VelocityPlatform get() {
         return Platform.get();
@@ -26,26 +21,11 @@ public class VelocityPlatform extends Platform {
 
     private final ProxyServer proxy;
 
-    VelocityPlatform(@NotNull ProxyServer proxy) {
-        super();
-        setInstance(this);
+    public VelocityPlatform(@NotNull ProxyServer proxy) {
+        super(PlatformType.VELOCITY);
         final ProtocolVersion[] versions = ProtocolVersion.values();
         MinecraftVersion.SERVER = MinecraftVersion.fromString(versions[versions.length - 1].getMostRecentSupportedVersion());
-
         this.proxy = proxy;
-    }
-
-    @Override
-    protected void initModules() {
-        if (isAvailable("Command")) {
-            initModule("com.saicone.mcode.velocity.command.VelocityCommand", "init");
-        }
-        if (isAvailable("Script")) {
-            initModule("com.saicone.mcode.velocity.script.VelocityScripts", "registerActions", "registerConditions");
-        }
-        if (isAvailable("Settings")) {
-            initModule("com.saicone.mcode.velocity.settings.TomlSettingsSource");
-        }
     }
 
     @Override

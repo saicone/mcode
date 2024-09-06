@@ -1,6 +1,8 @@
 package com.saicone.mcode.bukkit;
 
 import com.saicone.mcode.Platform;
+import com.saicone.mcode.bukkit.util.ServerInstance;
+import com.saicone.mcode.platform.PlatformType;
 import com.saicone.mcode.util.MStrings;
 import com.saicone.mcode.platform.MinecraftVersion;
 import org.bukkit.Bukkit;
@@ -13,39 +15,10 @@ import java.util.UUID;
 
 public class BukkitPlatform extends Platform {
 
-    public static void init() {
-        if (INSTANCE == null) {
-            new BukkitPlatform();
-        }
-    }
-
-    @NotNull
-    public static BukkitPlatform get() {
-        return Platform.get();
-    }
-
-    BukkitPlatform() {
-        super();
-        setInstance(this);
+    public BukkitPlatform() {
+        super(ServerInstance.Platform.PAPER ? PlatformType.PAPER : ServerInstance.Platform.SPIGOT ? PlatformType.SPIGOT : PlatformType.BUKKIT);
         MStrings.BUNGEE_HEX = true;
-
         MinecraftVersion.SERVER = MinecraftVersion.fromString(Bukkit.getServer().getBukkitVersion());
-    }
-
-    @Override
-    protected void initModules() {
-        if (isAvailable("Command")) {
-            initModule("com.saicone.mcode.bukkit.command.BukkitCommand", "init");
-        }
-        if (isAvailable("Script")) {
-            initModule("com.saicone.mcode.bukkit.script.BukkitScripts", "registerActions", "registerConditions");
-        }
-        if (isAvailable("Settings")) {
-            initModule("com.saicone.mcode.bukkit.settings.BukkitYamlSource");
-        }
-        if (isAvailable("Lookup")) {
-            initModule("com.saicone.mcode.bukkit.util.BukkitLookup");
-        }
     }
 
     @Override

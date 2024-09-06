@@ -37,11 +37,11 @@ public class BungeeScriptCompiler extends ScriptCompiler {
     }
 
     protected void registerActions() {
-
+        // empty default method
     }
 
     protected void registerConditions() {
-
+        // empty default method
     }
 
     public void putSenderCondition(@NotNull Object key, @NotNull Predicate<CommandSender> predicate) {

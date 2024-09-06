@@ -31,7 +31,12 @@ public class VelocityScripts {
         }
     };
 
-    public static void registerActions() {
+    static {
+        registerActions();
+        registerConditions();
+    }
+
+    private static void registerActions() {
         ListAction.builder("(?i)(force)?(player)?(chat|say)", String::valueOf).consumer((user, action) -> {
             if (user.getSubject() instanceof Player) {
                 for (String msg : action.getList()) {
@@ -41,7 +46,7 @@ public class VelocityScripts {
         }).register();
     }
 
-    public static void registerConditions() {
+    private static void registerConditions() {
         REGISTRY.putSourceCondition("player", sender -> sender instanceof Player);
         REGISTRY.putSourceCondition("console", sender -> !(sender instanceof Player));
         REGISTRY.putSourceCondition(EvalKey.regex("(?i)perm(ission)?s?"), (sender, perms) -> {

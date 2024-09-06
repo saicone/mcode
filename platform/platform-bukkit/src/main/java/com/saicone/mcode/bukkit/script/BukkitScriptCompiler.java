@@ -55,7 +55,7 @@ public class BukkitScriptCompiler extends ScriptCompiler {
     }
 
     protected void registerConditions() {
-
+        // empty default method
     }
 
     public void putSenderCondition(@NotNull Object key, @NotNull Predicate<CommandSender> predicate) {

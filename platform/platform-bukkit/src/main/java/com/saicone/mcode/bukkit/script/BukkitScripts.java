@@ -35,7 +35,15 @@ public class BukkitScripts {
         }
     };
 
-    public static void registerActions() {
+    static {
+        registerActions();
+        registerConditions();
+    }
+
+    BukkitScripts() {
+    }
+
+    private static void registerActions() {
         ListAction.builder("(?i)console(command|cmd)?", String::valueOf).consumer((user, action) -> {
             for (String cmd : action.getList()) {
                 Bukkit.dispatchCommand(Bukkit.getConsoleSender(), user.parse(cmd));
@@ -58,7 +66,7 @@ public class BukkitScripts {
         Money.BUILDER.register();
     }
 
-    public static void registerConditions() {
+    private static void registerConditions() {
         REGISTRY.putSenderCondition("player", sender -> sender instanceof Player);
         REGISTRY.putSenderCondition("console", sender -> !(sender instanceof Player));
         REGISTRY.putSenderCondition(EvalKey.regex("(?i)perm(ission)?s?"), (sender, perms) -> {
