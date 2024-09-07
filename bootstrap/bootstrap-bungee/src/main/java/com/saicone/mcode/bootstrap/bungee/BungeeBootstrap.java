@@ -3,7 +3,6 @@ package com.saicone.mcode.bootstrap.bungee;
 import com.saicone.mcode.Plugin;
 import com.saicone.mcode.bootstrap.Addon;
 import com.saicone.mcode.bootstrap.Bootstrap;
-import com.saicone.mcode.bungee.BungeePlatform;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
@@ -12,7 +11,6 @@ import org.jetbrains.annotations.NotNull;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Objects;
@@ -83,7 +81,7 @@ public class BungeeBootstrap extends net.md_5.bungee.api.plugin.Plugin implement
         getLibraryLoader().load();
 
         // Initialize addons
-        new BungeePlatform();
+        build("com.saicone.mcode.bungee.BungeePlatform");
         initAddons();
 
         // Load plugin
@@ -91,19 +89,14 @@ public class BungeeBootstrap extends net.md_5.bungee.api.plugin.Plugin implement
     }
 
     private void initAddons() {
-        try {
-            if (this.addons.contains(Addon.MODULE_SCRIPT)) {
-                Class.forName("com.saicone.mcode.bungee.script.BungeeScripts");
-            }
-            if (this.addons.contains(Addon.MODULE_TASK)) {
-                final Method method = Class.forName("com.saicone.mcode.module.task.Task").getDeclaredMethod("setScheduler", Class.forName("com.saicone.mcode.scheduler.Scheduler"));
-                method.invoke(null, Class.forName("com.saicone.mcode.bungee.scheduler.BungeeScheduler").getDeclaredConstructor(net.md_5.bungee.api.plugin.Plugin.class).newInstance(this));
-            }
-            if (this.addons.contains(Addon.LIBRARY_SETTINGS)) {
-                Class.forName("com.saicone.mcode.bungee.settings.BungeeYamlSource");
-            }
-        } catch (Throwable t) {
-            throw new RuntimeException(t);
+        if (this.addons.contains(Addon.MODULE_SCRIPT)) {
+            init("com.saicone.mcode.bungee.script.BungeeScripts");
+        }
+        if (this.addons.contains(Addon.MODULE_TASK)) {
+            run("com.saicone.mcode.module.task.Task", "setScheduler", build("com.saicone.mcode.bungee.scheduler.BungeeScheduler", this));
+        }
+        if (this.addons.contains(Addon.LIBRARY_SETTINGS)) {
+            init("com.saicone.mcode.bungee.settings.BungeeYamlSource");
         }
     }
 

@@ -3,7 +3,6 @@ package com.saicone.mcode.bootstrap.paper;
 import com.saicone.mcode.Plugin;
 import com.saicone.mcode.bootstrap.Addon;
 import com.saicone.mcode.bootstrap.Bootstrap;
-import com.saicone.mcode.bukkit.BukkitPlatform;
 import com.saicone.mcode.bukkit.util.ServerInstance;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -13,7 +12,6 @@ import org.jetbrains.annotations.NotNull;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Objects;
@@ -86,7 +84,7 @@ public class PaperBootstrap extends JavaPlugin implements Bootstrap {
         getLibraryLoader().load();
 
         // Initialize addons
-        new BukkitPlatform();
+        build("com.saicone.mcode.bukkit.BukkitPlatform");
         initAddons();
 
         // Load plugin
@@ -94,25 +92,20 @@ public class PaperBootstrap extends JavaPlugin implements Bootstrap {
     }
 
     private void initAddons() {
-        try {
-            if (this.addons.contains(Addon.MODULE_SCRIPT)) {
-                Class.forName("com.saicone.mcode.bukkit.script.BukkitScripts");
+        if (this.addons.contains(Addon.MODULE_SCRIPT)) {
+            init("com.saicone.mcode.bukkit.script.BukkitScripts");
+        }
+        if (this.addons.contains(Addon.MODULE_TASK)) {
+            final String scheduler;
+            if (ServerInstance.Platform.FOLIA) {
+                scheduler = "com.saicone.mcode.folia.scheduler.FoliaScheduler";
+            } else {
+                scheduler = "com.saicone.mcode.bukkit.scheduler.BukkitScheduler";
             }
-            if (this.addons.contains(Addon.MODULE_TASK)) {
-                final Method method = Class.forName("com.saicone.mcode.module.task.Task").getDeclaredMethod("setScheduler", Class.forName("com.saicone.mcode.scheduler.Scheduler"));
-                final String scheduler;
-                if (ServerInstance.Platform.FOLIA) {
-                    scheduler = "com.saicone.mcode.folia.scheduler.FoliaScheduler";
-                } else {
-                    scheduler = "com.saicone.mcode.bukkit.scheduler.BukkitScheduler";
-                }
-                method.invoke(null, Class.forName(scheduler).getDeclaredConstructor(org.bukkit.plugin.Plugin.class).newInstance(this));
-            }
-            if (this.addons.contains(Addon.LIBRARY_SETTINGS)) {
-                Class.forName("com.saicone.mcode.bukkit.settings.BukkitYamlSource");
-            }
-        } catch (Throwable t) {
-            throw new RuntimeException(t);
+            run("com.saicone.mcode.module.task.Task", "setScheduler", build(scheduler, this));
+        }
+        if (this.addons.contains(Addon.LIBRARY_SETTINGS)) {
+            init("com.saicone.mcode.bukkit.settings.BukkitYamlSource");
         }
     }
 

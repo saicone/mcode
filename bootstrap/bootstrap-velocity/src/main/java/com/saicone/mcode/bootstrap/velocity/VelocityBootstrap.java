@@ -7,7 +7,6 @@ import com.google.inject.Inject;
 import com.saicone.mcode.Plugin;
 import com.saicone.mcode.bootstrap.Addon;
 import com.saicone.mcode.bootstrap.Bootstrap;
-import com.saicone.mcode.velocity.VelocityPlatform;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
@@ -19,7 +18,6 @@ import org.slf4j.Logger;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
@@ -92,7 +90,7 @@ public class VelocityBootstrap implements Bootstrap {
         getLibraryLoader().load();
 
         // Initialize addons
-        new VelocityPlatform(proxy);
+        build("com.saicone.mcode.velocity.VelocityPlatform", proxy);
         initAddons();
 
         // Load plugin
@@ -100,19 +98,14 @@ public class VelocityBootstrap implements Bootstrap {
     }
 
     private void initAddons() {
-        try {
-            if (this.addons.contains(Addon.MODULE_SCRIPT)) {
-                Class.forName("com.saicone.mcode.velocity.script.VelocityScripts");
-            }
-            if (this.addons.contains(Addon.MODULE_TASK)) {
-                final Method method = Class.forName("com.saicone.mcode.module.task.Task").getDeclaredMethod("setScheduler", Class.forName("com.saicone.mcode.scheduler.Scheduler"));
-                method.invoke(null, Class.forName("com.saicone.mcode.velocity.scheduler.VelocityScheduler").getDeclaredConstructor(ProxyServer.class, Object.class).newInstance(this.proxy, this));
-            }
-            if (this.addons.contains(Addon.LIBRARY_SETTINGS)) {
-                Class.forName("com.saicone.mcode.velocity.settings.TomlSettingsSource");
-            }
-        } catch (Throwable t) {
-            throw new RuntimeException(t);
+        if (this.addons.contains(Addon.MODULE_SCRIPT)) {
+            init("com.saicone.mcode.velocity.script.VelocityScripts");
+        }
+        if (this.addons.contains(Addon.MODULE_TASK)) {
+            run("com.saicone.mcode.module.task.Task", "setScheduler", build("com.saicone.mcode.velocity.scheduler.VelocityScheduler", this.proxy, this));
+        }
+        if (this.addons.contains(Addon.LIBRARY_SETTINGS)) {
+            init("com.saicone.mcode.velocity.settings.TomlSettingsSource");
         }
     }
 
