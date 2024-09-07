@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
@@ -26,6 +27,7 @@ import java.util.function.Supplier;
 
 public class VelocityBootstrap implements Bootstrap {
 
+    private final ProxyServer proxy;
     private final Logger logger;
     private final Path folder;
     private final Set<Addon> addons;
@@ -55,6 +57,7 @@ public class VelocityBootstrap implements Bootstrap {
             }
         });
 
+        this.proxy = proxy;
         this.logger = logger;
         this.folder = folder;
 
@@ -101,11 +104,15 @@ public class VelocityBootstrap implements Bootstrap {
             if (this.addons.contains(Addon.MODULE_SCRIPT)) {
                 Class.forName("com.saicone.mcode.velocity.script.VelocityScripts");
             }
+            if (this.addons.contains(Addon.MODULE_TASK)) {
+                final Method method = Class.forName("com.saicone.mcode.scheduler.Task").getDeclaredMethod("setScheduler", Class.forName("com.saicone.mcode.scheduler.Scheduler"));
+                method.invoke(null, Class.forName("com.saicone.mcode.velocity.scheduler.VelocityScheduler").getDeclaredConstructor(ProxyServer.class, Object.class).newInstance(this.proxy, this));
+            }
             if (this.addons.contains(Addon.LIBRARY_SETTINGS)) {
                 Class.forName("com.saicone.mcode.velocity.settings.TomlSettingsSource");
             }
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
         }
     }
 
