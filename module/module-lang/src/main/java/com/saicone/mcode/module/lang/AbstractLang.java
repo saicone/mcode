@@ -1,6 +1,5 @@
 package com.saicone.mcode.module.lang;
 
-import com.saicone.mcode.Platform;
 import com.saicone.mcode.util.DMap;
 import com.saicone.settings.Settings;
 import com.saicone.settings.SettingsData;
@@ -13,8 +12,6 @@ import java.util.*;
 import java.util.function.BiConsumer;
 
 public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> implements DisplaySupplier<SenderT> {
-
-    private static final boolean ALLOW_SETTINGS = Platform.isAvailable("Settings");
 
     // Object parameters
     private LangSupplier langSupplier;

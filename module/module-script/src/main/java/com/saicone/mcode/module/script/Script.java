@@ -1,6 +1,5 @@
 package com.saicone.mcode.module.script;
 
-import com.saicone.mcode.Platform;
 import com.saicone.mcode.module.script.action.BroadcastDisplay;
 import com.saicone.mcode.module.script.action.Delay;
 import com.saicone.mcode.module.script.action.SendDisplay;
@@ -18,14 +17,16 @@ public class Script {
 
     static {
         Delay.BUILDER.register();
-        if (Platform.isAvailable("Lang")) {
+        try {
+            Class.forName("com.saicone.mcode.module.lang.Displays");
             SendDisplay.BUILDER.register();
             BroadcastDisplay.BUILDER.register();
-        }
+        } catch (ClassNotFoundException ignored) { }
         REGISTRY.putCondition(EvalKey.regex("(?i)compare|eval"), object -> new Compare(String.valueOf(object)));
-        if (Platform.isAvailable("Cache")) {
+        try {
+            Class.forName("com.saicone.mcode.util.cache.Cache");
             REGISTRY.putCondition(EvalKey.regex("(?i)cooldown"), object -> new Cooldown(String.valueOf(object)));
-        }
+        } catch (ClassNotFoundException ignored) { }
     }
 
     private final ScriptCompiler compiler;
