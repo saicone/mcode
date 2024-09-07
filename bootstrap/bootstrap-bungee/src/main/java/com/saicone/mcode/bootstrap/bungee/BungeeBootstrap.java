@@ -96,7 +96,7 @@ public class BungeeBootstrap extends net.md_5.bungee.api.plugin.Plugin implement
                 Class.forName("com.saicone.mcode.bungee.script.BungeeScripts");
             }
             if (this.addons.contains(Addon.MODULE_TASK)) {
-                final Method method = Class.forName("com.saicone.mcode.scheduler.Task").getDeclaredMethod("setScheduler", Class.forName("com.saicone.mcode.scheduler.Scheduler"));
+                final Method method = Class.forName("com.saicone.mcode.module.task.Task").getDeclaredMethod("setScheduler", Class.forName("com.saicone.mcode.scheduler.Scheduler"));
                 method.invoke(null, Class.forName("com.saicone.mcode.bungee.scheduler.BungeeScheduler").getDeclaredConstructor(net.md_5.bungee.api.plugin.Plugin.class).newInstance(this));
             }
             if (this.addons.contains(Addon.LIBRARY_SETTINGS)) {

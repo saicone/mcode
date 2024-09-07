@@ -99,7 +99,7 @@ public class PaperBootstrap extends JavaPlugin implements Bootstrap {
                 Class.forName("com.saicone.mcode.bukkit.script.BukkitScripts");
             }
             if (this.addons.contains(Addon.MODULE_TASK)) {
-                final Method method = Class.forName("com.saicone.mcode.scheduler.Task").getDeclaredMethod("setScheduler", Class.forName("com.saicone.mcode.scheduler.Scheduler"));
+                final Method method = Class.forName("com.saicone.mcode.module.task.Task").getDeclaredMethod("setScheduler", Class.forName("com.saicone.mcode.scheduler.Scheduler"));
                 final String scheduler;
                 if (ServerInstance.Platform.FOLIA) {
                     scheduler = "com.saicone.mcode.folia.scheduler.FoliaScheduler";

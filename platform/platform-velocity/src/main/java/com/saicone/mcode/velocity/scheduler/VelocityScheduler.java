@@ -1,6 +1,6 @@
 package com.saicone.mcode.velocity.scheduler;
 
-import com.saicone.mcode.scheduler.Scheduler;
+import com.saicone.mcode.module.task.Scheduler;
 import com.saicone.mcode.velocity.VelocityPlatform;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.scheduler.ScheduledTask;

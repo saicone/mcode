@@ -105,7 +105,7 @@ public class VelocityBootstrap implements Bootstrap {
                 Class.forName("com.saicone.mcode.velocity.script.VelocityScripts");
             }
             if (this.addons.contains(Addon.MODULE_TASK)) {
-                final Method method = Class.forName("com.saicone.mcode.scheduler.Task").getDeclaredMethod("setScheduler", Class.forName("com.saicone.mcode.scheduler.Scheduler"));
+                final Method method = Class.forName("com.saicone.mcode.module.task.Task").getDeclaredMethod("setScheduler", Class.forName("com.saicone.mcode.scheduler.Scheduler"));
                 method.invoke(null, Class.forName("com.saicone.mcode.velocity.scheduler.VelocityScheduler").getDeclaredConstructor(ProxyServer.class, Object.class).newInstance(this.proxy, this));
             }
             if (this.addons.contains(Addon.LIBRARY_SETTINGS)) {

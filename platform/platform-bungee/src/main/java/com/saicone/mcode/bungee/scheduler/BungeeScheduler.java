@@ -1,6 +1,6 @@
 package com.saicone.mcode.bungee.scheduler;
 
-import com.saicone.mcode.scheduler.Scheduler;
+import com.saicone.mcode.module.task.Scheduler;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.scheduler.ScheduledTask;
 import org.jetbrains.annotations.NotNull;

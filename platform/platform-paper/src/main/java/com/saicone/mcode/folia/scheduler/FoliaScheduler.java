@@ -1,7 +1,7 @@
 package com.saicone.mcode.folia.scheduler;
 
-import com.saicone.mcode.scheduler.Scheduler;
-import com.saicone.mcode.scheduler.TaskTimer;
+import com.saicone.mcode.module.task.Scheduler;
+import com.saicone.mcode.module.task.TaskTimer;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;

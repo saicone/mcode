@@ -1,6 +1,6 @@
 package com.saicone.mcode.bukkit.scheduler;
 
-import com.saicone.mcode.scheduler.Scheduler;
+import com.saicone.mcode.module.task.Scheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
