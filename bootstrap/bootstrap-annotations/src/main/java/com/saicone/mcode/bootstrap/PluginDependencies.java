@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
 
 @Documented
 @Target(ElementType.TYPE)
-@Retention(RetentionPolicy.RUNTIME)
+@Retention(RetentionPolicy.CLASS)
 public @interface PluginDependencies {
 
     PluginDependency[] value();
