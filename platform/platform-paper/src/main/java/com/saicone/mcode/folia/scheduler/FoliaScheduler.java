@@ -1,6 +1,7 @@
 package com.saicone.mcode.folia.scheduler;
 
 import com.saicone.mcode.scheduler.Scheduler;
+import com.saicone.mcode.scheduler.TaskTimer;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -88,6 +89,38 @@ public class FoliaScheduler implements Scheduler<ScheduledTask> {
     @Override
     public void stop(ScheduledTask task) {
         task.cancel();
+    }
+
+    @Override
+    public TaskTimer<ScheduledTask> timer(@NotNull String id) {
+        return new TaskTimer<>(id) {
+            @Override
+            protected ScheduledTask run(boolean async, long delay, long period, @NotNull TimeUnit unit, @NotNull Runnable runnable) {
+                if (period > 0) {
+                    return async ? timerAsync(runnable, delay, period, unit) : timer(runnable, delay, period, unit);
+                }
+                if (delay > 0) {
+                    return async ? laterAsync(runnable, delay, unit) : later(runnable, delay, unit);
+                }
+                return async ? runAsync(runnable) : FoliaScheduler.this.run(runnable);
+            }
+
+            @Override
+            protected ScheduledTask run(@NotNull Object provider, long delay, long period, @NotNull TimeUnit unit, @NotNull Runnable runnable) {
+                if (period > 0) {
+                    return timerBy(provider, runnable, delay, period, unit);
+                }
+                if (delay > 0) {
+                    return laterBy(provider, runnable, delay, unit);
+                }
+                return runBy(provider, runnable);
+            }
+
+            @Override
+            protected void stop(ScheduledTask task) {
+                task.cancel();
+            }
+        };
     }
 
     @Override

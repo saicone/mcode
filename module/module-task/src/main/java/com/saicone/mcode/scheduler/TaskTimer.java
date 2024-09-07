@@ -233,6 +233,7 @@ public abstract class TaskTimer<TaskT> {
             runningTask = run((boolean) operator, delay, period, unit, runnable);
         } else {
             runningProvider = operator;
+            runningAsync = true;
             runningTask = run(operator, delay, period, unit, runnable);
         }
         return this;
@@ -247,7 +248,7 @@ public abstract class TaskTimer<TaskT> {
     public void reset() {
         if (isRunning()) {
             stop();
-            run(runningAsync, runningDelay, runningPeriod, runningUnit);
+            run(runningProvider == null ? runningAsync : runningProvider, runningDelay, runningPeriod, runningUnit);
         }
     }
 
