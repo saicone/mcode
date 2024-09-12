@@ -33,9 +33,9 @@ public enum Addon {
     PLATFORM_VELOCITY("${mcode_group}:platform-velocity:${mcode_version}"),
 
     // Libraries
-    LIBRARY_DELIVERY4J("com{}saicone{}delivery4j:delivery4j:1.0"),
-    LIBRARY_SETTINGS("com{}saicone{}settings:settings:1.0"),
-    LIBRARY_TYPES("com{}saicone:types:1.1");
+    LIBRARY_DELIVERY4J("com{}saicone{}delivery4j:delivery4j:${delivery4j_version}"),
+    LIBRARY_SETTINGS("com{}saicone{}settings:settings:${settings_version}"),
+    LIBRARY_TYPES("com{}saicone:types:${types_version}");
 
     public static final Addon[] VALUES = values();
     public static final Map<String, String> RELOCATIONS;
@@ -74,6 +74,7 @@ public enum Addon {
         switch (this) {
             case MODULE_COMMAND:
             case MODULE_COMMAND_BRIGADIER:
+            case MODULE_ENV:
             case MODULE_LANG:
             case MODULE_LANG_ADVENTURE:
             case MODULE_SCRIPT:
