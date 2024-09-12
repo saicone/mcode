@@ -5,7 +5,7 @@ plugins {
 allprojects {
     dependencies {
         compileOnlyApi project(':common')
-        compileOnlyApi project(':module:module-env')
+        api project(':module:module-env')
     }
 }
 
@@ -17,7 +17,7 @@ subprojects {
 
 blossom {
     replaceTokenIn('src/main/java/com/saicone/mcode/bootstrap/Addon.java')
-    replaceToken '${mcode_group}', (System.getenv("GROUP") ?: 'com.saicone.mcode').replace('.', '{}')
+    replaceToken '${mcode_group}', ((System.getenv("GROUP") ?: "com.saicone") + "." + (System.getenv("ARTIFACT") ?: "mcode")).replace('.', '{}')
     replaceToken '${mcode_version}', System.getenv("VERSION") ?: project.version
     replaceToken '${delivery4j_version}', libs.delivery4j.get().version
     replaceToken '${settings_version}', libs.settings.get().version
