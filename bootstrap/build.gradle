@@ -11,7 +11,7 @@ allprojects {
 
 subprojects {
     dependencies {
-        compileOnly project(':bootstrap')
+        compileOnlyApi project(':bootstrap')
     }
 }
 

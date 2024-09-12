@@ -6,5 +6,5 @@ repositories {
 
 dependencies {
     compileOnly libs.spigot.api
-    compileOnly project(':platform:platform-bukkit')
+    compileOnlyApi project(':platform:platform-bukkit')
 }

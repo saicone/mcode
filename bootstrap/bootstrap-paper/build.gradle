@@ -4,7 +4,7 @@ repositories {
 
 dependencies {
     compileOnly libs.paper.api
-    compileOnly project(':platform:platform-paper')
+    compileOnlyApi project(':platform:platform-paper')
 }
 
 java {

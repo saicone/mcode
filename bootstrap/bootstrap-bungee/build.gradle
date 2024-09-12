@@ -5,7 +5,7 @@ repositories {
 
 dependencies {
     compileOnly libs.bungeecord.api
-    compileOnly project(':platform:platform-bungee')
+    compileOnlyApi project(':platform:platform-bungee')
 }
 
 java {

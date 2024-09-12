@@ -4,7 +4,7 @@ repositories {
 
 dependencies {
     compileOnly libs.velocity.api
-    compileOnly project(':platform:platform-velocity')
+    compileOnlyApi project(':platform:platform-velocity')
 }
 
 java {
