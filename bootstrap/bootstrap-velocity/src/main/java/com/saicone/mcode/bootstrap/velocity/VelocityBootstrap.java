@@ -7,6 +7,10 @@ import com.google.inject.Inject;
 import com.saicone.mcode.Plugin;
 import com.saicone.mcode.bootstrap.Addon;
 import com.saicone.mcode.bootstrap.Bootstrap;
+import com.saicone.mcode.env.Env;
+import com.saicone.mcode.env.Executes;
+import com.saicone.mcode.env.Registrar;
+import com.saicone.mcode.util.concurrent.DelayedExecutor;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
@@ -18,12 +22,20 @@ import org.slf4j.Logger;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
-public class VelocityBootstrap implements Bootstrap {
+public class VelocityBootstrap implements Bootstrap, DelayedExecutor, Registrar {
+
+    static {
+        // Class load
+        Env.init(VelocityBootstrap.class);
+        Env.execute(Executes.BOOT, true);
+    }
 
     private final ProxyServer proxy;
     private final Logger logger;
@@ -34,6 +46,9 @@ public class VelocityBootstrap implements Bootstrap {
     @Inject
     public VelocityBootstrap(ProxyServer proxy, Logger logger, @DataDirectory Path folder) {
         // Initialization
+        Env.executor(this);
+        Env.registrar(this);
+        Env.execute(Executes.BOOT, false);
 
         // Replace logger with Bukkit logger
         getLibraryLoader().logger((level, msg) -> {
@@ -93,8 +108,13 @@ public class VelocityBootstrap implements Bootstrap {
         build("com.saicone.mcode.velocity.VelocityPlatform", proxy);
         initAddons();
 
+        // Reload Awake annotations, some methods and classes should load correctly with its dependencies loaded
+        Env.reload();
+
         // Load plugin
+        Env.execute(Executes.INIT, true);
         this.plugin = loadPlugin(pluginClass);
+        Env.execute(Executes.INIT, false);
     }
 
     private void initAddons() {
@@ -112,16 +132,22 @@ public class VelocityBootstrap implements Bootstrap {
     @Subscribe
     public void onInit(ProxyInitializeEvent e) {
         // Load
+        Env.execute(Executes.LOAD, true);
         this.plugin.onLoad();
+        Env.execute(Executes.LOAD, false);
 
         // Enable
+        Env.execute(Executes.ENABLE, true);
         this.plugin.onEnable();
+        Env.execute(Executes.ENABLE, false);
     }
 
     @Subscribe
     public void onShut(ProxyShutdownEvent e) {
         // Disable
+        Env.execute(Executes.DISABLE, true);
         this.plugin.onDisable();
+        Env.execute(Executes.DISABLE, false);
     }
 
     @Override
@@ -171,6 +197,36 @@ public class VelocityBootstrap implements Bootstrap {
             default:
                 this.logger.info(msg.get(), throwable);
                 break;
+        }
+    }
+
+    @Override
+    public void execute(@NotNull Runnable command) {
+        proxy.getScheduler().buildTask(this, command).schedule();
+    }
+
+    @Override
+    public void execute(@NotNull Runnable command, long delay, @NotNull TimeUnit unit) {
+        proxy.getScheduler().buildTask(this, command).delay(delay, unit).schedule();
+    }
+
+    @Override
+    public void execute(@NotNull Runnable command, long delay, long period, @NotNull TimeUnit unit) {
+        proxy.getScheduler().buildTask(this, command).repeat(period, unit).schedule();
+    }
+
+    @Override
+    public boolean isPresent(@NotNull String dependency) {
+        return proxy.getPluginManager().isLoaded(dependency);
+    }
+
+    @Override
+    public void register(@NotNull Object object) {
+        for (Method method : object.getClass().getDeclaredMethods()) {
+            if (method.isAnnotationPresent(Subscribe.class)) {
+                proxy.getEventManager().register(this, object);
+                break;
+            }
         }
     }
 }

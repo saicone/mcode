@@ -15,6 +15,7 @@ public enum Addon {
     // Modules
     MODULE_COMMAND("${mcode_group}:module-command:${mcode_version}"),
     MODULE_COMMAND_BRIGADIER("${mcode_group}:module-command-brigadier:${mcode_version}"),
+    MODULE_ENV("${mcode_group}:module-env:${mcode_version}"),
     MODULE_LANG("${mcode_group}:module-lang:${mcode_version}"),
     MODULE_LANG_ADVENTURE("${mcode_group}:module-lang-adventure:${mcode_version}"),
     MODULE_SCRIPT("${mcode_group}:module-script:${mcode_version}"),
@@ -58,6 +59,7 @@ public enum Addon {
         map.put("net{}kyori{}adventure", "net.kyori.adventure");
         map.put("com{}github{}benmanes{}caffeine{}cache", "com.github.benmanes.caffeine.cache");
         map.put("com{}google{}common{}cache", "com.google.common.cache");
+        map.put("com{}google{}common", "com.google.common");
 
         RELOCATIONS = map;
     }

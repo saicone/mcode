@@ -5,6 +5,7 @@ plugins {
 allprojects {
     dependencies {
         compileOnlyApi project(':common')
+        compileOnlyApi project(':module:module-env')
     }
 }
 

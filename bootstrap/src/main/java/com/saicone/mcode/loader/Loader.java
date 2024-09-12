@@ -52,8 +52,10 @@ public interface Loader {
                 System.out.println(prefix + "[" + JAR_NAME + "] " + msg);
             }
         }).xmlParser(new EzlibLoader.XmlParser());
+        libraryLoader.applyDependency(EzlibLoader.Dependency.annotations());
         libraryLoader.loadRelocations(Addon.RELOCATIONS);
         libraryLoader.applyDependency(Addon.COMMON.dependency());
+        libraryLoader.applyDependency(Addon.MODULE_ENV.dependency());
         return libraryLoader;
     }
 

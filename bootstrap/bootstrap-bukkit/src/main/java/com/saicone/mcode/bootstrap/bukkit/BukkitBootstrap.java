@@ -4,8 +4,14 @@ import com.saicone.mcode.Plugin;
 import com.saicone.mcode.bootstrap.Addon;
 import com.saicone.mcode.bootstrap.Bootstrap;
 import com.saicone.mcode.bukkit.util.ServerInstance;
+import com.saicone.mcode.env.Env;
+import com.saicone.mcode.env.Executes;
+import com.saicone.mcode.env.Registrar;
+import com.saicone.mcode.util.concurrent.DelayedExecutor;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -16,13 +22,20 @@ import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 
-public class BukkitBootstrap extends JavaPlugin implements Bootstrap {
+public class BukkitBootstrap extends JavaPlugin implements Bootstrap, DelayedExecutor, Registrar {
 
     static {
         // Class load
+        Env.init(BukkitBootstrap.class);
+        try {
+            Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
+            Env.condition("multithreading", true);
+        } catch (ClassNotFoundException ignored) { }
+        Env.execute(Executes.BOOT, true);
     }
 
     private final Path folder;
@@ -31,6 +44,9 @@ public class BukkitBootstrap extends JavaPlugin implements Bootstrap {
 
     public BukkitBootstrap() {
         // Initialization
+        Env.executor(this);
+        Env.registrar(this);
+        Env.execute(Executes.BOOT, false);
 
         // Replace logger with Bukkit logger
         getLibraryLoader().logger((level, msg) -> {
@@ -92,8 +108,13 @@ public class BukkitBootstrap extends JavaPlugin implements Bootstrap {
         build("com.saicone.mcode.bukkit.BukkitPlatform");
         initAddons();
 
+        // Reload Awake annotations, some methods and classes should load correctly with its dependencies loaded
+        Env.reload();
+
         // Load plugin
+        Env.execute(Executes.INIT, true);
         this.plugin = loadPlugin(pluginClass);
+        Env.execute(Executes.INIT, false);
     }
 
     private void initAddons() {
@@ -117,19 +138,25 @@ public class BukkitBootstrap extends JavaPlugin implements Bootstrap {
     @Override
     public void onLoad() {
         // Load
+        Env.execute(Executes.LOAD, true);
         this.plugin.onLoad();
+        Env.execute(Executes.LOAD, false);
     }
 
     @Override
     public void onEnable() {
         // Enable
+        Env.execute(Executes.ENABLE, true);
         this.plugin.onEnable();
+        Env.execute(Executes.ENABLE, false);
     }
 
     @Override
     public void onDisable() {
         // Disable
+        Env.execute(Executes.DISABLE, true);
         this.plugin.onDisable();
+        Env.execute(Executes.DISABLE, false);
     }
 
     @Override
@@ -161,6 +188,33 @@ public class BukkitBootstrap extends JavaPlugin implements Bootstrap {
                 return Level.WARNING;
             default:
                 return Level.INFO;
+        }
+    }
+
+    @Override
+    public void execute(@NotNull Runnable command) {
+        Bukkit.getScheduler().runTask(this, command);
+    }
+
+    @Override
+    public void execute(@NotNull Runnable command, long delay, @NotNull TimeUnit unit) {
+        Bukkit.getScheduler().runTaskLater(this, command, (long) (unit.toMillis(delay) * 0.02));
+    }
+
+    @Override
+    public void execute(@NotNull Runnable command, long delay, long period, @NotNull TimeUnit unit) {
+        Bukkit.getScheduler().runTaskTimer(this, command, (long) (unit.toMillis(delay) * 0.02), (long) (unit.toMillis(period) * 0.02));
+    }
+
+    @Override
+    public boolean isPresent(@NotNull String dependency) {
+        return Bukkit.getPluginManager().isPluginEnabled(dependency);
+    }
+
+    @Override
+    public void register(@NotNull Object object) {
+        if (object instanceof Listener) {
+            Bukkit.getPluginManager().registerEvents((Listener) object, this);
         }
     }
 }

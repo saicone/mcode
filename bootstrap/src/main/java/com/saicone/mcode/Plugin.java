@@ -1,6 +1,8 @@
 package com.saicone.mcode;
 
 import com.saicone.mcode.bootstrap.Bootstrap;
+import com.saicone.mcode.env.Env;
+import com.saicone.mcode.env.Executes;
 import com.saicone.mcode.util.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -14,6 +16,12 @@ public class Plugin {
     private static Plugin INSTANCE;
 
     protected int logLevel = 3;
+
+    @NotNull
+    @SuppressWarnings("unchecked")
+    public static <T extends Bootstrap> T bootstrap() {
+        return (T) BOOTSTRAP;
+    }
 
     public static void log(int level, @NotNull Supplier<String> msg) {
         if (level > INSTANCE.logLevel) {
@@ -50,6 +58,12 @@ public class Plugin {
         BOOTSTRAP.logException(level, throwable, () -> Strings.replaceArgs(msg, args));
     }
 
+    public static void reload() {
+        Env.execute(Executes.RELOAD, true);
+        INSTANCE.onReload();
+        Env.execute(Executes.RELOAD, false);
+    }
+
     public Plugin() {
         if (INSTANCE != null) {
             throw new IllegalStateException("The plugin instance is already initialized");
@@ -82,7 +96,7 @@ public class Plugin {
         // empty default method
     }
 
-    public void onReload() {
+    protected void onReload() {
         // empty default method
     }
 }
