@@ -55,7 +55,6 @@ public interface Loader {
         libraryLoader.applyAnnotationsDependency();
         libraryLoader.loadRelocations(Addon.RELOCATIONS);
         libraryLoader.applyDependency(Addon.COMMON.dependency());
-        libraryLoader.applyDependency(Addon.MODULE_ENV.dependency());
         return libraryLoader;
     }
 
