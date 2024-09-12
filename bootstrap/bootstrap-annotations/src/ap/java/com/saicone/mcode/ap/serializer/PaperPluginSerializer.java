@@ -5,7 +5,7 @@ import com.saicone.mcode.bootstrap.PluginDescription;
 import com.saicone.mcode.platform.MinecraftVersion;
 
 import java.io.BufferedWriter;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,7 +18,7 @@ public class PaperPluginSerializer extends YamlSerializer {
 
     @Override
     public void write(BufferedWriter writer) {
-        final Map<String, Object> map = new HashMap<>();
+        final Map<String, Object> map = new LinkedHashMap<>();
 
         // Information
 
@@ -78,9 +78,9 @@ public class PaperPluginSerializer extends YamlSerializer {
         // Dependencies
 
         if (!this.dependencies.isEmpty()) {
-            final Map<String, Map<String, Object>> dependencies = new HashMap<>();
+            final Map<String, Map<String, Object>> dependencies = new LinkedHashMap<>();
             for (Map.Entry<String, Set<SerializedDependency>> entry : this.dependencies.entrySet()) {
-                final Map<String, Object> listed = new HashMap<>();
+                final Map<String, Object> listed = new LinkedHashMap<>();
                 for (SerializedDependency dependency : entry.getValue()) {
                     listed.put(dependency.getPlugin(), write(dependency));
                 }
@@ -102,7 +102,7 @@ public class PaperPluginSerializer extends YamlSerializer {
     }
 
     private Map<String, Object> write(SerializedDependency dependency) {
-        final Map<String, Object> map = new HashMap<>();
+        final Map<String, Object> map = new LinkedHashMap<>();
         if (!dependency.getLoad().isBlank() && !dependency.getLoad().equalsIgnoreCase("OMIT")) {
             map.put("load", dependency.getLoad().toUpperCase());
         }

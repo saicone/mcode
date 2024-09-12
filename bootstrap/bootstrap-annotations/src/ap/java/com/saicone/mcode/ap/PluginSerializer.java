@@ -5,8 +5,8 @@ import com.saicone.mcode.bootstrap.PluginDescription;
 import com.saicone.mcode.util.Strings;
 
 import java.io.BufferedWriter;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -36,13 +36,13 @@ public abstract class PluginSerializer {
     }
 
     public Map<String, Object> getExtra() {
-        final Map<String, Object> map = new HashMap<>();
+        final Map<String, Object> map = new LinkedHashMap<>();
         if (this.plugin.addons().length > 0) {
-            final Map<String, Object> mcode = new HashMap<>();
+            final Map<String, Object> mcode = new LinkedHashMap<>();
             if (this.pluginClass != null) {
                 mcode.put("plugin", this.pluginClass);
             }
-            final Set<String> addons = new HashSet<>();
+            final Set<String> addons = new LinkedHashSet<>();
             for (Addon addon : this.plugin.addons()) {
                 addons.add(addon.name());
             }
@@ -91,7 +91,7 @@ public abstract class PluginSerializer {
             if (map.containsKey(key)) {
                 map = (Map<String, Object>) map.get(key);
             } else {
-                final Map<String, Object> sub = new HashMap<>();
+                final Map<String, Object> sub = new LinkedHashMap<>();
                 map.put(key, sub);
                 map = sub;
             }

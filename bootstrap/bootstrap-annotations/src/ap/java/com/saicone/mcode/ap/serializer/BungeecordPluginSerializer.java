@@ -4,8 +4,8 @@ import com.saicone.mcode.ap.SerializedDependency;
 import com.saicone.mcode.bootstrap.PluginDescription;
 
 import java.io.BufferedWriter;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,7 +18,7 @@ public class BungeecordPluginSerializer extends YamlSerializer {
 
     @Override
     public void write(BufferedWriter writer) {
-        final Map<String, Object> map = new HashMap<>();
+        final Map<String, Object> map = new LinkedHashMap<>();
 
         // Information
 
