@@ -4,7 +4,6 @@ repositories {
 
 dependencies {
     compileOnly libs.paper.api
-    compileOnly libs.folia.api
     api project(':platform:platform-bukkit')
     compileOnly project(':module:module-task')
 }
