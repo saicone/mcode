@@ -26,7 +26,7 @@ public @interface PluginDescription {
 
     String name();
 
-    String[] aliases();
+    String[] aliases() default {};
 
     String prefix() default "";
 
