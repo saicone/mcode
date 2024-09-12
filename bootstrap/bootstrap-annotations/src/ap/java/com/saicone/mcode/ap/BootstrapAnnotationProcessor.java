@@ -159,21 +159,21 @@ public class BootstrapAnnotationProcessor extends AbstractProcessor {
 
     @SuppressWarnings("fallthrough")
     private void serialize(PluginDescription plugin, PlatformType type, String mainClass) {
-        if (generatedFiles.contains(type == PlatformType.SPIGOT ? PlatformType.BUKKIT : type)) {
+        if (getGeneratedFiles().contains(type == PlatformType.SPIGOT ? PlatformType.BUKKIT : type)) {
             return;
         }
         switch (type) {
             case PAPER:
-                serializers.put(PlatformType.PAPER, new PaperPluginSerializer(plugin, mainClass, serializeDependencies(plugin, PlatformType.BUKKIT)));
+                getSerializers().put(PlatformType.PAPER, new PaperPluginSerializer(plugin, mainClass, serializeDependencies(plugin, PlatformType.BUKKIT)));
             case BUKKIT:
             case SPIGOT:
-                serializers.put(PlatformType.BUKKIT, new BukkitPluginSerializer(plugin, mainClass, serializeDependencies(plugin, PlatformType.BUKKIT)));
+                getSerializers().put(PlatformType.BUKKIT, new BukkitPluginSerializer(plugin, mainClass, serializeDependencies(plugin, PlatformType.BUKKIT)));
                 break;
             case BUNGEECORD:
-                serializers.put(PlatformType.BUNGEECORD, new BungeecordPluginSerializer(plugin, mainClass, serializeDependencies(plugin, PlatformType.BUNGEECORD)));
+                getSerializers().put(PlatformType.BUNGEECORD, new BungeecordPluginSerializer(plugin, mainClass, serializeDependencies(plugin, PlatformType.BUNGEECORD)));
                 break;
             case VELOCITY:
-                serializers.put(PlatformType.VELOCITY, new VelocityPluginSerializer(plugin, mainClass, serializeDependencies(plugin, PlatformType.VELOCITY)));
+                getSerializers().put(PlatformType.VELOCITY, new VelocityPluginSerializer(plugin, mainClass, serializeDependencies(plugin, PlatformType.VELOCITY)));
                 break;
             default:
                 break;
