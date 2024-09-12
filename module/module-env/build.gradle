@@ -1,4 +1,4 @@
 dependencies {
     compileOnlyApi project(':common')
-    api libs.guava
+    compileOnlyApi libs.guava
 }
