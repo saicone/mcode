@@ -67,7 +67,7 @@ public enum Addon {
     private final EzlibLoader.Dependency dependency;
 
     Addon(@NotNull String path) {
-        this.dependency = new EzlibLoader.Dependency().path(path);
+        this.dependency = new EzlibLoader.Dependency().path(path.replace("{}", "."));
     }
 
     public boolean isModule() {

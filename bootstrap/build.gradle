@@ -17,7 +17,7 @@ subprojects {
 
 blossom {
     replaceTokenIn('src/main/java/com/saicone/mcode/bootstrap/Addon.java')
-    replaceToken '${mcode_group}', System.getenv("GROUP") ?: 'com.saicone.mcode'
+    replaceToken '${mcode_group}', (System.getenv("GROUP") ?: 'com.saicone.mcode').replace('.', '{}')
     replaceToken '${mcode_version}', System.getenv("VERSION") ?: project.version
 }
 
