@@ -51,7 +51,7 @@ public class BukkitPluginSerializer extends YamlSerializer {
 
         // Load
 
-        map.put("main", getMain("mcode.bootstrap.bukkit.BukkitBootstrap"));
+        map.put("main", getMain(".mcode.bootstrap.bukkit.BukkitBootstrap"));
 
 
         // Behaviour

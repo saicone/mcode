@@ -46,7 +46,7 @@ public class VelocityPluginSerializer extends PluginSerializer {
 
         // Load
 
-        object.addProperty("main", getMain("mcode.bootstrap.velocity.VelocityBootstrap"));
+        object.addProperty("main", getMain(".mcode.bootstrap.velocity.VelocityBootstrap"));
 
 
         // Dependencies

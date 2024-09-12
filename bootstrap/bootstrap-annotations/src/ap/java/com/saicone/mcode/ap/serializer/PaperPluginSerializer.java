@@ -46,7 +46,7 @@ public class PaperPluginSerializer extends YamlSerializer {
 
         // Load
 
-        map.put("main", getMain("mcode.bootstrap.paper.PaperBootstrap"));
+        map.put("main", getMain(".mcode.bootstrap.paper.PaperBootstrap"));
         if (!this.plugin.bootstrapper().isBlank()) {
             map.put("bootstrapper", this.plugin.bootstrapper());
         }

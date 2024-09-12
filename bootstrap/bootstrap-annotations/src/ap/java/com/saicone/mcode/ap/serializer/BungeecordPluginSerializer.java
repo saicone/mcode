@@ -46,7 +46,7 @@ public class BungeecordPluginSerializer extends YamlSerializer {
 
         // Load
 
-        map.put("main", getMain("mcode.bootstrap.bungee.BungeeBootstrap"));
+        map.put("main", getMain(".mcode.bootstrap.bungee.BungeeBootstrap"));
 
 
         // Dependencies
