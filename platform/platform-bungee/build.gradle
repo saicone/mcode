@@ -23,6 +23,9 @@ dependencies {
     // Command module
     compileOnly project(':module:module-command')
 
+    // Env module
+    compileOnly project(':module:module-env')
+
     // Compatibility
     compileOnly libs.delivery4j
     compileOnly libs.settings

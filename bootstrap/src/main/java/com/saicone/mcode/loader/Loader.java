@@ -55,6 +55,7 @@ public interface Loader {
         libraryLoader.applyAnnotationsDependency();
         libraryLoader.loadRelocations(Addon.RELOCATIONS);
         libraryLoader.applyDependency(Addon.COMMON.dependency());
+        libraryLoader.applyDependency(Addon.MODULE_ENV.dependency());
         return libraryLoader;
     }
 
@@ -70,15 +71,16 @@ public interface Loader {
     }
 
     @NotNull
-    default Object build(@NotNull String name, @NotNull Object... params) {
+    @SuppressWarnings("unchecked")
+    default <T> T build(@NotNull String name, @NotNull Object... params) {
         try {
             final Class<?> clazz = Class.forName(name);
             if (params.length == 0) {
-                return clazz.getDeclaredConstructor().newInstance();
+                return (T) clazz.getDeclaredConstructor().newInstance();
             }
             for (Constructor<?> c : clazz.getDeclaredConstructors()) {
                 if (matches(c, params)) {
-                    return c.newInstance(params);
+                    return (T) c.newInstance(params);
                 }
             }
         } catch (Throwable t) {
@@ -88,15 +90,16 @@ public interface Loader {
     }
 
     @Nullable
-    default Object run(@NotNull String name, @NotNull String method, @NotNull Object... params) {
+    @SuppressWarnings("unchecked")
+    default <T> T run(@NotNull String name, @NotNull String method, @NotNull Object... params) {
         try {
             final Class<?> clazz = Class.forName(name);
             if (params.length == 0) {
-                return clazz.getDeclaredMethod(method).invoke(null);
+                return (T) clazz.getDeclaredMethod(method).invoke(null);
             }
             for (Method m : clazz.getDeclaredMethods()) {
                 if (matches(m, params)) {
-                    return m.invoke(null, params);
+                    return (T) m.invoke(null, params);
                 }
             }
         } catch (Throwable t) {

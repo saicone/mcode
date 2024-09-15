@@ -4,12 +4,25 @@ repositories {
 
 dependencies {
     compileOnly libs.velocity.api
+
+    // Task module
     compileOnly project(':module:module-task')
+
+    // Lang module
     compileOnly project(':module:module-lang')
     implementation project(':module:module-lang-adventure')
+
+    // Script module
     compileOnly project(':module:module-script')
+
+    // Command module
     compileOnly project(':module:module-command')
     compileOnly project(':module:module-command-brigadier')
+
+    // Env module
+    compileOnly project(':module:module-env')
+
+    // Compatibility
     compileOnly libs.delivery4j
     compileOnly libs.settings
 }

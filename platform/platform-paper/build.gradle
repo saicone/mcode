@@ -5,7 +5,12 @@ repositories {
 dependencies {
     compileOnly libs.paper.api
     api project(':platform:platform-bukkit')
+
+    // Task module
     compileOnly project(':module:module-task')
+
+    // Env module
+    compileOnly project(':module:module-env')
 }
 
 java {

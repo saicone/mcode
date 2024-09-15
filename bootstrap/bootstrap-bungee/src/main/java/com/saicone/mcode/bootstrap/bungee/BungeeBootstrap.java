@@ -5,9 +5,6 @@ import com.saicone.mcode.bootstrap.Addon;
 import com.saicone.mcode.bootstrap.Bootstrap;
 import com.saicone.mcode.env.Env;
 import com.saicone.mcode.env.Executes;
-import com.saicone.mcode.env.Registrar;
-import com.saicone.mcode.util.concurrent.DelayedExecutor;
-import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
@@ -20,11 +17,10 @@ import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 
-public class BungeeBootstrap extends net.md_5.bungee.api.plugin.Plugin implements Bootstrap, DelayedExecutor, Registrar {
+public class BungeeBootstrap extends net.md_5.bungee.api.plugin.Plugin implements Bootstrap {
 
     static {
         // Load platform addons
@@ -41,8 +37,8 @@ public class BungeeBootstrap extends net.md_5.bungee.api.plugin.Plugin implement
 
     public BungeeBootstrap() {
         // Initialization
-        Env.executor(this);
-        Env.registrar(this);
+        Env.executor(build("com.saicone.mcode.bungee.env.BungeeExecutor", this));
+        Env.registrar(build("com.saicone.mcode.bungee.env.BungeeRegistrar", this));
         Env.execute(Executes.BOOT, false);
 
         // Replace logger with Bukkit logger
@@ -167,32 +163,5 @@ public class BungeeBootstrap extends net.md_5.bungee.api.plugin.Plugin implement
             case 2 -> Level.WARNING;
             default -> Level.INFO;
         };
-    }
-
-    @Override
-    public void execute(@NotNull Runnable command) {
-        getProxy().getScheduler().runAsync(this, command);
-    }
-
-    @Override
-    public void execute(@NotNull Runnable command, long delay, @NotNull TimeUnit unit) {
-        getProxy().getScheduler().schedule(this, command, delay, unit);
-    }
-
-    @Override
-    public void execute(@NotNull Runnable command, long delay, long period, @NotNull TimeUnit unit) {
-        getProxy().getScheduler().schedule(this, command, delay, period, unit);
-    }
-
-    @Override
-    public boolean isPresent(@NotNull String dependency) {
-        return getProxy().getPluginManager().getPlugin(dependency) != null;
-    }
-
-    @Override
-    public void register(@NotNull Object object) {
-        if (object instanceof Listener) {
-            getProxy().getPluginManager().registerListener(this, (Listener) object);
-        }
     }
 }

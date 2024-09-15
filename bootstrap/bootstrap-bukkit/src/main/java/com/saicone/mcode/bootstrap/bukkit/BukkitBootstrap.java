@@ -6,12 +6,8 @@ import com.saicone.mcode.bootstrap.Bootstrap;
 import com.saicone.mcode.bukkit.util.ServerInstance;
 import com.saicone.mcode.env.Env;
 import com.saicone.mcode.env.Executes;
-import com.saicone.mcode.env.Registrar;
-import com.saicone.mcode.util.concurrent.DelayedExecutor;
-import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -22,11 +18,10 @@ import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 
-public class BukkitBootstrap extends JavaPlugin implements Bootstrap, DelayedExecutor, Registrar {
+public class BukkitBootstrap extends JavaPlugin implements Bootstrap {
 
     static {
         // Load platform addons
@@ -53,8 +48,8 @@ public class BukkitBootstrap extends JavaPlugin implements Bootstrap, DelayedExe
 
     public BukkitBootstrap() {
         // Initialization
-        Env.executor(this);
-        Env.registrar(this);
+        Env.executor(build("com.saicone.mcode.bukkit.env.BukkitExecutor", this));
+        Env.registrar(build("com.saicone.mcode.bukkit.env.BukkitRegistrar", this));
         Env.execute(Executes.BOOT, false);
 
         // Replace logger with Bukkit logger
@@ -188,33 +183,6 @@ public class BukkitBootstrap extends JavaPlugin implements Bootstrap, DelayedExe
                 return Level.WARNING;
             default:
                 return Level.INFO;
-        }
-    }
-
-    @Override
-    public void execute(@NotNull Runnable command) {
-        Bukkit.getScheduler().runTask(this, command);
-    }
-
-    @Override
-    public void execute(@NotNull Runnable command, long delay, @NotNull TimeUnit unit) {
-        Bukkit.getScheduler().runTaskLater(this, command, (long) (unit.toMillis(delay) * 0.02));
-    }
-
-    @Override
-    public void execute(@NotNull Runnable command, long delay, long period, @NotNull TimeUnit unit) {
-        Bukkit.getScheduler().runTaskTimer(this, command, (long) (unit.toMillis(delay) * 0.02), (long) (unit.toMillis(period) * 0.02));
-    }
-
-    @Override
-    public boolean isPresent(@NotNull String dependency) {
-        return Bukkit.getPluginManager().isPluginEnabled(dependency);
-    }
-
-    @Override
-    public void register(@NotNull Object object) {
-        if (object instanceof Listener) {
-            Bukkit.getPluginManager().registerEvents((Listener) object, this);
         }
     }
 }

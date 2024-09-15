@@ -6,12 +6,8 @@ import com.saicone.mcode.bootstrap.Bootstrap;
 import com.saicone.mcode.bukkit.util.ServerInstance;
 import com.saicone.mcode.env.Env;
 import com.saicone.mcode.env.Executes;
-import com.saicone.mcode.env.Registrar;
-import com.saicone.mcode.util.concurrent.DelayedExecutor;
-import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -22,13 +18,10 @@ import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 
-public class PaperBootstrap extends JavaPlugin implements Bootstrap, DelayedExecutor, Registrar {
-
-    private static final boolean MULTITHREADING;
+public class PaperBootstrap extends JavaPlugin implements Bootstrap {
 
     static {
         // Load platform addons
@@ -37,13 +30,10 @@ public class PaperBootstrap extends JavaPlugin implements Bootstrap, DelayedExec
 
         // Class load
         Env.init(PaperBootstrap.class);
-        boolean multithreading = false;
         try {
             Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
             Env.condition("multithreading", true);
-            multithreading = true;
         } catch (ClassNotFoundException ignored) { }
-        MULTITHREADING = multithreading;
         Env.execute(Executes.BOOT, true);
     }
 
@@ -53,8 +43,8 @@ public class PaperBootstrap extends JavaPlugin implements Bootstrap, DelayedExec
 
     public PaperBootstrap() {
         // Initialization
-        Env.executor(this);
-        Env.registrar(this);
+        Env.executor(build("com.saicone.mcode.paper.env.PaperExecutor", this));
+        Env.registrar(build("com.saicone.mcode.bukkit.env.BukkitRegistrar", this));
         Env.execute(Executes.BOOT, false);
 
         // Replace logger with Bukkit logger
@@ -186,44 +176,5 @@ public class PaperBootstrap extends JavaPlugin implements Bootstrap, DelayedExec
             case 2 -> Level.WARNING;
             default -> Level.INFO;
         };
-    }
-
-    @Override
-    public void execute(@NotNull Runnable command) {
-        if (MULTITHREADING) {
-            Bukkit.getGlobalRegionScheduler().run(this, task -> command.run());
-        } else {
-            Bukkit.getScheduler().runTask(this, command);
-        }
-    }
-
-    @Override
-    public void execute(@NotNull Runnable command, long delay, @NotNull TimeUnit unit) {
-        if (MULTITHREADING) {
-            Bukkit.getGlobalRegionScheduler().runDelayed(this, task -> command.run(), (long) (unit.toMillis(delay) * 0.02));
-        } else {
-            Bukkit.getScheduler().runTaskLater(this, command, (long) (unit.toMillis(delay) * 0.02));
-        }
-    }
-
-    @Override
-    public void execute(@NotNull Runnable command, long delay, long period, @NotNull TimeUnit unit) {
-        if (MULTITHREADING) {
-            Bukkit.getGlobalRegionScheduler().runAtFixedRate(this, task -> command.run(), (long) (unit.toMillis(delay) * 0.02), (long) (unit.toMillis(period) * 0.02));
-        } else {
-            Bukkit.getScheduler().runTaskTimer(this, command, (long) (unit.toMillis(delay) * 0.02), (long) (unit.toMillis(period) * 0.02));
-        }
-    }
-
-    @Override
-    public boolean isPresent(@NotNull String dependency) {
-        return Bukkit.getPluginManager().isPluginEnabled(dependency);
-    }
-
-    @Override
-    public void register(@NotNull Object object) {
-        if (object instanceof Listener) {
-            Bukkit.getPluginManager().registerEvents((Listener) object, this);
-        }
     }
 }
