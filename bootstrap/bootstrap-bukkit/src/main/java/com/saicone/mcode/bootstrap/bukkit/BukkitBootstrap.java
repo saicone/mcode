@@ -29,6 +29,15 @@ import java.util.logging.Level;
 public class BukkitBootstrap extends JavaPlugin implements Bootstrap, DelayedExecutor, Registrar {
 
     static {
+        // Load platform addons
+        LIBRARY_LOADER.applyDependency(Addon.PLATFORM_BUKKIT.dependency());
+        try {
+            Class.forName("com.destroystokyo.paper.Title");
+            if (Runtime.version().feature() >= 21) {
+                LIBRARY_LOADER.applyDependency(Addon.PLATFORM_PAPER.dependency());
+            }
+        } catch (ClassNotFoundException ignored) { }
+
         // Class load
         Env.init(BukkitBootstrap.class);
         try {
@@ -89,15 +98,6 @@ public class BukkitBootstrap extends JavaPlugin implements Bootstrap, DelayedExe
             throw new RuntimeException("Cannot read plugin.yml from plugin JAR file", e);
         }
 
-        // Put platform addons
-        this.addons.add(Addon.PLATFORM_BUKKIT);
-        try {
-            Class.forName("com.destroystokyo.paper.Title");
-            if (Runtime.version().feature() >= 21) {
-                this.addons.add(Addon.PLATFORM_PAPER);
-            }
-        } catch (ClassNotFoundException ignored) { }
-
         // Load addon libraries
         for (Addon addon : this.addons) {
             getLibraryLoader().loadDependency(addon.dependency());
@@ -108,8 +108,8 @@ public class BukkitBootstrap extends JavaPlugin implements Bootstrap, DelayedExe
         build("com.saicone.mcode.bukkit.BukkitPlatform");
         initAddons();
 
-        // Reload Awake annotations, some methods and classes should load correctly with its dependencies loaded
-        Env.reload();
+        // Reload runtime some classes should load correctly with its dependencies loaded
+        Env.runtime().reload();
 
         // Load plugin
         Env.execute(Executes.INIT, true);
@@ -123,7 +123,7 @@ public class BukkitBootstrap extends JavaPlugin implements Bootstrap, DelayedExe
         }
         if (this.addons.contains(Addon.MODULE_TASK)) {
             final String scheduler;
-            if (this.addons.contains(Addon.PLATFORM_PAPER) && ServerInstance.Platform.FOLIA) {
+            if (ServerInstance.Platform.FOLIA) {
                 scheduler = "com.saicone.mcode.folia.scheduler.FoliaScheduler";
             } else {
                 scheduler = "com.saicone.mcode.bukkit.scheduler.BukkitScheduler";

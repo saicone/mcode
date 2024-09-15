@@ -1,24 +1,26 @@
 package com.saicone.mcode.env;
 
+import com.saicone.mcode.env.asm.AnnotationConsumer;
 import com.saicone.mcode.util.concurrent.DelayedExecutor;
 import com.saicone.mcode.util.jar.JarRuntime;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.objectweb.asm.ClassReader;
 
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
+import java.util.function.BiConsumer;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public class Env {
@@ -43,32 +45,8 @@ public class Env {
             throw new RuntimeException("Cannot initialize JarRuntime", e);
         }
         condition("java.version", Runtime.version().feature());
-        reload();
-    }
-
-    public static void reload() {
         RUNTIME.reload();
-        for (Class<?> type : RUNTIME.annotated(Awake.class)) {
-            if (type.isAnnotationPresent(Awake.class)) {
-                load(type.getAnnotation(Awake.class), runnable(type));
-            }
-            for (Constructor<?> constructor : type.getDeclaredConstructors()) {
-                if (constructor.isAnnotationPresent(Awake.class)) {
-                    load(constructor.getAnnotation(Awake.class), runnable(type, constructor));
-                }
-            }
-            for (Field field : type.getDeclaredFields()) {
-                if (field.isAnnotationPresent(Awake.class)) {
-                    load(field.getAnnotation(Awake.class), runnable(type, field));
-                }
-            }
-            for (Method method : type.getDeclaredMethods()) {
-                if (method.isAnnotationPresent(Awake.class)) {
-                    load(method.getAnnotation(Awake.class), runnable(type, method));
-                }
-            }
-        }
-        EXECUTABLES.sort(Comparator.comparingInt(Executable::priority));
+        annotated(Awake.class, (name, awake) -> load(awake, runnable(name)));
     }
 
     @NotNull
@@ -116,146 +94,181 @@ public class Env {
         }
     }
 
-    @NotNull
-    private static Runnable runnable(@NotNull Class<?> type) {
-        return runnable(instanceSupplier(type));
+    public static void annotated(@NotNull Class<? extends Annotation> annotation, @NotNull BiConsumer<String, Map<String, Object>> consumer) {
+        annotated(annotation.getName(), consumer);
+    }
+
+    public static void annotated(@NotNull String annotation, @NotNull BiConsumer<String, Map<String, Object>> consumer) {
+        final Predicate<String> predicate;
+        if (annotation.charAt(0) == 'L' && annotation.charAt(annotation.length() - 1) == ';') {
+            predicate = annotation::equals;
+        } else {
+            final String descriptor = "L" + annotation.replace('.', '/') + ";";
+            predicate = descriptor::equals;
+        }
+        for (Map.Entry<String, Class<?>> entry : RUNTIME.entrySet()) {
+            try {
+                final ClassReader reader = new ClassReader(entry.getKey());
+                final AnnotationConsumer annotationConsumer = new AnnotationConsumer(predicate, (name, map) -> {
+                    if (name == null) {
+                        consumer.accept(entry.getKey(), map);
+                    } else {
+                        consumer.accept(entry.getKey() + name, map);
+                    }
+                });
+                reader.accept(annotationConsumer, 0);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @NotNull
-    private static Runnable runnable(@NotNull Class<?> type, @NotNull Field field) {
-        field.setAccessible(true);
-        final Supplier<Object> supplier;
-        if (Modifier.isStatic(field.getModifiers())) {
-            supplier = () -> null;
+    private static Runnable runnable(@NotNull String name) {
+        final String className;
+        final String fieldName;
+        final String methodName;
+
+        final int index = name.indexOf('#');
+        if (index > 0) {
+            className = name.substring(0, index);
+            if (name.endsWith("()")) {
+                fieldName = null;
+                methodName = name.substring(index + 1, name.length() - 2);
+            } else {
+                fieldName = name.substring(index + 1);
+                methodName = null;
+            }
         } else {
-            supplier = instanceSupplier(type);
+            className = name;
+            fieldName = null;
+            methodName = null;
         }
-        return runnable(() -> {
-            Object instance = INSTANCES.get(field);
-            if (instance == null) {
-                try {
-                    instance = field.get(supplier.get());
-                } catch (IllegalAccessException e) {
-                    throw new RuntimeException(e);
+
+        return () -> {
+            final Class<?> type = RUNTIME.get(className);
+            if (type == null || type == Object.class) {
+                throw new IllegalStateException("The class " + className + " is not available to execute an awake on it");
+            }
+
+            final Object result;
+            try {
+                if (fieldName != null) {
+                    final Field field = type.getDeclaredField(fieldName);
+                    field.setAccessible(true);
+                    final Object instance;
+                    if (Modifier.isStatic(field.getModifiers())) {
+                        instance = null;
+                    } else {
+                        instance = instanceFor(type);
+                    }
+                    result = instanceFor(instance, field);
+                } else if (methodName != null) {
+                    final Method method = type.getDeclaredMethod(methodName);
+                    method.setAccessible(true);
+                    final Object instance;
+                    if (Modifier.isStatic(method.getModifiers())) {
+                        instance = null;
+                    } else {
+                        instance = instanceFor(type);
+                    }
+                    result = method.invoke(instance);
+                } else {
+                    result = instanceFor(type);
                 }
-                if (instance != null) {
-                    INSTANCES.put(field, instance);
-                    if (REGISTRAR != null) {
-                        REGISTRAR.register(instance);
+            } catch (Throwable t) {
+                throw new RuntimeException("Cannot invoke " + name, t);
+            }
+
+            if (result instanceof Runnable) {
+                ((Runnable) result).run();
+            } else if (result instanceof CompletableFuture) {
+                ((CompletableFuture<?>) result).join();
+            }
+        };
+    }
+
+    @NotNull
+    private static Object instanceFor(@NotNull Class<?> type) throws Throwable {
+        Object instance = INSTANCES.get(type);
+        if (instance == null) {
+            for (Field field : type.getDeclaredFields()) {
+                if (field.getType() == type && Modifier.isStatic(field.getModifiers())) {
+                    if (instance != null && !field.getName().equals("INSTANCE")) {
+                        continue;
+                    }
+                    field.setAccessible(true);
+                    instance = field.get(null);
+                }
+            }
+            if (instance == null) {
+                for (Constructor<?> constructor : type.getDeclaredConstructors()) {
+                    if (constructor.getParameterCount() < 1) {
+                        constructor.setAccessible(true);
+                        instance = constructor.newInstance();
                     }
                 }
             }
-            return instance;
-        });
-    }
-
-    @NotNull
-    private static Runnable runnable(@NotNull Class<?> type, @NotNull Method method) {
-        if (method.getParameterCount() > 0) {
-            throw new IllegalArgumentException("Cannot create a runnable using a method with multiple parameters: " + type.getName() + "#" + method.getName());
-        }
-        method.setAccessible(true);
-        final Supplier<Object> supplier;
-        if (Modifier.isStatic(method.getModifiers())) {
-            supplier = () -> null;
-        } else {
-            supplier = instanceSupplier(type);
-        }
-        return runnable(() -> {
-            try {
-                return method.invoke(supplier.get());
-            } catch (IllegalAccessException | InvocationTargetException e) {
-                throw new RuntimeException(e);
-            }
-        });
-    }
-
-    @NotNull
-    private static Runnable runnable(@NotNull Class<?> type, @NotNull Constructor<?> constructor) {
-        if (constructor.getParameterCount() > 0) {
-            throw new IllegalArgumentException("Cannot create a runnable using a constructor with multiple parameters: " + type.getName());
-        }
-        constructor.setAccessible(true);
-        return runnable(() -> {
-            Object instance = INSTANCES.get(constructor);
-            if (instance == null) {
-                try {
-                    instance = constructor.newInstance();
-                } catch (IllegalAccessException | InvocationTargetException | InstantiationException e) {
-                    throw new RuntimeException(e);
-                }
-                INSTANCES.put(constructor, instance);
+            if (instance != null) {
+                INSTANCES.put(type, instance);
                 if (REGISTRAR != null) {
                     REGISTRAR.register(instance);
                 }
+            } else {
+                throw new IllegalArgumentException("The type " + type + " doesn't have an INSTANCE field of empty constructor");
             }
-            return instance;
-        });
+        }
+        return instance;
     }
 
     @NotNull
-    private static Runnable runnable(@NotNull Supplier<Object> supplier) {
-        return () -> {
-            final Object instance = supplier.get();
-            if (instance instanceof Runnable) {
-                ((Runnable) instance).run();
-            } else if (instance instanceof CompletableFuture) {
-                ((CompletableFuture<?>) instance).join();
+    private static Object instanceFor(@Nullable Object obj, @NotNull Field field) throws Throwable {
+        Object instance = INSTANCES.get(field);
+        if (instance == null) {
+            instance = field.get(obj);
+            if (instance != null) {
+                INSTANCES.put(field, instance);
+                if (REGISTRAR != null) {
+                    REGISTRAR.register(instance);
+                }
+            } else {
+                throw new IllegalStateException("The current type of field '" + field.getName() + "' is null");
             }
-        };
+        }
+        return instance;
     }
 
-    @NotNull
-    private static Supplier<Object> instanceSupplier(@NotNull Class<?> type) {
-        return () -> {
-            Object instance = INSTANCES.get(type);
-            if (instance == null) {
-                for (Field field : type.getDeclaredFields()) {
-                    if (field.getType() == type && Modifier.isStatic(field.getModifiers())) {
-                        if (instance != null && !field.getName().equals("INSTANCE")) {
-                            continue;
-                        }
-                        try {
-                            field.setAccessible(true);
-                            instance = field.get(null);
-                        } catch (IllegalAccessException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-                }
-                if (instance == null) {
-                    for (Constructor<?> constructor : type.getDeclaredConstructors()) {
-                        if (constructor.getParameterCount() < 1) {
-                            try {
-                                constructor.setAccessible(true);
-                                instance = constructor.newInstance();
-                            } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
-                                throw new RuntimeException(e);
-                            }
-                        }
-                    }
-                }
-                if (instance != null) {
-                    INSTANCES.put(type, instance);
-                    if (REGISTRAR != null) {
-                        REGISTRAR.register(instance);
-                    }
-                }
-            }
-            return instance;
-        };
+    private static void load(@NotNull Map<String, Object> awake, @NotNull Runnable runnable) {
+        final Executes when = Executes.valueOf((String) awake.get("when"));
+        final int priority = (int) awake.getOrDefault("priority", 0);
+        final long delay = (long) awake.getOrDefault("delay", 0);
+        final long period = (long) awake.getOrDefault("period", 0);
+        final TimeUnit unit = TimeUnit.valueOf((String) awake.getOrDefault("unit", "SECONDS"));
+
+        final Executable executable;
+        if (period > 0) {
+            executable = new PeriodicExecutable(runnable, when, priority, condition(awake), delay, period, unit);
+        } else if (delay > 0) {
+            executable = new DelayedExecutable(runnable, when, priority, condition(awake), delay, unit);
+        } else {
+            executable = new Executable(runnable, when, priority, condition(awake));
+        }
+        EXECUTABLES.add(executable);
     }
 
     @Nullable
-    private static Supplier<Boolean> condition(@NotNull Awake awake) {
-        if (awake.condition().length < 1 && awake.dependsOn().length < 1) {
+    @SuppressWarnings("unchecked")
+    private static Supplier<Boolean> condition(@NotNull Map<String, Object> awake) {
+        final List<String> conditions = (List<String>) awake.getOrDefault("condition", List.<String>of());
+        final List<String> dependsOn = (List<String>) awake.getOrDefault("dependsOn", List.<String>of());
+        if (conditions.isEmpty() && dependsOn.isEmpty()) {
             return null;
         }
-        final Map<String, Function<Object, Boolean>> conditions = new HashMap<>();
+        final Map<String, Predicate<Object>> predicates = new HashMap<>();
         // Optimize this check
-        for (String condition : awake.condition()) {
+        for (String condition : conditions) {
             final String key;
-            final Function<Object, Boolean> value;
+            final Predicate<Object> value;
 
             int index = condition.indexOf('=');
             if (index > 0) {
@@ -284,16 +297,16 @@ public class Env {
                 key = condition;
                 value = Boolean.TRUE::equals;
             }
-            conditions.put(key.trim(), value);
+            predicates.put(key.trim(), value);
         }
         return () -> {
-            for (Map.Entry<String, Function<Object, Boolean>> entry : conditions.entrySet()) {
-                if (!entry.getValue().apply(CONDITIONS.get(entry.getKey()))) {
+            for (Map.Entry<String, Predicate<Object>> entry : predicates.entrySet()) {
+                if (!entry.getValue().test(CONDITIONS.get(entry.getKey()))) {
                     return false;
                 }
             }
             if (REGISTRAR != null) {
-                for (String dependency : awake.dependsOn()) {
+                for (String dependency : dependsOn) {
                     if (!REGISTRAR.isPresent(dependency)) {
                         return false;
                     }
@@ -301,18 +314,6 @@ public class Env {
             }
             return true;
         };
-    }
-
-    private static void load(@NotNull Awake awake, @NotNull Runnable runnable) {
-        final Executable executable;
-        if (awake.period() > 0) {
-            executable = new PeriodicExecutable(runnable, awake.when(), awake.priority(), condition(awake), awake.delay(), awake.period(), awake.unit());
-        } else if (awake.delay() > 0) {
-            executable = new DelayedExecutable(runnable, awake.when(), awake.priority(), condition(awake), awake.delay(), awake.unit());
-        } else {
-            executable = new Executable(runnable, awake.when(), awake.priority(), condition(awake));
-        }
-        EXECUTABLES.add(executable);
     }
 
     // We are not in Java 14, so this record will be look like this

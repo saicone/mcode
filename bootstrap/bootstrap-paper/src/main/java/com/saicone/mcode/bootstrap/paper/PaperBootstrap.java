@@ -31,6 +31,10 @@ public class PaperBootstrap extends JavaPlugin implements Bootstrap, DelayedExec
     private static final boolean MULTITHREADING;
 
     static {
+        // Load platform addons
+        LIBRARY_LOADER.applyDependency(Addon.PLATFORM_BUKKIT.dependency());
+        LIBRARY_LOADER.applyDependency(Addon.PLATFORM_PAPER.dependency());
+
         // Class load
         Env.init(PaperBootstrap.class);
         boolean multithreading = false;
@@ -94,10 +98,6 @@ public class PaperBootstrap extends JavaPlugin implements Bootstrap, DelayedExec
             throw new RuntimeException("Cannot read paper-plugin.yml from plugin JAR file", e);
         }
 
-        // Put platform addons
-        this.addons.add(Addon.PLATFORM_BUKKIT);
-        this.addons.add(Addon.PLATFORM_PAPER);
-
         // Load addon libraries
         for (Addon addon : this.addons) {
             getLibraryLoader().loadDependency(addon.dependency());
@@ -108,8 +108,8 @@ public class PaperBootstrap extends JavaPlugin implements Bootstrap, DelayedExec
         build("com.saicone.mcode.bukkit.BukkitPlatform");
         initAddons();
 
-        // Reload Awake annotations, some methods and classes should load correctly with its dependencies loaded
-        Env.reload();
+        // Reload runtime some classes should load correctly with its dependencies loaded
+        Env.runtime().reload();
 
         // Load plugin
         Env.execute(Executes.INIT, true);

@@ -27,6 +27,9 @@ import java.util.logging.Level;
 public class BungeeBootstrap extends net.md_5.bungee.api.plugin.Plugin implements Bootstrap, DelayedExecutor, Registrar {
 
     static {
+        // Load platform addons
+        LIBRARY_LOADER.applyDependency(Addon.PLATFORM_BUNGEE.dependency());
+
         // Class load
         Env.init(BungeeBootstrap.class);
         Env.execute(Executes.BOOT, true);
@@ -82,9 +85,6 @@ public class BungeeBootstrap extends net.md_5.bungee.api.plugin.Plugin implement
             throw new RuntimeException("Cannot read bungee.yml from plugin JAR file", e);
         }
 
-        // Put platform addons
-        this.addons.add(Addon.PLATFORM_BUNGEE);
-
         // Load addon libraries
         for (Addon addon : this.addons) {
             getLibraryLoader().loadDependency(addon.dependency());
@@ -95,8 +95,8 @@ public class BungeeBootstrap extends net.md_5.bungee.api.plugin.Plugin implement
         build("com.saicone.mcode.bungee.BungeePlatform");
         initAddons();
 
-        // Reload Awake annotations, some methods and classes should load correctly with its dependencies loaded
-        Env.reload();
+        // Reload runtime some classes should load correctly with its dependencies loaded
+        Env.runtime().reload();
 
         // Load plugin
         Env.execute(Executes.INIT, true);

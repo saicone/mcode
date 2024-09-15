@@ -1,7 +1,5 @@
 package com.saicone.mcode.env;
 
-import com.saicone.mcode.platform.PlatformType;
-
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -10,13 +8,11 @@ import java.lang.annotation.Target;
 import java.util.concurrent.TimeUnit;
 
 @Documented
-@Target({ElementType.TYPE, ElementType.FIELD, ElementType.METHOD, ElementType.CONSTRUCTOR})
+@Target({ElementType.TYPE, ElementType.FIELD, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Awake {
 
     Executes when();
-
-    PlatformType[] platform() default {};
 
     int priority() default 0;
 

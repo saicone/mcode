@@ -31,13 +31,15 @@ subprojects {
         withJavadocJar()
     }
 
-    publishing {
-        publications {
-            maven(MavenPublication) {
-                groupId project.group
-                artifactId project.name
-                version project.version
-                from components.java
+    if (project.name != 'module-env') {
+        publishing {
+            publications {
+                maven(MavenPublication) {
+                    groupId project.group
+                    artifactId project.name
+                    version project.version
+                    from components.java
+                }
             }
         }
     }
@@ -48,6 +50,7 @@ def javadocProjects= [
         // Modules
         'module:module-command',
         'module:module-command-brigadier',
+        'module:module-env',
         'module:module-lang',
         'module:module-lang-adventure',
         'module:module-script',
@@ -91,6 +94,8 @@ task allJavadoc(type: Javadoc) {
         links 'https://javadoc.saicone.com/types/'
         links 'https://javadoc.saicone.com/settings/'
         links 'https://javadoc.saicone.com/delivery4j/'
+
+        links 'https://asm.ow2.io/javadoc/'
 
         // Platforms
         links 'https://hub.spigotmc.org/javadocs/bukkit/'

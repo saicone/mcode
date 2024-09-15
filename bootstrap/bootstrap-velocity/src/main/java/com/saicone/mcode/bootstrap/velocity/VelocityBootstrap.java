@@ -32,6 +32,9 @@ import java.util.function.Supplier;
 public class VelocityBootstrap implements Bootstrap, DelayedExecutor, Registrar {
 
     static {
+        // Put platform addons
+        LIBRARY_LOADER.applyDependency(Addon.PLATFORM_VELOCITY.dependency());
+
         // Class load
         Env.init(VelocityBootstrap.class);
         Env.execute(Executes.BOOT, true);
@@ -95,9 +98,6 @@ public class VelocityBootstrap implements Bootstrap, DelayedExecutor, Registrar 
             throw new RuntimeException("Cannot read velocity-plugin.json from plugin JAR file", e);
         }
 
-        // Put platform addons
-        this.addons.add(Addon.PLATFORM_VELOCITY);
-
         // Load addon libraries
         for (Addon addon : this.addons) {
             getLibraryLoader().loadDependency(addon.dependency());
@@ -108,8 +108,8 @@ public class VelocityBootstrap implements Bootstrap, DelayedExecutor, Registrar 
         build("com.saicone.mcode.velocity.VelocityPlatform", proxy);
         initAddons();
 
-        // Reload Awake annotations, some methods and classes should load correctly with its dependencies loaded
-        Env.reload();
+        // Reload runtime some classes should load correctly with its dependencies loaded
+        Env.runtime().reload();
 
         // Load plugin
         Env.execute(Executes.INIT, true);
