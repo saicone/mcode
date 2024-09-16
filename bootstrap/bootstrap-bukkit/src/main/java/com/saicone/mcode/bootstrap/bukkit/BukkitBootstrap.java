@@ -114,13 +114,14 @@ public class BukkitBootstrap extends JavaPlugin implements Bootstrap {
             init("com.saicone.mcode.bukkit.script.BukkitScripts");
         }
         if (this.addons.contains(Addon.MODULE_TASK)) {
-            final String scheduler;
+            final String schedulerName;
             if (ServerInstance.Platform.FOLIA) {
-                scheduler = "com.saicone.mcode.folia.scheduler.FoliaScheduler";
+                schedulerName = "com.saicone.mcode.folia.scheduler.FoliaScheduler";
             } else {
-                scheduler = "com.saicone.mcode.bukkit.scheduler.BukkitScheduler";
+                schedulerName = "com.saicone.mcode.bukkit.scheduler.BukkitScheduler";
             }
-            run("com.saicone.mcode.module.task.Task", "setScheduler", build(scheduler, this));
+            final Object scheduler = build(schedulerName, this);
+            run("com.saicone.mcode.module.task.Task", "setScheduler", scheduler);
         }
         if (this.addons.contains(Addon.LIBRARY_SETTINGS)) {
             init("com.saicone.mcode.bukkit.settings.BukkitYamlSource");

@@ -115,7 +115,8 @@ public class VelocityBootstrap implements Bootstrap {
             init("com.saicone.mcode.velocity.script.VelocityScripts");
         }
         if (this.addons.contains(Addon.MODULE_TASK)) {
-            run("com.saicone.mcode.module.task.Task", "setScheduler", build("com.saicone.mcode.velocity.scheduler.VelocityScheduler", this.proxy, this));
+            final Object scheduler = build("com.saicone.mcode.velocity.scheduler.VelocityScheduler", this.proxy, this);
+            run("com.saicone.mcode.module.task.Task", "setScheduler", scheduler);
         }
         if (this.addons.contains(Addon.LIBRARY_SETTINGS)) {
             init("com.saicone.mcode.velocity.settings.TomlSettingsSource");

@@ -333,7 +333,7 @@ public class Env {
         }
 
         public boolean shouldRun(@NotNull Executes executes, boolean previous) {
-            return when() == executes && (previous ? priority < 0 : priority > 0) && (condition == null || condition.get());
+            return when() == executes && previous == (priority < 0) && (condition == null || condition.get());
         }
 
         public void run() {
