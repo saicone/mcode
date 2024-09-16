@@ -36,7 +36,7 @@ public interface Bootstrap extends Loader {
             Plugin found = null;
             for (Field field : clazz.getDeclaredFields()) {
                 final int modifiers = field.getModifiers();
-                if (Modifier.isStatic(modifiers) && Modifier.isFinal(modifiers) && clazz.isAssignableFrom(field.getType())) {
+                if (Modifier.isStatic(modifiers) && Modifier.isFinal(modifiers) && field.getType().isAssignableFrom(clazz)) {
                     field.setAccessible(true);
                     found = (Plugin) field.get(null);
                 }

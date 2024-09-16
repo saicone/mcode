@@ -112,7 +112,7 @@ public interface Loader {
         if (executable.getParameterCount() == params.length) {
             int i = 0;
             for (Parameter parameter : executable.getParameters()) {
-                if (!params[i].getClass().isAssignableFrom(parameter.getType())) {
+                if (!parameter.getType().isAssignableFrom(params[i].getClass())) {
                     return false;
                 }
                 i++;
