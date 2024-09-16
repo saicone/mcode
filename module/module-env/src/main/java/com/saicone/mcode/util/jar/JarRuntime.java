@@ -81,6 +81,11 @@ public class JarRuntime extends LinkedHashMap<String, Class<?>> {
     }
 
     @NotNull
+    public ClassLoader getLoader() {
+        return classLoader;
+    }
+
+    @NotNull
     public <T> Iterable<Class<? extends T>> subClasses(@NotNull Class<T> type) {
         return iterableOf(clazz -> clazz.isAssignableFrom(type), clazz -> clazz.asSubclass(type));
     }

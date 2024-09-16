@@ -8,6 +8,7 @@ import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.ClassReader;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -107,8 +108,8 @@ public class Env {
             predicate = descriptor::equals;
         }
         for (Map.Entry<String, Class<?>> entry : RUNTIME.entrySet()) {
-            try {
-                final ClassReader reader = new ClassReader(entry.getKey());
+            try (InputStream input = RUNTIME.getLoader().getResource(entry.getKey()).openStream()) {
+                final ClassReader reader = new ClassReader(input);
                 final AnnotationConsumer annotationConsumer = new AnnotationConsumer(predicate, (name, map) -> {
                     if (name == null) {
                         consumer.accept(entry.getKey(), map);
