@@ -16,9 +16,9 @@ public @interface Awake {
 
     int priority() default 0;
 
-    long delay() default 0;
+    long delay() default 0L;
 
-    long period() default 0;
+    long period() default 0L;
 
     TimeUnit unit() default TimeUnit.SECONDS;
 

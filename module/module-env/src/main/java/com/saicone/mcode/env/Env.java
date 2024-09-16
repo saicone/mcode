@@ -241,9 +241,9 @@ public class Env {
 
     private static void load(@NotNull Map<String, Object> awake, @NotNull Runnable runnable) {
         final Executes when = Executes.valueOf((String) awake.get("when"));
-        final int priority = (int) awake.getOrDefault("priority", 0);
-        final long delay = (long) awake.getOrDefault("delay", 0);
-        final long period = (long) awake.getOrDefault("period", 0);
+        final int priority = ((Number) awake.getOrDefault("priority", 0)).intValue();
+        final long delay = ((Number) awake.getOrDefault("delay", 0)).longValue();
+        final long period = ((Number) awake.getOrDefault("period", 0)).longValue();
         final TimeUnit unit = TimeUnit.valueOf((String) awake.getOrDefault("unit", "SECONDS"));
 
         final Executable executable;
