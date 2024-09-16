@@ -49,9 +49,6 @@ public class PaperBootstrap extends JavaPlugin implements Bootstrap {
 
         // Replace logger with Bukkit logger
         getLibraryLoader().logger((level, msg) -> {
-            if (msg.contains("Ezlib is already initialized")) {
-                return;
-            }
             switch (level) {
                 case 1:
                     getLogger().severe(msg);
