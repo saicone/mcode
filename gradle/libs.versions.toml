@@ -14,7 +14,7 @@ adventure-platform = "4.3.2"
 
 authlib = "1.5.26" # 3.11.50
 brigadier = "1.0.18"
-ezlib = "9b54efca2b"
+ezlib = "8f5d74ca0c"
 delivery4j = "1.0"
 settings = "1.0"
 types = "1.1"
