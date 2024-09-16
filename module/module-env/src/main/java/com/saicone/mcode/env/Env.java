@@ -108,7 +108,7 @@ public class Env {
             predicate = descriptor::equals;
         }
         for (Map.Entry<String, Class<?>> entry : RUNTIME.entrySet()) {
-            try (InputStream input = RUNTIME.getLoader().getResource(entry.getKey()).openStream()) {
+            try (InputStream input = RUNTIME.getLoader().getResource(entry.getKey().replace('.', '/') + ".class").openStream()) {
                 final ClassReader reader = new ClassReader(input);
                 final AnnotationConsumer annotationConsumer = new AnnotationConsumer(predicate, (name, map) -> {
                     if (name == null) {
