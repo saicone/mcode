@@ -90,6 +90,11 @@ public class BukkitBootstrap extends JavaPlugin implements Bootstrap {
             throw new RuntimeException("Cannot read plugin.yml from plugin JAR file", e);
         }
 
+        // Add replacements for libraries
+        if (pluginClass.contains(".")) {
+            getLibraryLoader().replace("{package}", pluginClass.substring(0, pluginClass.lastIndexOf('.')));
+        }
+
         // Load addon libraries
         for (Addon addon : this.addons) {
             getLibraryLoader().loadDependency(addon.dependency());

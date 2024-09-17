@@ -78,6 +78,11 @@ public class BungeeBootstrap extends net.md_5.bungee.api.plugin.Plugin implement
             throw new RuntimeException("Cannot read bungee.yml from plugin JAR file", e);
         }
 
+        // Add replacements for libraries
+        if (pluginClass.contains(".")) {
+            getLibraryLoader().replace("{package}", pluginClass.substring(0, pluginClass.lastIndexOf('.')));
+        }
+
         // Load addon libraries
         for (Addon addon : this.addons) {
             getLibraryLoader().loadDependency(addon.dependency());
