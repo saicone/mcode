@@ -126,14 +126,6 @@ public abstract class DisplayHolder<SenderT> implements LangSupplier {
         getDisplayOrDefault(getEffectiveLanguage(language), path).sendArgs(sender, args);
     }
 
-    public void sendTo(@NotNull SenderT agent, @NotNull SenderT sender, @NotNull String path, @Nullable Object... args) {
-        sendTo(agent, sender, getLanguageFor(sender), path, args);
-    }
-
-    protected void sendTo(@NotNull SenderT agent, @NotNull SenderT sender, @NotNull String language, @NotNull String path, @Nullable Object... args) {
-        getDisplayOrDefault(getEffectiveLanguage(language), path).sendArgs(agent, sender, args);
-    }
-
     public void sendTo(@NotNull SenderT sender, @NotNull String path, @NotNull Function<String, String> parser) {
         sendTo(sender, getLanguageFor(sender), path, parser);
     }
@@ -142,16 +134,24 @@ public abstract class DisplayHolder<SenderT> implements LangSupplier {
         getDisplayOrDefault(getEffectiveLanguage(language), path).sendTo(sender, parser);
     }
 
+    public void sendWith(@NotNull SenderT agent, @NotNull SenderT sender, @NotNull String path, @Nullable Object... args) {
+        sendWith(agent, sender, getLanguageFor(sender), path, args);
+    }
+
+    protected void sendWith(@NotNull SenderT agent, @NotNull SenderT sender, @NotNull String language, @NotNull String path, @Nullable Object... args) {
+        getDisplayOrDefault(getEffectiveLanguage(language), path).sendArgsWith(agent, sender, args);
+    }
+
     public void sendToConsole(@NotNull String path, @Nullable Object... args) {
         getDisplay(getLanguage(), path).sendArgs(getConsole(), args);
     }
 
-    public void sendToConsole(@NotNull SenderT agent, @NotNull String path, @Nullable Object... args) {
-        getDisplay(getLanguage(), path).sendArgs(agent, getConsole(), args);
-    }
-
     public void sendToConsole(@NotNull String path, @NotNull Function<String, String> parser) {
         getDisplay(getLanguage(), path).sendTo(getConsole(), parser);
+    }
+
+    public void sendToConsoleWith(@NotNull SenderT agent, @NotNull String path, @Nullable Object... args) {
+        getDisplay(getLanguage(), path).sendArgsWith(agent, getConsole(), args);
     }
 
     public void sendToAll(@NotNull String path, @Nullable Object... args) {
@@ -160,14 +160,6 @@ public abstract class DisplayHolder<SenderT> implements LangSupplier {
 
     public void sendToAll(@NotNull String language, @NotNull String path, @Nullable Object... args) {
         getDisplayOrDefault(getEffectiveLanguage(language), path).sendArgs(getSenders(), args);
-    }
-
-    public void sendToAll(@NotNull SenderT agent, @NotNull String path, @Nullable Object... args) {
-        getDisplay(getLanguage(), path).sendArgs(getSenders(), agent, args);
-    }
-
-    public void sendToAll(@NotNull SenderT agent, @NotNull String language, @NotNull String path, @Nullable Object... args) {
-        getDisplayOrDefault(getEffectiveLanguage(language), path).sendArgs(getSenders(), agent, args);
     }
 
     public void sendToAll(@NotNull String path, @NotNull Function<String, String> parser) {
@@ -184,5 +176,13 @@ public abstract class DisplayHolder<SenderT> implements LangSupplier {
 
     public void sendToAll(@NotNull String language, @NotNull String path, @NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
         getDisplayOrDefault(getEffectiveLanguage(language), path).sendTo(getSenders(), parser, playerParser);
+    }
+
+    public void sendToAllWith(@NotNull SenderT agent, @NotNull String path, @Nullable Object... args) {
+        getDisplay(getLanguage(), path).sendArgsWith(agent, getSenders(), args);
+    }
+
+    public void sendToAllWith(@NotNull SenderT agent, @NotNull String language, @NotNull String path, @Nullable Object... args) {
+        getDisplayOrDefault(getEffectiveLanguage(language), path).sendArgsWith(agent, getSenders(), args);
     }
 }

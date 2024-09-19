@@ -27,11 +27,11 @@ public interface Display<SenderT> {
         sendTo(senders, s -> Strings.replaceArgs(s, args), (player, s) -> Text.of(s).parse(player).color().getString());
     }
 
-    default void sendArgs(@NotNull SenderT agent, @NotNull SenderT type, @Nullable Object... args) {
+    default void sendArgsWith(@NotNull SenderT agent, @NotNull SenderT type, @Nullable Object... args) {
         sendTo(type, s -> Text.of(s).args(args).parseAgent(type, agent).toString());
     }
 
-    default void sendArgs(@NotNull SenderT agent, @NotNull Collection<? extends SenderT> senders, @Nullable Object... args) {
+    default void sendArgsWith(@NotNull SenderT agent, @NotNull Collection<? extends SenderT> senders, @Nullable Object... args) {
         sendTo(senders, s -> Text.of(s).args(args).parseAgent(agent).toString(), (player, s) -> Text.of(s).parse(player).color().getString());
     }
 

@@ -103,24 +103,24 @@ public interface LangSupplier {
             holder().sendTo(sender, path, args);
         }
 
-        public <SenderT> void sendTo(@NotNull SenderT agent, @NotNull SenderT sender, @Nullable Object... args) {
-            holder().sendTo(agent, sender, path, args);
-        }
-
         public <SenderT> void sendTo(@NotNull SenderT sender, @NotNull Function<String, String> parser) {
             holder().sendTo(sender, path, parser);
+        }
+
+        public <SenderT> void sendWith(@NotNull SenderT agent, @NotNull SenderT sender, @Nullable Object... args) {
+            holder().sendWith(agent, sender, path, args);
         }
 
         public void sendToConsole(@Nullable Object... args) {
             holder.sendToConsole(path, args);
         }
 
-        public <SenderT> void sendToConsole(@NotNull SenderT agent, @Nullable Object... args) {
-            holder().sendToConsole(agent, path, args);
-        }
-
         public void sendToConsole(@NotNull Function<String, String> parser) {
             holder.sendToConsole(path, parser);
+        }
+
+        public <SenderT> void sendToConsoleWith(@NotNull SenderT agent, @Nullable Object... args) {
+            holder().sendToConsoleWith(agent, path, args);
         }
 
         public void sendToAll(@Nullable Object... args) {
@@ -129,14 +129,6 @@ public interface LangSupplier {
 
         public void sendToAll(@NotNull String language, @Nullable Object... args) {
             holder.sendToAll(language, path, args);
-        }
-
-        public <SenderT> void sendToAll(@NotNull SenderT agent, @Nullable Object... args) {
-            holder().sendToAll(agent, path, args);
-        }
-
-        public <SenderT> void sendToAll(@NotNull SenderT agent, @NotNull String language, @Nullable Object... args) {
-            holder().sendToAll(agent, language, path, args);
         }
 
         public void sendToAll(@NotNull Function<String, String> parser) {
@@ -153,6 +145,14 @@ public interface LangSupplier {
 
         public <SenderT> void sendToAll(@NotNull String language, @NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
             holder().sendToAll(language, path, parser, playerParser);
+        }
+
+        public <SenderT> void sendToAllWith(@NotNull SenderT agent, @Nullable Object... args) {
+            holder().sendToAllWith(agent, path, args);
+        }
+
+        public <SenderT> void sendToAllWith(@NotNull SenderT agent, @NotNull String language, @Nullable Object... args) {
+            holder().sendToAllWith(agent, language, path, args);
         }
     }
 }
