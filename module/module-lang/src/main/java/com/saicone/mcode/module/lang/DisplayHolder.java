@@ -143,15 +143,15 @@ public abstract class DisplayHolder<SenderT> implements LangSupplier {
     }
 
     public void sendToConsole(@NotNull String path, @Nullable Object... args) {
-        getDisplay(getLanguage(), path).sendArgs(getConsole(), args);
+        getDisplay(getLanguageFor(null), path).sendArgs(getConsole(), args);
     }
 
     public void sendToConsole(@NotNull String path, @NotNull Function<String, String> parser) {
-        getDisplay(getLanguage(), path).sendTo(getConsole(), parser);
+        getDisplay(getLanguageFor(null), path).sendTo(getConsole(), parser);
     }
 
     public void sendToConsoleWith(@NotNull SenderT agent, @NotNull String path, @Nullable Object... args) {
-        getDisplay(getLanguage(), path).sendArgsWith(agent, getConsole(), args);
+        getDisplay(getLanguageFor(null), path).sendArgsWith(agent, getConsole(), args);
     }
 
     public void sendToAll(@NotNull String path, @Nullable Object... args) {
