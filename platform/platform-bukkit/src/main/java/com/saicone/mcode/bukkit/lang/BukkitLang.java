@@ -8,7 +8,6 @@ import com.saicone.mcode.bukkit.util.ServerInstance;
 import com.saicone.mcode.module.lang.AbstractLang;
 import com.saicone.mcode.module.lang.Displays;
 import com.saicone.mcode.module.lang.display.*;
-import com.saicone.mcode.paper.lang.PaperLang;
 import com.saicone.mcode.util.DMap;
 import com.saicone.mcode.platform.MinecraftVersion;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -49,22 +48,18 @@ public class BukkitLang extends AbstractLang<CommandSender> {
     public static final TextLoader TEXT = new TextLoader();
     public static final TitleLoader TITLE = new TitleLoader();
 
-    private static final boolean USE_ADVENTURE;
     protected static final boolean CREATE_AUDIENCE;
     private static final boolean USE_XSERIES;
 
     static {
-        boolean useAdventure = false;
         boolean createAudience = true;
         try {
             final Class<?> audience = Class.forName("net.kyori.adventure.audience.Audience");
-            useAdventure = true;
             // Check native support
             if (audience.isAssignableFrom(CommandSender.class)) {
                 createAudience = false;
             }
         } catch (Throwable ignored) { }
-        USE_ADVENTURE = useAdventure;
         CREATE_AUDIENCE = createAudience;
 
         boolean useXSeries = false;
@@ -90,17 +85,6 @@ public class BukkitLang extends AbstractLang<CommandSender> {
     private boolean useConfig;
 
     private transient Map<String, String> cachedAliases;
-
-    @NotNull
-    public static BukkitLang of(@NotNull Plugin plugin, @NotNull Object... providers) {
-        if (USE_ADVENTURE) {
-            if (CREATE_AUDIENCE) {
-                return new BukkitAdventureLang(plugin, providers);
-            }
-            return new PaperLang(plugin, providers);
-        }
-        return new BukkitLang(plugin, providers);
-    }
 
     public BukkitLang(@NotNull Plugin plugin, @NotNull Object... providers) {
         super(providers);
