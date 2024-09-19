@@ -48,6 +48,9 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
     }
 
     public void load(@NotNull File langFolder) {
+        if (langSupplier != null) {
+            langSupplier.load();
+        }
         if (!langFolder.exists()) {
             langFolder.mkdirs();
         }

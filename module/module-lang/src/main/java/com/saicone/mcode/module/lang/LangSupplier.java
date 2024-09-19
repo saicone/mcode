@@ -27,6 +27,10 @@ public interface LangSupplier {
     );
     int DEFAULT_LOG_LEVEL = 2;
 
+    default void load() {
+        // empty default method
+    }
+
     @NotNull
     String getLanguage();
 
