@@ -26,6 +26,24 @@ public class Task {
         }
     }
 
+    public static Object sync(@NotNull Runnable runnable) {
+        if (isMainThread()) {
+            runnable.run();
+            return null;
+        } else {
+            return SCHEDULER.run(runnable);
+        }
+    }
+
+    public static Object async(@NotNull Runnable runnable) {
+        if (isMainThread()) {
+            return SCHEDULER.runAsync(runnable);
+        } else {
+            runnable.run();
+            return null;
+        }
+    }
+
     public static Object run(@NotNull Runnable runnable) {
         return SCHEDULER.run(runnable);
     }
