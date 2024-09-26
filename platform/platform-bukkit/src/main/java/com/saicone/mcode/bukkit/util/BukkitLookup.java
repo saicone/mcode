@@ -6,7 +6,7 @@ import org.bukkit.Bukkit;
 
 public class BukkitLookup extends EasyLookup {
 
-    private static final String nmsPackage = MinecraftVersion.SERVER.isUniversal() ? "net.minecraft." : ("net.minecraft.server." + MinecraftVersion.SERVER.getBukkitPackage() + ".");
+    private static final String nmsPackage = MinecraftVersion.SERVER.isUniversal() ? "net.minecraft." : ("net.minecraft.server." + MinecraftVersion.SERVER.bukkitPackage() + ".");
     private static final String obcPackage = Bukkit.getServer().getClass().getPackage().getName() + ".";
 
     static {
@@ -35,7 +35,7 @@ public class BukkitLookup extends EasyLookup {
             }
 
             // DataComponent
-            if (MinecraftVersion.SERVER.isDataComponent()) {
+            if (MinecraftVersion.SERVER.isComponent()) {
                 addNMSClass("core.component.DataComponentHolder");
                 addNMSClass("core.component.DataComponentMap");
                 addNMSClassId("DataComponentMap.Builder", "core.component.DataComponentMap$a", "core.component.DataComponentMap$Builder");

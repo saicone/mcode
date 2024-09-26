@@ -107,9 +107,14 @@ public enum MinecraftVersion {
     private final int feature;
     private final int minor;
 
-    private final float floatVersion;
-    private final int fullVersion;
+    private final float featRevision;
+    private final int fullRevision;
     private final String bukkitPackage;
+
+    private transient final boolean legacy;
+    private transient final boolean flat;
+    private transient final boolean universal;
+    private transient final boolean component;
 
     MinecraftVersion(@Nullable Integer dataVersion, int protocol, int resourcePackFormat, @Nullable Integer dataPackFormat, int revision) {
         this.dataVersion = dataVersion;
@@ -125,27 +130,32 @@ public enum MinecraftVersion {
         this.minor = split.length > 3 ? Integer.parseInt(split[3]) : 0;
 
         final String featureFormatted = feature >= 10 ? String.valueOf(feature) : "0" + feature;
-        final String minorFormatted = minor >= 10 ? String.valueOf(minor) : "0" + minor;
+        final String revisionFormatted = revision >= 10 ? String.valueOf(revision) : "0" + revision;
 
-        this.floatVersion = Float.parseFloat(feature + "." + minorFormatted);
-        this.fullVersion = Integer.parseInt(split[1] + featureFormatted + minorFormatted);
+        this.featRevision = Float.parseFloat(feature + "." + revisionFormatted);
+        this.fullRevision = Integer.parseInt(split[1] + featureFormatted + revisionFormatted);
         this.bukkitPackage = "v" + split[1] + "_" + feature + "_R" + revision;
+
+        this.legacy = major <= 12;
+        this.flat = major >= 13;
+        this.universal = major >= 17;
+        this.component = dataVersion != null && dataVersion >= 3837;
     }
 
     public boolean isLegacy() {
-        return major <= 12;
+        return legacy;
     }
 
     public boolean isFlat() {
-        return major >= 13;
+        return flat;
     }
 
     public boolean isUniversal() {
-        return major >= 17;
+        return universal;
     }
 
-    public boolean isDataComponent() {
-        return dataVersion >= 3837;
+    public boolean isComponent() {
+        return component;
     }
 
     public boolean isOlderThan(@NotNull MinecraftVersion version) {
@@ -162,6 +172,10 @@ public enum MinecraftVersion {
 
     public boolean isNewerThanOrEquals(@NotNull MinecraftVersion version) {
         return this.ordinal() >= version.ordinal();
+    }
+
+    public boolean isBetween(@NotNull MinecraftVersion version1, @NotNull MinecraftVersion version2) {
+        return (this.ordinal() >= version1.ordinal() && this.ordinal() <= version2.ordinal()) || (this.ordinal() >= version2.ordinal() && this.ordinal() <= version1.ordinal());
     }
 
     @Nullable
@@ -198,16 +212,16 @@ public enum MinecraftVersion {
         return minor;
     }
 
-    public float getFloatVersion() {
-        return floatVersion;
+    public float featRevision() {
+        return featRevision;
     }
 
-    public int getFullVersion() {
-        return fullVersion;
+    public int fullRevision() {
+        return fullRevision;
     }
 
     @NotNull
-    public String getBukkitPackage() {
+    public String bukkitPackage() {
         return bukkitPackage;
     }
 
