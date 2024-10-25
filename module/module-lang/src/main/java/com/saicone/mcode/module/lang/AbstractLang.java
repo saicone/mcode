@@ -39,6 +39,7 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
         }
         this.langSupplier = langSupplier;
         this.langProviders = langProviders;
+        langProviders[langProviders.length - 1] = this.getClass();
         computePaths();
         computeDisplayLoaders();
     }
@@ -240,8 +241,9 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
     @SuppressWarnings("unchecked")
     private <T> void computeFields(@NotNull Class<?>[] classes, @NotNull Class<T> classType, @NotNull BiConsumer<String, T> consumer) {
         for (Class<?> provided : classes) {
+            if (provided == null) continue;
             // Check every superclass
-            for (Class<?> clazz = provided; clazz != Object.class; clazz = clazz.getSuperclass()) {
+            for (Class<?> clazz = provided; clazz != null && clazz != Object.class; clazz = clazz.getSuperclass()) {
                 for (Field field : clazz.getDeclaredFields()) {
                     if (classType.isAssignableFrom(field.getType())) {
                         field.setAccessible(true);

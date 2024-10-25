@@ -67,8 +67,12 @@ public class VelocityLang extends AbstractLang<CommandSource> implements Adventu
 
     @Override
     public @NotNull String getLanguageFor(@Nullable Object object) {
-        if (object instanceof Player) {
-            return ((Player) object).getPlayerSettings().getLocale().toLanguageTag().replace('-', '_');
+        if (object instanceof CommandSource) {
+            if (object instanceof Player player) {
+                return player.getPlayerSettings().getLocale().toLanguageTag().replace('-', '_');
+            } else {
+                return super.getLanguageFor(null);
+            }
         }
         return super.getLanguageFor(object);
     }
@@ -123,11 +127,15 @@ public class VelocityLang extends AbstractLang<CommandSource> implements Adventu
 
     @Override
     protected void saveFile(@NotNull File folder, @NotNull String name) {
+        final File file = new File(folder, name);
+        if (file.exists()) {
+            return;
+        }
         try (InputStream in = plugin.getClass().getClassLoader().getResourceAsStream("lang/" + name)) {
             if (in == null) {
                 return;
             }
-            Files.copy(in, new File(folder, name).toPath());
+            Files.copy(in, file.toPath());
         } catch (IOException e) {
             sendLog(2, e);
         }

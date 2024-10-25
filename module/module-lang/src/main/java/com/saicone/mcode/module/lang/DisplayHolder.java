@@ -55,7 +55,7 @@ public abstract class DisplayHolder<SenderT> implements LangSupplier {
     @NotNull
     public Display<SenderT> getDisplayOrDefault(@NotNull Object language, @NotNull String key) {
         final Display<SenderT> display = getDisplayOrNull(language, key);
-        if (display == null && !getLanguage().equals(language)) {
+        if (display != null) {
             return getDisplay(key);
         }
         return Display.empty();

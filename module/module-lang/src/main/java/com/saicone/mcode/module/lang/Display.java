@@ -20,7 +20,7 @@ public interface Display<SenderT> {
     }
 
     default void sendArgs(@NotNull SenderT type, @Nullable Object... args) {
-        sendTo(type, s -> Text.of(s).args(args).parse(type).toString());
+        sendTo(type, s -> Text.of(s).args(args).parse(type).color().getString());
     }
 
     default void sendArgs(@NotNull Collection<? extends SenderT> senders, @Nullable Object... args) {
@@ -28,11 +28,11 @@ public interface Display<SenderT> {
     }
 
     default void sendArgsWith(@NotNull SenderT agent, @NotNull SenderT type, @Nullable Object... args) {
-        sendTo(type, s -> Text.of(s).args(args).parseAgent(type, agent).toString());
+        sendTo(type, s -> Text.of(s).args(args).parseAgent(type, agent).color().getString());
     }
 
     default void sendArgsWith(@NotNull SenderT agent, @NotNull Collection<? extends SenderT> senders, @Nullable Object... args) {
-        sendTo(senders, s -> Text.of(s).args(args).parseAgent(agent).toString(), (player, s) -> Text.of(s).parse(player).color().getString());
+        sendTo(senders, s -> Text.of(s).args(args).parseAgent(agent).getString(), (player, s) -> Text.of(s).parse(player).color().getString());
     }
 
     void sendTo(@NotNull SenderT type, @NotNull Function<String, String> parser);

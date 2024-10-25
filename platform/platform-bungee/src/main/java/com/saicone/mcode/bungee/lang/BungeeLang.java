@@ -71,8 +71,12 @@ public class BungeeLang extends AbstractLang<CommandSender> {
 
     @Override
     public @NotNull String getLanguageFor(@Nullable Object object) {
-        if (object instanceof ProxiedPlayer) {
-            return ((ProxiedPlayer) object).getLocale().toLanguageTag().replace('-', '_');
+        if (object instanceof CommandSender) {
+            if (object instanceof ProxiedPlayer) {
+                return ((ProxiedPlayer) object).getLocale().toLanguageTag().replace('-', '_');
+            } else {
+                return super.getLanguageFor(null);
+            }
         }
         return super.getLanguageFor(object);
     }
@@ -125,11 +129,15 @@ public class BungeeLang extends AbstractLang<CommandSender> {
 
     @Override
     protected void saveFile(@NotNull File folder, @NotNull String name) {
+        final File file = new File(folder, name);
+        if (file.exists()) {
+            return;
+        }
         try (InputStream in = plugin.getResourceAsStream("lang/" + name)) {
             if (in == null) {
                 return;
             }
-            Files.copy(in, new File(folder, name).toPath());
+            Files.copy(in, file.toPath());
         } catch (IOException e) {
             sendLog(2, e);
         }
