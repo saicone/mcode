@@ -23,7 +23,7 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
 
     // Mutable parameters
     private transient boolean useSettings;
-    private transient String filePrefix = ".yml";
+    private transient String fileSuffix = ".yml";
     private transient String displayType = Display.DEFAULT_TYPE;
 
     public AbstractLang(@NotNull Object... providers) {
@@ -57,12 +57,12 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
         }
         // Save language files
         for (String language : getLanguageTypes()) {
-            saveFile(langFolder, language + filePrefix);
+            saveFile(langFolder, language + fileSuffix);
             final int index = language.indexOf('_');
             if (index > 0) {
                 final String formatted = language.substring(0, index).toLowerCase() + "_" + language.substring(index + 1).toUpperCase();
                 if (!formatted.equals(language)) {
-                    saveFile(langFolder, formatted + filePrefix);
+                    saveFile(langFolder, formatted + fileSuffix);
                 }
             }
         }
@@ -92,8 +92,8 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
         this.useSettings = useSettings;
     }
 
-    public void setFilePrefix(@NotNull String filePrefix) {
-        this.filePrefix = filePrefix;
+    public void setFileSuffix(@NotNull String fileSuffix) {
+        this.fileSuffix = fileSuffix;
     }
 
     public void setDisplayType(@NotNull String displayType) {
@@ -159,8 +159,8 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
     }
 
     @NotNull
-    public String getFilePrefix() {
-        return filePrefix;
+    public String getFileSuffix() {
+        return fileSuffix;
     }
 
     @NotNull
