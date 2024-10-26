@@ -111,5 +111,18 @@ public class AnnotationMapper extends AnnotationVisitor {
             this.array.add(value);
             super.visit(name, value);
         }
+
+        @Override
+        public void visitEnum(String name, String descriptor, String value) {
+            this.array.add(value); // Do not convert String value into provided descriptor class
+            super.visitEnum(name, descriptor, value);
+        }
+
+        @Override
+        public AnnotationVisitor visitAnnotation(String name, String descriptor) {
+            final Map<String, Object> annotation = new HashMap<>();
+            this.array.add(annotation);
+            return new AnnotationMapper(annotation, super.visitAnnotation(name, descriptor));
+        }
     }
 }

@@ -13,7 +13,7 @@ jar {
 
 shadowJar {
     archiveClassifier.set('')
-    relocate 'org.objectweb.asm', project.group + '.asm'
+    relocate 'org.objectweb.asm', 'com.saicone.mcode.asm'
 }
 
 publishing {
