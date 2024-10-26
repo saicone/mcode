@@ -184,6 +184,14 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
     }
 
     @Override
+    public @NotNull String getLanguageFor(@Nullable Object object) {
+        if (langSupplier != null) {
+            return langSupplier.getLanguageFor(object);
+        }
+        return super.getLanguageFor(object);
+    }
+
+    @Override
     public @NotNull Set<String> getLanguageTypes() {
         if (langSupplier != null) {
             return langSupplier.getLanguageTypes();
@@ -197,6 +205,14 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
             return langSupplier.getLanguageAliases();
         }
         return super.getLanguageAliases();
+    }
+
+    @Override
+    public @NotNull String getEffectiveLanguage(@NotNull Object language) {
+        if (langSupplier != null) {
+            return langSupplier.getEffectiveLanguage(language);
+        }
+        return super.getEffectiveLanguage(language);
     }
 
     @Override
