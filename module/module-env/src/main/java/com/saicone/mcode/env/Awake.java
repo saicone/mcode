@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Awake {
 
-    Executes when();
+    Executes[] when();
 
     int priority() default 0;
 

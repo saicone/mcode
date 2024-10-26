@@ -16,8 +16,10 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
@@ -90,7 +92,7 @@ public class Env {
     public static void execute(@NotNull Executes executes, boolean previous) {
         for (Executable executable : EXECUTABLES) {
             if (executable.shouldRun(executes, previous)) {
-                executable.run();
+                executable.run(executes);
             }
         }
     }
@@ -239,8 +241,12 @@ public class Env {
         return instance;
     }
 
+    @SuppressWarnings("unchecked")
     private static void load(@NotNull Map<String, Object> awake, @NotNull Runnable runnable) {
-        final Executes when = Executes.valueOf((String) awake.get("when"));
+        final Set<Executes> when = new HashSet<>();
+        for (String name : (List<String>) awake.getOrDefault("when", List.<String>of())) {
+            when.add(Executes.valueOf(name));
+        }
         final int priority = ((Number) awake.getOrDefault("priority", 0)).intValue();
         final long delay = ((Number) awake.getOrDefault("delay", 0)).longValue();
         final long period = ((Number) awake.getOrDefault("period", 0)).longValue();
@@ -321,11 +327,11 @@ public class Env {
     private static class Executable {
 
         private final Runnable runnable;
-        private final Executes when;
+        private final Set<Executes> when;
         private final int priority;
         private final Supplier<Boolean> condition;
 
-        public Executable(@NotNull Runnable runnable, @NotNull Executes when, int priority, @Nullable Supplier<Boolean> condition) {
+        public Executable(@NotNull Runnable runnable, @NotNull Set<Executes> when, int priority, @Nullable Supplier<Boolean> condition) {
             this.runnable = runnable;
             this.when = when;
             this.priority = priority;
@@ -333,10 +339,10 @@ public class Env {
         }
 
         public boolean shouldRun(@NotNull Executes executes, boolean previous) {
-            return when() == executes && previous == (priority < 0) && (condition == null || condition.get());
+            return when().contains(executes) && previous == (priority < 0) && (condition == null || condition.get());
         }
 
-        public void run() {
+        public void run(@NotNull Executes executes) {
             runnable().run();
         }
 
@@ -345,8 +351,7 @@ public class Env {
             return runnable;
         }
 
-        @NotNull
-        public Executes when() {
+        public @NotNull Set<Executes> when() {
             return when;
         }
 
@@ -365,16 +370,16 @@ public class Env {
         private final long delay;
         private final TimeUnit unit;
 
-        public DelayedExecutable(@NotNull Runnable runnable, @NotNull Executes when, int priority, @Nullable Supplier<Boolean> condition, long delay, @NotNull TimeUnit unit) {
+        public DelayedExecutable(@NotNull Runnable runnable, @NotNull Set<Executes> when, int priority, @Nullable Supplier<Boolean> condition, long delay, @NotNull TimeUnit unit) {
             super(runnable, when, priority, condition);
             this.delay = delay;
             this.unit = unit;
         }
 
         @Override
-        public void run() {
-            if (EXECUTOR == null || when() == Executes.DISABLE) {
-                throw new IllegalStateException("Cannot run delayed awake " + (priority() < 0 ? "before" : "on") + " " + when().name());
+        public void run(@NotNull Executes executes) {
+            if (EXECUTOR == null || executes == Executes.DISABLE) {
+                throw new IllegalStateException("Cannot run delayed awake " + (priority() < 0 ? "before" : "on") + " " + executes.name());
             }
             EXECUTOR.execute(runnable(), delay(), unit());
         }
@@ -392,15 +397,15 @@ public class Env {
 
         private final long period;
 
-        public PeriodicExecutable(@NotNull Runnable runnable, @NotNull Executes when, int priority, @Nullable Supplier<Boolean> condition, long delay, long period, @NotNull TimeUnit unit) {
+        public PeriodicExecutable(@NotNull Runnable runnable, @NotNull Set<Executes> when, int priority, @Nullable Supplier<Boolean> condition, long delay, long period, @NotNull TimeUnit unit) {
             super(runnable, when, priority, condition, delay, unit);
             this.period = period;
         }
 
         @Override
-        public void run() {
-            if (EXECUTOR == null || when() == Executes.DISABLE) {
-                throw new IllegalStateException("Cannot run periodic awake " + (priority() < 0 ? "before" : "on") + " " + when().name());
+        public void run(@NotNull Executes executes) {
+            if (EXECUTOR == null || executes == Executes.DISABLE) {
+                throw new IllegalStateException("Cannot run periodic awake " + (priority() < 0 ? "before" : "on") + " " + executes.name());
             }
             EXECUTOR.execute(runnable(), delay(), period(), unit());
         }
