@@ -73,11 +73,7 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
         for (var entry : getObjects(file).entrySet()) {
             final Display<SenderT> display = loadDisplayOrNull(entry.getValue());
             if (display != null) {
-                if (!displays.containsKey(language)) {
-                    displays.put(language, new HashMap<>());
-                }
-                final Map<String, Display<SenderT>> map = displays.get(language);
-                map.put(entry.getKey(), display);
+                this.put(language, entry.getKey(), display);
             }
         }
     }

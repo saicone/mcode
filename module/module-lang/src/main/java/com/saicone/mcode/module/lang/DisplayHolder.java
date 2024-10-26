@@ -12,7 +12,7 @@ import java.util.function.Function;
 
 public abstract class DisplayHolder<SenderT> implements LangSupplier {
 
-    protected final Map<String, Map<String, Display<SenderT>>> displays = new HashMap<>();
+    private final Map<String, Map<String, Display<SenderT>>> displays = new HashMap<>();
 
     @Nullable
     public Display<SenderT> put(@NotNull String language, @NotNull String key, @NotNull Display<SenderT> display) {
@@ -56,7 +56,7 @@ public abstract class DisplayHolder<SenderT> implements LangSupplier {
     public Display<SenderT> getDisplayOrDefault(@NotNull Object language, @NotNull String key) {
         final Display<SenderT> display = getDisplayOrNull(language, key);
         if (display != null) {
-            return getDisplay(key);
+            return display;
         }
         return Display.empty();
     }
