@@ -14,6 +14,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public interface Loader {
 
@@ -46,10 +47,20 @@ public interface Loader {
             gson.load();
         }
 
+        final Logger logger = Logger.getLogger(JAR_NAME);
         final EzlibLoader libraryLoader = new EzlibLoader(Loader.class.getClassLoader(), null, ezlib).logger((level, msg) -> {
-            if (level <= 3) {
-                final String prefix = level == 1 ? "\u001B[31m" : level == 2 ? "\u001B[33m" : "";
-                System.out.println(prefix + "[" + JAR_NAME + "] " + msg);
+            switch (level) {
+                case 1:
+                    logger.severe(msg);
+                    break;
+                case 2:
+                    logger.warning(msg);
+                    break;
+                case 3:
+                    logger.info(msg);
+                    break;
+                default:
+                    break;
             }
         }).xmlParser(new EzlibLoader.XmlParser());
         libraryLoader.applyAnnotationsDependency();
