@@ -9,7 +9,7 @@ import com.saicone.mcode.module.lang.AbstractLang;
 import com.saicone.mcode.module.lang.Displays;
 import com.saicone.mcode.module.lang.display.*;
 import com.saicone.mcode.util.DMap;
-import com.saicone.mcode.platform.MinecraftVersion;
+import com.saicone.mcode.platform.MC;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
@@ -378,7 +378,7 @@ public class BukkitLang extends AbstractLang<CommandSender> {
             if (sender instanceof Player) {
                 if (USE_XSERIES) {
                     Titles.sendTitle((Player) sender, fadeIn, stay, fadeOut, title, subtitle);
-                } else if (MinecraftVersion.SERVER.isNewerThanOrEquals(MinecraftVersion.V_1_9)) {
+                } else if (MC.version().isNewerThanOrEquals(MC.V_1_9)) {
                     ((Player) sender).sendTitle(title, subtitle, fadeIn, stay, fadeOut);
                 } else {
                     ((Player) sender).sendTitle(title, subtitle);
@@ -398,7 +398,7 @@ public class BukkitLang extends AbstractLang<CommandSender> {
                     ActionBar.sendActionBar((Player) sender, actionbar);
                 } else if (ServerInstance.Platform.SPIGOT) {
                     ((Player) sender).spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR, net.md_5.bungee.api.chat.TextComponent.fromLegacyText(actionbar));
-                } else if (Bukkit.isPrimaryThread() && MinecraftVersion.SERVER.isNewerThanOrEquals(MinecraftVersion.V_1_11)) {
+                } else if (Bukkit.isPrimaryThread() && MC.version().isNewerThanOrEquals(MC.V_1_11)) {
                     Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "minecraft:title " + sender.getName() + " actionbar {\"text\":\"" + ChatColor.stripColor(actionbar) + "\"}");
                 } else {
                     sender.sendMessage(actionbar);

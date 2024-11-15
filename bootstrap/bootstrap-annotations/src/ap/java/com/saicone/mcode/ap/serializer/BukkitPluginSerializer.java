@@ -2,7 +2,7 @@ package com.saicone.mcode.ap.serializer;
 
 import com.saicone.mcode.ap.SerializedDependency;
 import com.saicone.mcode.bootstrap.PluginDescription;
-import com.saicone.mcode.platform.MinecraftVersion;
+import com.saicone.mcode.platform.MC;
 
 import java.io.BufferedWriter;
 import java.util.HashSet;
@@ -57,11 +57,11 @@ public class BukkitPluginSerializer extends YamlSerializer {
         // Behaviour
 
         if (!this.plugin.compatibility().isBlank()) {
-            final MinecraftVersion version = MinecraftVersion.fromString(this.plugin.compatibility().split("-")[0].trim());
+            final MC version = MC.fromString(this.plugin.compatibility().split("-")[0].trim());
             if (version != null) {
-                if (version.isOlderThan(MinecraftVersion.V_1_13)) {
+                if (version.isOlderThan(MC.V_1_13)) {
                     map.put("api-version", "1.13");
-                } else if (version.isOlderThan(MinecraftVersion.V_1_20_5)) {
+                } else if (version.isOlderThan(MC.V_1_20_5)) {
                     map.put("api-version", version.major() + "." + version.feature());
                 } else {
                     map.put("api-version", version.major() + "." + version.feature() + "." + version.minor());

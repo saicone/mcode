@@ -1,12 +1,13 @@
 package com.saicone.mcode.platform;
 
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.function.Function;
 
-public enum MinecraftVersion {
+public enum MC {
 
     V_1_7(null, 3, 1, null, 1),
     V_1_7_1(null, 3, 1, null, 1),
@@ -92,10 +93,13 @@ public enum MinecraftVersion {
     V_1_20_6(3839, 766, 32, 41, 4),
 
     V_1_21(3953, 767, 34, 48, 1),
-    V_1_21_1(3955, 767, 34, 48, 1);
+    V_1_21_1(3955, 767, 34, 48, 1),
+    V_1_21_2(4080, 768, 42, 57, 2),
+    V_1_21_3(4082, 768, 42, 57, 2);
 
-    public static final MinecraftVersion[] VALUES = values();
-    public static MinecraftVersion SERVER = VALUES[VALUES.length - 1];
+    public static final MC[] VALUES = values();
+    @ApiStatus.Internal
+    public static MC VERSION = VALUES[VALUES.length - 1];
 
     private final Integer dataVersion;
     private final int protocol;
@@ -116,7 +120,12 @@ public enum MinecraftVersion {
     private transient final boolean universal;
     private transient final boolean component;
 
-    MinecraftVersion(@Nullable Integer dataVersion, int protocol, int resourcePackFormat, @Nullable Integer dataPackFormat, int revision) {
+    @NotNull
+    public static MC version() {
+        return VERSION;
+    }
+
+    MC(@Nullable Integer dataVersion, int protocol, int resourcePackFormat, @Nullable Integer dataPackFormat, int revision) {
         this.dataVersion = dataVersion;
         this.protocol = protocol;
         this.resourcePackFormat = resourcePackFormat;
@@ -158,23 +167,23 @@ public enum MinecraftVersion {
         return component;
     }
 
-    public boolean isOlderThan(@NotNull MinecraftVersion version) {
+    public boolean isOlderThan(@NotNull MC version) {
         return this.ordinal() < version.ordinal();
     }
 
-    public boolean isOlderThanOrEquals(@NotNull MinecraftVersion version) {
+    public boolean isOlderThanOrEquals(@NotNull MC version) {
         return this.ordinal() <= version.ordinal();
     }
 
-    public boolean isNewerThan(@NotNull MinecraftVersion version) {
+    public boolean isNewerThan(@NotNull MC version) {
         return this.ordinal() > version.ordinal();
     }
 
-    public boolean isNewerThanOrEquals(@NotNull MinecraftVersion version) {
+    public boolean isNewerThanOrEquals(@NotNull MC version) {
         return this.ordinal() >= version.ordinal();
     }
 
-    public boolean isBetween(@NotNull MinecraftVersion version1, @NotNull MinecraftVersion version2) {
+    public boolean isBetween(@NotNull MC version1, @NotNull MC version2) {
         return (this.ordinal() >= version1.ordinal() && this.ordinal() <= version2.ordinal()) || (this.ordinal() >= version2.ordinal() && this.ordinal() <= version1.ordinal());
     }
 
@@ -226,8 +235,8 @@ public enum MinecraftVersion {
     }
 
     @Nullable
-    public static MinecraftVersion fromString(@NotNull String s) {
-        final String[] split = s.split("\\.");
+    public static MC fromString(@NotNull String s) {
+        final String[] split = s.replace("MC:", "").trim().split("\\.");
         if (split.length < 2) {
             return null;
         }
@@ -241,7 +250,7 @@ public enum MinecraftVersion {
             feature = Integer.parseInt(split[1]);
             minor = split.length > 2 ? Integer.parseInt(split[2].split("[-_]")[0]) : 0;
         }
-        for (MinecraftVersion value : VALUES) {
+        for (MC value : VALUES) {
             if (value.major == major && value.feature == feature && value.minor == minor) {
                 return value;
             }
@@ -250,10 +259,10 @@ public enum MinecraftVersion {
     }
     
     @Nullable
-    public static <T> MinecraftVersion from(@NotNull Function<@NotNull MinecraftVersion, @Nullable T> valueFunction, @Nullable T t) {
+    public static <T> MC from(@NotNull Function<@NotNull MC, @Nullable T> valueFunction, @Nullable T t) {
         final boolean isNumber = t instanceof Number;
         for (int i = VALUES.length; i-- > 0; ) {
-            final MinecraftVersion value = VALUES[i];
+            final MC value = VALUES[i];
             final T obj = valueFunction.apply(value);
             if (isNumber && obj instanceof Number) {
                 if (((Number) obj).doubleValue() >= ((Number) t).doubleValue()) {

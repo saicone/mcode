@@ -4,7 +4,7 @@ import com.saicone.mcode.Platform;
 import com.saicone.mcode.bukkit.util.ServerInstance;
 import com.saicone.mcode.platform.PlatformType;
 import com.saicone.mcode.util.MStrings;
-import com.saicone.mcode.platform.MinecraftVersion;
+import com.saicone.mcode.platform.MC;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.jetbrains.annotations.NotNull;
@@ -18,7 +18,7 @@ public class BukkitPlatform extends Platform {
     public BukkitPlatform() {
         super(ServerInstance.Platform.PAPER ? PlatformType.PAPER : ServerInstance.Platform.SPIGOT ? PlatformType.SPIGOT : PlatformType.BUKKIT);
         MStrings.BUNGEE_HEX = true;
-        MinecraftVersion.SERVER = MinecraftVersion.fromString(Bukkit.getServer().getBukkitVersion());
+        MC.VERSION = MC.fromString(Bukkit.getServer().getBukkitVersion());
     }
 
     @Override

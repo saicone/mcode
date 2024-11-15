@@ -1,12 +1,12 @@
 package com.saicone.mcode.bukkit.util;
 
 import com.saicone.mcode.util.EasyLookup;
-import com.saicone.mcode.platform.MinecraftVersion;
+import com.saicone.mcode.platform.MC;
 import org.bukkit.Bukkit;
 
 public class BukkitLookup extends EasyLookup {
 
-    private static final String nmsPackage = MinecraftVersion.SERVER.isUniversal() ? "net.minecraft." : ("net.minecraft.server." + MinecraftVersion.SERVER.bukkitPackage() + ".");
+    private static final String nmsPackage = MC.version().isUniversal() ? "net.minecraft." : ("net.minecraft.server." + MC.version().bukkitPackage() + ".");
     private static final String obcPackage = Bukkit.getServer().getClass().getPackage().getName() + ".";
 
     static {
@@ -22,7 +22,7 @@ public class BukkitLookup extends EasyLookup {
             addNMSClass("nbt.NBTTagIntArray", "IntArrayTag");
             addNMSClass("nbt.NBTTagList", "ListTag");
             addNMSClass("nbt.NBTTagLong", "LongTag");
-            if (MinecraftVersion.SERVER.isNewerThanOrEquals(MinecraftVersion.V_1_12)) {
+            if (MC.version().isNewerThanOrEquals(MC.V_1_12)) {
                 addNMSClass("nbt.NBTTagLongArray", "LongArrayTag");
             }
             addNMSClass("nbt.NBTTagShort", "ShortTag");
@@ -30,12 +30,12 @@ public class BukkitLookup extends EasyLookup {
             addNMSClass("nbt.NBTCompressedStreamTools", "NbtIo");
             addNMSClass("nbt.NBTReadLimiter", "NbtAccounter");
             addNMSClass("nbt.MojangsonParser", "TagParser");
-            if (MinecraftVersion.SERVER.isFlat()) {
+            if (MC.version().isFlat()) {
                 addNMSClass("nbt.DynamicOpsNBT", "NbtOps");
             }
 
             // DataComponent
-            if (MinecraftVersion.SERVER.isComponent()) {
+            if (MC.version().isComponent()) {
                 addNMSClass("core.component.DataComponentHolder");
                 addNMSClass("core.component.DataComponentMap");
                 addNMSClassId("DataComponentMap.Builder", "core.component.DataComponentMap$a", "core.component.DataComponentMap$Builder");
@@ -104,7 +104,7 @@ public class BukkitLookup extends EasyLookup {
                 aliases[i] = nmsPackage + alias;
             }
         }
-        if (MinecraftVersion.SERVER.isUniversal()) {
+        if (MC.version().isUniversal()) {
             return nmsPackage + name;
         } else {
             return nmsPackage + (name.contains(".") ? name.substring(name.lastIndexOf('.') + 1) : name);

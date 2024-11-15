@@ -7,7 +7,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
-import com.saicone.mcode.platform.MinecraftVersion;
+import com.saicone.mcode.platform.MC;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -52,7 +52,7 @@ public class SkullTexture {
     private static final Cache<String, String> TEXTURE_CACHE = CacheBuilder.newBuilder().expireAfterAccess(3, TimeUnit.HOURS).build();
 
     static {
-        if (MinecraftVersion.SERVER.isFlat()) {
+        if (MC.version().isFlat()) {
             PLAYER_HEAD = new ItemStack(Material.PLAYER_HEAD);
         } else {
             PLAYER_HEAD = new ItemStack(Material.getMaterial("SKULL_ITEM"), 1, (short) 3);
@@ -67,7 +67,7 @@ public class SkullTexture {
             get$profile = BukkitLookup.method("CraftPlayer", "getProfile", GameProfile.class);
             // Unreflect reason:
             // Private method/field
-            if (MinecraftVersion.SERVER.isNewerThanOrEquals(MinecraftVersion.V_1_15)) {
+            if (MC.version().isNewerThanOrEquals(MC.V_1_15)) {
                 set$profile = BukkitLookup.unreflectMethod("CraftMetaSkull", "setProfile", GameProfile.class);
             } else {
                 set$profile = BukkitLookup.unreflectSetter("CraftMetaSkull", "profile");
