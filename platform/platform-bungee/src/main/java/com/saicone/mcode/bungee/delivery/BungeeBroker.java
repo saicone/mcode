@@ -2,7 +2,7 @@ package com.saicone.mcode.bungee.delivery;
 
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteStreams;
-import com.saicone.delivery4j.DeliveryClient;
+import com.saicone.delivery4j.Broker;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.PluginMessageEvent;
@@ -12,24 +12,25 @@ import net.md_5.bungee.event.EventHandler;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class BungeeDelivery extends DeliveryClient implements Listener {
+public class BungeeBroker extends Broker implements Listener {
 
     private final Plugin plugin;
     private final Set<String> forward;
 
     @NotNull
     @Contract("_ -> new")
-    public static BungeeDelivery of(@NotNull Plugin plugin) {
-        return new BungeeDelivery(plugin, new HashSet<>());
+    public static BungeeBroker of(@NotNull Plugin plugin) {
+        return new BungeeBroker(plugin, new HashSet<>());
     }
 
     @NotNull
     @Contract("_, _ -> new")
-    public static BungeeDelivery of(@NotNull Plugin plugin, String... forward) {
+    public static BungeeBroker of(@NotNull Plugin plugin, String... forward) {
         final Set<String> set = new HashSet<>();
         for (String s : forward) {
             if (s.equals("*")) {
@@ -40,17 +41,17 @@ public class BungeeDelivery extends DeliveryClient implements Listener {
                 set.add(s);
             }
         }
-        return new BungeeDelivery(plugin, set);
+        return new BungeeBroker(plugin, set);
     }
 
-    public BungeeDelivery(@NotNull Plugin plugin, @NotNull Set<String> forward) {
+    public BungeeBroker(@NotNull Plugin plugin, @NotNull Set<String> forward) {
         this.plugin = plugin;
         this.forward = forward;
     }
 
     @Override
     public void onStart() {
-        for (String channel : subscribedChannels) {
+        for (String channel : getSubscribedChannels()) {
             registerChannel(channel);
         }
         plugin.getProxy().getPluginManager().registerListener(plugin, this);
@@ -59,7 +60,7 @@ public class BungeeDelivery extends DeliveryClient implements Listener {
     @Override
     public void onClose() {
         plugin.getProxy().getPluginManager().unregisterListener(this);
-        for (String channel : subscribedChannels) {
+        for (String channel : getSubscribedChannels()) {
             unregisterChannel(channel);
         }
     }
@@ -90,34 +91,42 @@ public class BungeeDelivery extends DeliveryClient implements Listener {
 
     @EventHandler
     @SuppressWarnings("all")
-    public void onPluginMessageReceived(PluginMessageEvent e) {
-        if (e.isCancelled() || !subscribedChannels.contains(e.getTag())) {
+    public void onPluginMessageReceived(PluginMessageEvent event) {
+        if (event.isCancelled() || !getSubscribedChannels().contains(event.getTag())) {
             return;
         }
-        final boolean isMain = isMainChannel(e.getTag());
+        final boolean isMain = isMainChannel(event.getTag());
         if (!isMain) {
-            e.setCancelled(true);
+            event.setCancelled(true);
         }
 
-        if (e.getSender() instanceof ProxiedPlayer) {
+        if (event.getSender() instanceof ProxiedPlayer) {
             return;
         }
 
         if (isMain) {
-            final ByteArrayDataInput in = ByteStreams.newDataInput(e.getData());
+            final ByteArrayDataInput in = ByteStreams.newDataInput(event.getData());
             final String subChannel = in.readUTF();
             if ("Forward".equals(subChannel)) {
                 final String server = in.readUTF();
                 final String channel = in.readUTF();
-                if (subscribedChannels.contains(channel)) {
+                if (getSubscribedChannels().contains(channel)) {
                     final byte[] data = new byte[in.readShort()];
                     in.readFully(data);
-                    receive(channel, data);
+                    try {
+                        receive(channel, data);
+                    } catch (IOException e) {
+                        getLogger().log(2, "Cannot process received message from channel '" + channel + "'", e);
+                    }
                 }
             }
             return;
         } else {
-            receive(e.getTag(), e.getData());
+            try {
+                receive(event.getTag(), event.getData());
+            } catch (IOException e) {
+                getLogger().log(2, "Cannot process received message from channel '" + event.getTag() + "'", e);
+            }
         }
 
         if (forward.isEmpty()) {
@@ -127,7 +136,7 @@ public class BungeeDelivery extends DeliveryClient implements Listener {
         final boolean all = forward.contains("*");
         for (Map.Entry<String, ServerInfo> entry : plugin.getProxy().getServers().entrySet()) {
             if (all || forward.contains(entry.getKey())) {
-                entry.getValue().sendData(e.getTag(), e.getData());
+                entry.getValue().sendData(event.getTag(), event.getData());
             }
         }
     }

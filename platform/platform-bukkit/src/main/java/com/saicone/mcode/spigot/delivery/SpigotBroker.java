@@ -1,7 +1,7 @@
 package com.saicone.mcode.spigot.delivery;
 
 import com.google.common.collect.Iterables;
-import com.saicone.delivery4j.DeliveryClient;
+import com.saicone.delivery4j.Broker;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -9,29 +9,31 @@ import org.bukkit.plugin.messaging.PluginMessageListener;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 
-public class SpigotDelivery extends DeliveryClient implements PluginMessageListener {
+import java.io.IOException;
+
+public class SpigotBroker extends Broker implements PluginMessageListener {
 
     private final Plugin plugin;
 
     @NotNull
-    public static SpigotDelivery of(@NotNull Plugin plugin) {
-        return new SpigotDelivery(plugin);
+    public static SpigotBroker of(@NotNull Plugin plugin) {
+        return new SpigotBroker(plugin);
     }
 
-    public SpigotDelivery(@NotNull Plugin plugin) {
+    public SpigotBroker(@NotNull Plugin plugin) {
         this.plugin = plugin;
     }
 
     @Override
     public void onStart() {
-        for (String subscribedChannel : subscribedChannels) {
+        for (String subscribedChannel : getSubscribedChannels()) {
             registerPluginChannel(subscribedChannel);
         }
     }
 
     @Override
     public void onClose() {
-        for (String subscribedChannel : subscribedChannels) {
+        for (String subscribedChannel : getSubscribedChannels()) {
             unregisterPluginChannel(subscribedChannel);
         }
     }
@@ -67,8 +69,12 @@ public class SpigotDelivery extends DeliveryClient implements PluginMessageListe
 
     @Override
     public void onPluginMessageReceived(@NotNull String channel, @NotNull Player player, byte @NotNull [] message) {
-        if (subscribedChannels.contains(channel)) {
-            receive(channel, message);
+        if (getSubscribedChannels().contains(channel)) {
+            try {
+                receive(channel, message);
+            } catch (IOException e) {
+                getLogger().log(2, "Cannot process received message from channel '" + channel + "'", e);
+            }
         }
     }
 

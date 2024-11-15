@@ -2,6 +2,7 @@ package com.saicone.mcode.module.task;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 public interface Scheduler<TaskT> {
@@ -66,5 +67,10 @@ public interface Scheduler<TaskT> {
 
     default boolean isMainThread() {
         return false;
+    }
+
+    @NotNull
+    default Executor asExecutor() {
+        return this::runAsync;
     }
 }

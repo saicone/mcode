@@ -7,23 +7,25 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
-public class SpigotForwardDelivery extends SpigotDelivery {
+import java.io.IOException;
+
+public class SpigotForwardBroker extends SpigotBroker {
 
     private static final String BUNGEECORD_CHANNEL = "BungeeCord";
 
     private final String preChannel;
 
     @NotNull
-    public static SpigotForwardDelivery of(@NotNull Plugin plugin) {
+    public static SpigotForwardBroker of(@NotNull Plugin plugin) {
         return of(plugin, BUNGEECORD_CHANNEL);
     }
 
     @NotNull
-    public static SpigotForwardDelivery of(@NotNull Plugin plugin, @NotNull String preChannel) {
-        return new SpigotForwardDelivery(plugin, preChannel);
+    public static SpigotForwardBroker of(@NotNull Plugin plugin, @NotNull String preChannel) {
+        return new SpigotForwardBroker(plugin, preChannel);
     }
 
-    public SpigotForwardDelivery(@NotNull Plugin plugin, @NotNull String preChannel) {
+    public SpigotForwardBroker(@NotNull Plugin plugin, @NotNull String preChannel) {
         super(plugin);
         this.preChannel = preChannel;
     }
@@ -67,10 +69,14 @@ public class SpigotForwardDelivery extends SpigotDelivery {
             final String subChannel = in.readUTF();
             if ("Forward".equals(subChannel)) {
                 final String channel = in.readUTF();
-                if (subscribedChannels.contains(channel)) {
+                if (getSubscribedChannels().contains(channel)) {
                     final byte[] data = new byte[in.readShort()];
                     in.readFully(data);
-                    receive(channel, data);
+                    try {
+                        receive(channel, data);
+                    } catch (IOException e) {
+                        getLogger().log(2, "Cannot process received message from channel '" + channel + "'", e);
+                    }
                 }
             }
         }
