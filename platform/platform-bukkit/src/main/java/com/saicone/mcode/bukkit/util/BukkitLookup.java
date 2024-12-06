@@ -4,6 +4,10 @@ import com.saicone.mcode.util.EasyLookup;
 import com.saicone.mcode.platform.MC;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.lang.invoke.MethodHandle;
+import java.util.function.Supplier;
 
 public class BukkitLookup extends EasyLookup {
 
@@ -54,6 +58,43 @@ public class BukkitLookup extends EasyLookup {
 
     BukkitLookup() {
         super();
+    }
+
+    @Nullable
+    public static MethodHandle find(@NotNull Object clazz, @NotNull String any, @NotNull Supplier<String> unmappedName) {
+        return find(clazz, () -> any, unmappedName);
+    }
+
+    @Nullable
+    public static MethodHandle find(@NotNull Object clazz, @NotNull Supplier<String> any, @NotNull Supplier<String> unmappedName) {
+        return find(clazz, () -> {
+            final String s = any.get();
+            if (s == null) {
+                return null;
+            }
+            if (ServerInstance.Type.MOJANG_MAPPED) {
+                return s;
+            }
+            final int bracket = s.indexOf('(');
+            if (bracket == 0) { // Constructor
+                return s;
+            } else if (bracket > 0) { // Method
+                final String s1 = s.substring(0, bracket);
+                final int space = s1.lastIndexOf(' ');
+                if (space < 0) {
+                    return unmappedName.get() + s.substring(bracket);
+                } else {
+                    return s1.substring(0, space) + " " + unmappedName.get() + s.substring(bracket);
+                }
+            } else { // Field
+                final int space = s.lastIndexOf(' ');
+                if (space < 0) {
+                    return unmappedName.get();
+                } else {
+                    return s.substring(0, space) + " " + unmappedName.get();
+                }
+            }
+        });
     }
 
     /**

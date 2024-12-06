@@ -10,6 +10,8 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,21 +42,103 @@ public class EasyLookup {
 
     static {
         try {
-            // Java
-            addClassId("boolean[]", "[Z");
-            addClassId("byte[]", "[B");
-            addClassId("short[]", "[S");
-            addClassId("int[]", "[I");
-            addClassId("long[]", "[J");
-            addClassId("float[]", "[F");
-            addClassId("double[]", "[D");
+            // Primitive
+            addClassId("Character", Character.class);
+            addClassId("char", char.class);
             addClassId("char[]", "[C");
+            addClassId("Boolean", Boolean.class);
+            addClassId("boolean", boolean.class);
+            addClassId("boolean[]", "[Z");
+            addClassId("Byte", Byte.class);
+            addClassId("byte", byte.class);
+            addClassId("byte[]", "[B");
+            addClassId("Short", Short.class);
+            addClassId("short", short.class);
+            addClassId("short[]", "[S");
+            addClassId("Integer", Integer.class);
+            addClassId("int", int.class);
+            addClassId("int[]", "[I");
+            addClassId("Long", Long.class);
+            addClassId("long", long.class);
+            addClassId("long[]", "[J");
+            addClassId("Float", Float.class);
+            addClassId("float", float.class);
+            addClassId("float[]", "[F");
+            addClassId("Double", Double.class);
+            addClassId("double", double.class);
+            addClassId("double[]", "[D");
+            // Java
+            addClassId("Class", Class.class);
+            addClassId("Object", Object.class);
+            addClassId("Number", Number.class);
+            addClassId("String", String.class);
+            addClassId("BigInteger", BigInteger.class);
+            addClassId("BigDecimal", BigDecimal.class);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
     }
 
     protected EasyLookup() {
+    }
+
+    @Nullable
+    public static MethodHandle find(@NotNull Object clazz, @NotNull String any) {
+        return find(clazz, () -> any);
+    }
+
+    @Nullable
+    public static MethodHandle find(@NotNull Object clazz, @NotNull Supplier<String> any) {
+        try {
+            return unsafeFind(clazz, any);
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    @Nullable
+    public static MethodHandle unsafeFind(@NotNull Object clazz, @NotNull Supplier<String> any) throws NoSuchFieldException, IllegalAccessException, NoSuchMethodException {
+        final String s = any.get();
+        if (s == null) {
+            return null;
+        }
+        final int bracket = s.trim().indexOf('(');
+        if (bracket < 0) { // Field
+            final int space = s.lastIndexOf(' ');
+            final String modifier = s.substring(0, space);
+            final String type = modifier.substring(modifier.lastIndexOf(' ') + 1);
+            final String name = s.substring(space + 1);
+            if (modifier.contains("set")) {
+                if (modifier.contains("static")) {
+                    return staticSetter(clazz, name, type);
+                } else {
+                    return setter(clazz, name, type);
+                }
+            } else {
+                if (modifier.contains("static")) {
+                    return staticGetter(clazz, name, type);
+                } else {
+                    return getter(clazz, name, type);
+                }
+            }
+        }
+
+        final Object[] parameterTypes = bracket + 1 >= s.length() ? new String[0] : s.substring(bracket + 1, s.length() - 1).split(",");
+        if (bracket == 0) { // Constructor
+            return constructor(clazz, parameterTypes);
+        }
+
+        // Method
+        final String s1 = s.substring(0, bracket);
+        final int space = s1.lastIndexOf(' ');
+        final String modifier = s1.substring(0, space);
+        final String type = modifier.substring(modifier.lastIndexOf(' ') + 1);
+        final String name = s1.substring(space + 1);
+        if (modifier.contains("static")) {
+            return staticMethod(clazz, name, type, parameterTypes);
+        } else {
+            return method(clazz, name, type, parameterTypes);
+        }
     }
 
     /**
@@ -82,6 +166,12 @@ public class EasyLookup {
     public static Class<?> classById(@NotNull String id) {
         final Class<?> clazz = CLASS_ID_MAP.get(id);
         if (clazz == null) {
+            if (id.endsWith("[]")) {
+                final Class<?> nonArray = classById(id.substring(0, id.length() - 2));
+                try {
+                    return Class.forName("[" + nonArray);
+                } catch (ClassNotFoundException ignored) { }
+            }
             throw new IllegalArgumentException("The class with ID '" + id + "' doesn't exist");
         }
         return clazz;
@@ -100,7 +190,7 @@ public class EasyLookup {
         if (object instanceof Class) {
             return (Class<?>) object;
         } else {
-            return classById(String.valueOf(object));
+            return classById(String.valueOf(object).trim());
         }
     }
 
