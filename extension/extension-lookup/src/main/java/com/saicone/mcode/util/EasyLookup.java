@@ -43,6 +43,7 @@ public class EasyLookup {
     static {
         try {
             // Primitive
+            addClassId("void", void.class);
             addClassId("Character", Character.class);
             addClassId("char", char.class);
             addClassId("char[]", "[C");
@@ -123,7 +124,20 @@ public class EasyLookup {
             }
         }
 
-        final Object[] parameterTypes = bracket + 1 >= s.length() ? new String[0] : s.substring(bracket + 1, s.length() - 1).split(",");
+        final Object[] parameterTypes;
+        if (bracket + 1 >= s.length()) {
+            parameterTypes = new String[0];
+        } else {
+            parameterTypes = Arrays.stream(s.substring(bracket + 1, s.length() - 1).split(","))
+                    .map(parameter -> {
+                        final int space = parameter.lastIndexOf(' ');
+                        if (space > 0) {
+                            return parameter.substring(0, space);
+                        }
+                        return parameter;
+                    })
+                    .toArray();
+        }
         if (bracket == 0) { // Constructor
             return constructor(clazz, parameterTypes);
         }

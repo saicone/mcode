@@ -14,13 +14,16 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.InputStream;
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.Base64;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -45,50 +48,43 @@ public class SkullTexture {
 
     private static final ItemStack PLAYER_HEAD;
 
-    private static final MethodHandle getProfile;
-    private static final MethodHandle setProfile;
-    private static final MethodHandle getValue;
-
-    private static final Cache<String, String> TEXTURE_CACHE = CacheBuilder.newBuilder().expireAfterAccess(3, TimeUnit.HOURS).build();
-
     static {
+        // Create head item
         if (MC.version().isFlat()) {
             PLAYER_HEAD = new ItemStack(Material.PLAYER_HEAD);
         } else {
             PLAYER_HEAD = new ItemStack(Material.getMaterial("SKULL_ITEM"), 1, (short) 3);
         }
-        MethodHandle get$profile = null;
-        MethodHandle set$profile = null;
-        MethodHandle get$value = null;
+
+        // Add reflected classes
         try {
             BukkitLookup.addBukkitClass("entity.CraftPlayer");
             BukkitLookup.addBukkitClass("inventory.CraftMetaSkull");
-
-            get$profile = BukkitLookup.method("CraftPlayer", GameProfile.class, "getProfile");
-            // Unreflect reason:
-            // Private method/field
-            if (MC.version().isNewerThanOrEquals(MC.V_1_15)) {
-                set$profile = BukkitLookup.unreflectMethod("CraftMetaSkull", "setProfile", GameProfile.class);
-            } else {
-                set$profile = BukkitLookup.unreflectSetter("CraftMetaSkull", "profile");
-            }
-
-            String value = "value";
-            for (Method method : Property.class.getDeclaredMethods()) {
-                if (method.getName().equals("getValue")) {
-                    // Old name found
-                    value = "getValue";
-                    break;
-                }
-            }
-            get$value = BukkitLookup.method(Property.class, String.class, value);
-        } catch (NoSuchFieldException | IllegalAccessException | ClassNotFoundException | NoSuchMethodException e) {
+            BukkitLookup.addClassId("GameProfile", GameProfile.class);
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
-        getProfile = get$profile;
-        setProfile = set$profile;
-        getValue = get$value;
     }
+
+    private static final MethodHandle getProfile = BukkitLookup.find("CraftPlayer", "public GameProfile getProfile()");
+    private static final MethodHandle setProfile = BukkitLookup.find("CraftMetaSkull", () -> {
+        if (MC.version().isNewerThanOrEquals(MC.V_1_15)) {
+            return "private void setProfile(GameProfile profile)";
+        } else {
+            return "set GameProfile profile";
+        }
+    });
+    private static final MethodHandle getValue = BukkitLookup.find(Property.class, () -> {
+        for (Method method : Property.class.getDeclaredMethods()) {
+            if (method.getName().equals("getValue")) {
+                // Old name found
+                return "public String getValue()";
+            }
+        }
+        return "public String value()";
+    });
+
+    private static final Cache<String, String> TEXTURE_CACHE = CacheBuilder.newBuilder().expireAfterAccess(3, TimeUnit.HOURS).build();
 
     SkullTexture() {
     }
