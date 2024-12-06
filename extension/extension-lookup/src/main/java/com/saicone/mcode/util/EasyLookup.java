@@ -10,6 +10,7 @@ import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * Class to handle reflection lookups in an easy way.
@@ -17,6 +18,9 @@ import java.util.Map;
  * @author Rubenicos
  */
 public class EasyLookup {
+
+    private static final boolean DEBUG = "true".equals(System.getProperty("saicone.easylookup.debug"));
+    private static final Logger LOGGER = Logger.getLogger("EasyLookup");
 
     private static final MethodHandles.Lookup lookup = MethodHandles.lookup();
     private static final Map<Class<?>, MethodHandles.Lookup> privateLookups = new HashMap<>();
@@ -166,9 +170,13 @@ public class EasyLookup {
      * @return      Added class.
      */
     public static Class<?> addClassId(String id, Class<?> clazz) {
-        if (!classes.containsKey(id)) {
-            classes.put(id, clazz);
+        if (DEBUG) {
+            final Class<?> value = classes.get(id);
+            if (value != null && !value.equals(clazz)) {
+                LOGGER.info("Replacing class ID: '" + id + "' [old = " + value.getName() + ", new = " + clazz.getName() + "]");
+            }
         }
+        classes.put(id, clazz);
         return clazz;
     }
 
@@ -209,8 +217,14 @@ public class EasyLookup {
         try {
             return lookup.findConstructor(from, type(void.class, parameterTypes));
         } catch (IllegalAccessException e) {
+            if (DEBUG) {
+                LOGGER.info("unreflectConstructor = '" + from.getName() + '(' + String.join(", ", names(classesOf(parameterTypes))) + ")'");
+            }
             return unreflectConstructor(from, parameterTypes);
         } catch (NoSuchMethodException e) {
+            if (DEBUG) {
+                LOGGER.info("findConstructor = '" + from.getName() + '(' + String.join(", ", names(classesOf(parameterTypes))) + ")'");
+            }
             return unreflectConstructor(findConstructor(from, classesOf(parameterTypes)));
         }
     }
@@ -304,8 +318,14 @@ public class EasyLookup {
         try {
             return lookup.findVirtual(from, name, type(returnType, parameterTypes));
         } catch (IllegalAccessException e) {
+            if (DEBUG) {
+                LOGGER.info("unreflectMethod = '" + classOf(returnType).getName() + ' ' + name + '(' + String.join(", ", names(classesOf(parameterTypes))) + ")' inside class " + from.getName());
+            }
             return unreflectMethod(from, name, parameterTypes);
         } catch (NoSuchMethodException e) {
+            if (DEBUG) {
+                LOGGER.info("findMethod = '" + classOf(returnType).getName() + ' ' + name + '(' + String.join(", ", names(classesOf(parameterTypes))) + ")' inside class " + from.getName());
+            }
             return unreflectMethod(findMethod(from, false, name, classOf(returnType), classesOf(parameterTypes)));
         }
     }
@@ -372,8 +392,14 @@ public class EasyLookup {
         try {
             return lookup.findStatic(from, name, type(returnType, parameterTypes));
         } catch (IllegalAccessException e) {
+            if (DEBUG) {
+                LOGGER.info("unreflectMethod = 'static " + classOf(returnType).getName() + ' ' + name + '(' + String.join(", ", names(classesOf(parameterTypes))) + ")' inside class " + from.getName());
+            }
             return unreflectMethod(from, name, parameterTypes);
         } catch (NoSuchMethodException e) {
+            if (DEBUG) {
+                LOGGER.info("findMethod = 'static " + classOf(returnType).getName() + ' ' + name + '(' + String.join(", ", names(classesOf(parameterTypes))) + ")' inside class " + from.getName());
+            }
             return unreflectMethod(findMethod(from, true, name, classOf(returnType), classesOf(parameterTypes)));
         }
     }
@@ -465,8 +491,14 @@ public class EasyLookup {
         try {
             return lookup.findGetter(from, name, type);
         } catch (IllegalAccessException e) {
+            if (DEBUG) {
+                LOGGER.info("unreflectGetter = '" + type.getName() + ' ' + name + "' inside class " + from.getName());
+            }
             return unreflectGetter(from, name);
         } catch (NoSuchFieldException e) {
+            if (DEBUG) {
+                LOGGER.info("findGetter = '" + type.getName() + ' ' + name + "' inside class " + from.getName());
+            }
             return unreflectGetter(findField(from, false, name, type));
         }
     }
@@ -529,8 +561,14 @@ public class EasyLookup {
         try {
             return lookup.findStaticGetter(from, name, type);
         } catch (IllegalAccessException e) {
+            if (DEBUG) {
+                LOGGER.info("unreflectGetter = 'static " + type.getName() + ' ' + name + "' inside class " + from.getName());
+            }
             return unreflectGetter(from, name);
         } catch (NoSuchFieldException e) {
+            if (DEBUG) {
+                LOGGER.info("unreflectGetter = 'static " + type.getName() + ' ' + name + "' inside class " + from.getName());
+            }
             return unreflectGetter(findField(from, true, name, type));
         }
     }
@@ -558,8 +596,14 @@ public class EasyLookup {
         try {
             return lookup.findSetter(from, name, type);
         } catch (IllegalAccessException e) {
+            if (DEBUG) {
+                LOGGER.info("unreflectSetter = '" + type.getName() + ' ' + name + "' inside class " + from.getName());
+            }
             return unreflectSetter(from, name);
         } catch (NoSuchFieldException e) {
+            if (DEBUG) {
+                LOGGER.info("findSetter = '" + type.getName() + ' ' + name + "' inside class " + from.getName());
+            }
             return unreflectSetter(findField(from, false, name, type));
         }
     }
@@ -622,8 +666,14 @@ public class EasyLookup {
         try {
             return lookup.findStaticSetter(from, name, type);
         } catch (IllegalAccessException e) {
+            if (DEBUG) {
+                LOGGER.info("unreflectSetter = 'static " + type.getName() + ' ' + name + "' inside class " + from.getName());
+            }
             return unreflectSetter(from, name);
         } catch (NoSuchFieldException e) {
+            if (DEBUG) {
+                LOGGER.info("findSetter = 'static " + type.getName() + ' ' + name + "' inside class " + from.getName());
+            }
             return unreflectSetter(findField(from, true, name, type));
         }
     }
