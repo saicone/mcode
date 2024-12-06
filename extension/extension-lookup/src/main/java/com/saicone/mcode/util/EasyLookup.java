@@ -1,5 +1,8 @@
 package com.saicone.mcode.util;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -10,6 +13,7 @@ import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.logging.Logger;
 
 /**
@@ -59,7 +63,7 @@ public class EasyLookup {
      * @param name Class name.
      * @return     true if the provided class exists.
      */
-    public static boolean testClass(String name) {
+    public static boolean testClass(@NotNull String name) {
         boolean test = false;
         try {
             Class.forName(name);
@@ -74,8 +78,13 @@ public class EasyLookup {
      * @param id Class ID.
      * @return   A class represented by provided ID or null.
      */
-    public static Class<?> classById(String id) {
-        return classes.get(id);
+    @NotNull
+    public static Class<?> classById(@NotNull String id) {
+        final Class<?> clazz = classes.get(id);
+        if (clazz == null) {
+            throw new IllegalArgumentException("The class with ID '" + id + "' doesn't exist");
+        }
+        return clazz;
     }
 
     /**
@@ -86,7 +95,8 @@ public class EasyLookup {
      * @param object Class or String.
      * @return       A class represented by provided object or null.
      */
-    public static Class<?> classOf(Object object) {
+    @NotNull
+    public static Class<?> classOf(@NotNull Object object) {
         if (object instanceof Class) {
             return (Class<?>) object;
         } else {
@@ -98,9 +108,10 @@ public class EasyLookup {
      * Same has {@link #classOf(Object)} but for multiple objects.
      *
      * @param classes Classes objects.
-     * @return        A array of classes represented by objects.
+     * @return        An array of classes represented by objects.
      */
-    public static Class<?>[] classesOf(Object... classes) {
+    @NotNull
+    public static Class<?>[] classesOf(@NotNull Object... classes) {
         Class<?>[] array = new Class<?>[classes.length];
         for (int i = 0; i < classes.length; i++) {
             array[i] = classOf(classes[i]);
@@ -115,7 +126,8 @@ public class EasyLookup {
      * @return        Added class.
      * @throws ClassNotFoundException if the class cannot be located.
      */
-    public static Class<?> addClass(String name) throws ClassNotFoundException {
+    @NotNull
+    public static Class<?> addClass(@NotNull String name) throws ClassNotFoundException {
         return addClass(name, new String[0]);
     }
 
@@ -127,7 +139,8 @@ public class EasyLookup {
      * @return        Added class.
      * @throws ClassNotFoundException if the class cannot be located.
      */
-    public static Class<?> addClass(String name, String... aliases) throws ClassNotFoundException {
+    @NotNull
+    public static Class<?> addClass(@NotNull String name, @NotNull String... aliases) throws ClassNotFoundException {
         return addClassId(name.contains(".") ? name.substring(name.lastIndexOf('.') + 1) : name, name, aliases);
     }
 
@@ -141,7 +154,8 @@ public class EasyLookup {
      * @return        Added class.
      * @throws ClassNotFoundException if the class cannot be located.
      */
-    public static Class<?> addClassId(String id, String name, String... aliases) throws ClassNotFoundException {
+    @NotNull
+    public static Class<?> addClassId(@NotNull String id, @NotNull String name, @NotNull String... aliases) throws ClassNotFoundException {
         String finalName = null;
         if (testClass(name)) {
             finalName = name;
@@ -169,7 +183,8 @@ public class EasyLookup {
      * @param clazz Class object.
      * @return      Added class.
      */
-    public static Class<?> addClassId(String id, Class<?> clazz) {
+    @NotNull
+    public static Class<?> addClassId(@NotNull String id, @NotNull Class<?> clazz) {
         if (DEBUG) {
             final Class<?> value = classes.get(id);
             if (value != null && !value.equals(clazz)) {
@@ -186,7 +201,8 @@ public class EasyLookup {
      * @param clazz Target class.
      * @return      Private lookup or null.
      */
-    public static MethodHandles.Lookup privateLookup(Class<?> clazz) {
+    @Nullable
+    public static MethodHandles.Lookup privateLookup(@NotNull Class<?> clazz) {
         return privateLookups.computeIfAbsent(clazz, c -> {
             try {
                 return MethodHandles.privateLookupIn(clazz, lookup);
@@ -199,7 +215,7 @@ public class EasyLookup {
 
     /**
      * Easy way to invoke {@link MethodHandles.Lookup#findConstructor(Class, MethodType)} without
-     * creating a MethodType, it also provide void class at first argument has default.<br>
+     * creating a MethodType, it also provides void class at first argument has default.<br>
      *
      * Required classes can be Strings to get by {@link #classById(String)}.<br>
      *
@@ -212,7 +228,8 @@ public class EasyLookup {
      * @throws IllegalAccessException if access checking fails or if the method's variable arity
      *                                modifier bit is set and asVarargsCollector fails.
      */
-    public static MethodHandle constructor(Object clazz, Object... parameterTypes) throws NoSuchMethodException, IllegalAccessException {
+    @NotNull
+    public static MethodHandle constructor(@NotNull Object clazz, @NotNull Object... parameterTypes) throws NoSuchMethodException, IllegalAccessException {
         final Class<?> from = classOf(clazz);
         try {
             return lookup.findConstructor(from, type(void.class, parameterTypes));
@@ -238,7 +255,8 @@ public class EasyLookup {
      * @throws IllegalAccessException if access checking fails or if the method's variable arity
      *                                modifier bit is set and asVarargsCollector fails.
      */
-    public static MethodHandle unreflectConstructor(Constructor<?> constructor) throws IllegalAccessException {
+    @NotNull
+    public static MethodHandle unreflectConstructor(@NotNull Constructor<?> constructor) throws IllegalAccessException {
         try {
             return lookup.unreflectConstructor(constructor);
         } catch (IllegalAccessException e) {
@@ -261,7 +279,8 @@ public class EasyLookup {
      * @throws IllegalAccessException if access checking fails or if the method's variable arity
      *                                modifier bit is set and asVarargsCollector fails.
      */
-    public static MethodHandle unreflectConstructor(Object clazz, Object... parameterTypes) throws NoSuchMethodException, IllegalAccessException {
+    @NotNull
+    public static MethodHandle unreflectConstructor(@NotNull Object clazz, @NotNull Object... parameterTypes) throws NoSuchMethodException, IllegalAccessException {
         Constructor<?> c = classOf(clazz).getDeclaredConstructor(classesOf(parameterTypes));
         c.setAccessible(true);
         return lookup.unreflectConstructor(c);
@@ -280,7 +299,8 @@ public class EasyLookup {
      * @throws IllegalAccessException if access checking fails or if the method's variable arity
      *                                modifier bit is set and asVarargsCollector fails.
      */
-    public static Constructor<?> findConstructor(Class<?> from, Class<?>... parameterTypes) throws NoSuchMethodException, IllegalAccessException {
+    @NotNull
+    public static Constructor<?> findConstructor(@NotNull Class<?> from, @NotNull Class<?>... parameterTypes) throws NoSuchMethodException, IllegalAccessException {
         // Find with reflection
         try {
             return from.getDeclaredConstructor(parameterTypes);
@@ -313,7 +333,8 @@ public class EasyLookup {
      * @throws IllegalAccessException if access checking fails, or if the method is static, or if the method's
      *                                variable arity modifier bit is set and asVarargsCollector fails.
      */
-    public static MethodHandle method(Object clazz, String name, Object returnType, Object... parameterTypes) throws NoSuchMethodException, IllegalAccessException {
+    @NotNull
+    public static MethodHandle method(@NotNull Object clazz, @NotNull String name, @NotNull Object returnType, @NotNull Object... parameterTypes) throws NoSuchMethodException, IllegalAccessException {
         final Class<?> from = classOf(clazz);
         try {
             return lookup.findVirtual(from, name, type(returnType, parameterTypes));
@@ -339,7 +360,8 @@ public class EasyLookup {
      * @throws IllegalAccessException if access checking fails or if the method's variable arity
      *                                modifier bit is set and asVarargsCollector fails.
      */
-    public static MethodHandle unreflectMethod(Method method) throws IllegalAccessException {
+    @NotNull
+    public static MethodHandle unreflectMethod(@NotNull Method method) throws IllegalAccessException {
         try {
             return lookup.unreflect(method);
         } catch (IllegalAccessException e) {
@@ -363,7 +385,8 @@ public class EasyLookup {
      * @throws IllegalAccessException if access checking fails or if the method's variable arity
      *                                modifier bit is set and asVarargsCollector fails.
      */
-    public static MethodHandle unreflectMethod(Object clazz, String name, Object... parameterTypes) throws NoSuchMethodException, IllegalAccessException {
+    @NotNull
+    public static MethodHandle unreflectMethod(@NotNull Object clazz, @NotNull String name, @NotNull Object... parameterTypes) throws NoSuchMethodException, IllegalAccessException {
         Method m = classOf(clazz).getDeclaredMethod(name, classesOf(parameterTypes));
         m.setAccessible(true);
         return lookup.unreflect(m);
@@ -387,7 +410,8 @@ public class EasyLookup {
      * @throws IllegalAccessException if access checking fails, or if the method is not static, or if the method's
      *                                variable arity modifier bit is set and asVarargsCollector fails.
      */
-    public static MethodHandle staticMethod(Object clazz, String name, Object returnType, Object... parameterTypes) throws NoSuchMethodException, IllegalAccessException {
+    @NotNull
+    public static MethodHandle staticMethod(@NotNull Object clazz, @NotNull String name, @NotNull Object returnType, @NotNull Object... parameterTypes) throws NoSuchMethodException, IllegalAccessException {
         final Class<?> from = classOf(clazz);
         try {
             return lookup.findStatic(from, name, type(returnType, parameterTypes));
@@ -420,7 +444,8 @@ public class EasyLookup {
      * @throws IllegalAccessException if access checking fails, or if the method is not static, or if the method's
      *                                variable arity modifier bit is set and asVarargsCollector fails.
      */
-    public static Method findMethod(Class<?> from, boolean isStatic, String name, Class<?> returnType, Class<?>... parameterTypes) throws NoSuchMethodException, IllegalAccessException {
+    @NotNull
+    public static Method findMethod(@NotNull Class<?> from, boolean isStatic, @NotNull String name, @NotNull Class<?> returnType, @NotNull Class<?>... parameterTypes) throws NoSuchMethodException, IllegalAccessException {
         // Find with reflection
         try {
             return from.getDeclaredMethod(name, parameterTypes);
@@ -456,7 +481,7 @@ public class EasyLookup {
      * @param checkedTypes The Class array to be checked.
      * @return             true if checkedTypes can be assigned to baseTypes in respecting order.
      */
-    public static boolean isAssignableFrom(Class<?>[] baseTypes, Class<?>[] checkedTypes) {
+    public static boolean isAssignableFrom(@NotNull Class<?>[] baseTypes, @NotNull Class<?>[] checkedTypes) {
         if (baseTypes.length != checkedTypes.length) {
             return false;
         }
@@ -485,7 +510,8 @@ public class EasyLookup {
      * @throws NoSuchFieldException   if the field does not exist.
      * @throws IllegalAccessException  if access checking fails, or if the field is static.
      */
-    public static MethodHandle getter(Object clazz, String name, Object returnType) throws NoSuchFieldException, IllegalAccessException {
+    @NotNull
+    public static MethodHandle getter(@NotNull Object clazz, @NotNull String name, @NotNull Object returnType) throws NoSuchFieldException, IllegalAccessException {
         final Class<?> from = classOf(clazz);
         final Class<?> type = classOf(returnType);
         try {
@@ -513,7 +539,8 @@ public class EasyLookup {
      * @return      A MethodHandle representing a field getter for provided class.
      * @throws IllegalAccessException if access checking fails.
      */
-    public static MethodHandle unreflectGetter(Field field) throws IllegalAccessException {
+    @NotNull
+    public static MethodHandle unreflectGetter(@NotNull Field field) throws IllegalAccessException {
         try {
             return lookup.unreflectGetter(field);
         } catch (IllegalAccessException e) {
@@ -535,7 +562,8 @@ public class EasyLookup {
      * @throws NoSuchFieldException   if a field with the specified name is not found.
      * @throws IllegalAccessException if access checking fails.
      */
-    public static MethodHandle unreflectGetter(Object clazz, String name) throws NoSuchFieldException, IllegalAccessException {
+    @NotNull
+    public static MethodHandle unreflectGetter(@NotNull Object clazz, @NotNull String name) throws NoSuchFieldException, IllegalAccessException {
         return lookup.unreflectGetter(field(classOf(clazz), name));
     }
 
@@ -555,7 +583,8 @@ public class EasyLookup {
      * @throws NoSuchFieldException   if the field does not exist.
      * @throws IllegalAccessException if access checking fails, or if the field is not static.
      */
-    public static MethodHandle staticGetter(Object clazz, String name, Object returnType) throws NoSuchFieldException, IllegalAccessException {
+    @NotNull
+    public static MethodHandle staticGetter(@NotNull Object clazz, @NotNull String name, @NotNull Object returnType) throws NoSuchFieldException, IllegalAccessException {
         final Class<?> from = classOf(clazz);
         final Class<?> type = classOf(returnType);
         try {
@@ -590,7 +619,8 @@ public class EasyLookup {
      * @throws NoSuchFieldException   if the field does not exist.
      * @throws IllegalAccessException  if access checking fails, or if the field is static.
      */
-    public static MethodHandle setter(Object clazz, String name, Object returnType) throws NoSuchFieldException, IllegalAccessException {
+    @NotNull
+    public static MethodHandle setter(@NotNull Object clazz, @NotNull String name, @NotNull Object returnType) throws NoSuchFieldException, IllegalAccessException {
         final Class<?> from = classOf(clazz);
         final Class<?> type = classOf(returnType);
         try {
@@ -618,7 +648,8 @@ public class EasyLookup {
      * @return      A MethodHandle representing a field setter for provided class.
      * @throws IllegalAccessException if access checking fails.
      */
-    public static MethodHandle unreflectSetter(Field field) throws IllegalAccessException {
+    @NotNull
+    public static MethodHandle unreflectSetter(@NotNull Field field) throws IllegalAccessException {
         try {
             return lookup.unreflectSetter(field);
         } catch (IllegalAccessException e) {
@@ -640,7 +671,8 @@ public class EasyLookup {
      * @throws NoSuchFieldException   if a field with the specified name is not found.
      * @throws IllegalAccessException if access checking fails.
      */
-    public static MethodHandle unreflectSetter(Object clazz, String name) throws NoSuchFieldException, IllegalAccessException {
+    @NotNull
+    public static MethodHandle unreflectSetter(@NotNull Object clazz, @NotNull String name) throws NoSuchFieldException, IllegalAccessException {
         return lookup.unreflectSetter(field(classOf(clazz), name));
     }
 
@@ -660,7 +692,8 @@ public class EasyLookup {
      * @throws NoSuchFieldException   if the field does not exist.
      * @throws IllegalAccessException if access checking fails, or if the field is not static.
      */
-    public static MethodHandle staticSetter(Object clazz, String name, Object returnType) throws NoSuchFieldException, IllegalAccessException {
+    @NotNull
+    public static MethodHandle staticSetter(@NotNull Object clazz, @NotNull String name, @NotNull Object returnType) throws NoSuchFieldException, IllegalAccessException {
         final Class<?> from = classOf(clazz);
         final Class<?> type = classOf(returnType);
         try {
@@ -689,7 +722,8 @@ public class EasyLookup {
      * @throws NoSuchFieldException   if the field does not exist.
      * @throws IllegalAccessException if access checking fails, or if the field is not static.
      */
-    public static Field findField(Class<?> from, boolean isStatic, String name, Class<?> type) throws NoSuchFieldException, IllegalAccessException {
+    @NotNull
+    public static Field findField(@NotNull Class<?> from, boolean isStatic, @NotNull String name, @NotNull Class<?> type) throws NoSuchFieldException, IllegalAccessException {
         // Find with name
         try {
             final Field field = from.getDeclaredField(name);
@@ -721,17 +755,20 @@ public class EasyLookup {
      * @return      A field from provided class with access permission.
      * @throws NoSuchFieldException if the field does not exist.
      */
-    public static Field field(Object clazz, String field) throws NoSuchFieldException {
+    @NotNull
+    public static Field field(@NotNull Object clazz, @NotNull String field) throws NoSuchFieldException {
         Field f = classOf(clazz).getDeclaredField(field);
         f.setAccessible(true);
         return f;
     }
 
-    private static MethodType type(Object returnType, Object... classes) {
+    @NotNull
+    private static MethodType type(@NotNull Object returnType, @NotNull Object... classes) {
         return type(classOf(returnType), classesOf(classes));
     }
 
-    private static MethodType type(Class<?> returnType, Class<?>... classes) {
+    @NotNull
+    private static MethodType type(@NotNull Class<?> returnType, @NotNull Class<?>... classes) {
         switch (classes.length) {
             case 0:
                 return MethodType.methodType(returnType);
@@ -742,7 +779,8 @@ public class EasyLookup {
         }
     }
 
-    private static String[] names(Class<?>[] classes) {
+    @NotNull
+    private static String[] names(@NotNull Class<?>[] classes) {
         final String[] names = new String[classes.length];
         for (int i = 0; i < classes.length; i++) {
             names[i] = classes[i].getName();
@@ -766,6 +804,6 @@ public class EasyLookup {
          * @param parameterTypes method parameter types as array.
          * @return               true if method matches.
          */
-        boolean test(Method method, Class<?> returnType, Class<?>[] parameterTypes);
+        boolean test(@NotNull Method method, @NotNull Class<?> returnType, @NotNull Class<?>[] parameterTypes);
     }
 }

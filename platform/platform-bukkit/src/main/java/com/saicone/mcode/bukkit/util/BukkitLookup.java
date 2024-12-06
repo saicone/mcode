@@ -3,6 +3,7 @@ package com.saicone.mcode.bukkit.util;
 import com.saicone.mcode.util.EasyLookup;
 import com.saicone.mcode.platform.MC;
 import org.bukkit.Bukkit;
+import org.jetbrains.annotations.NotNull;
 
 public class BukkitLookup extends EasyLookup {
 
@@ -64,7 +65,8 @@ public class BukkitLookup extends EasyLookup {
      * @return        Added class.
      * @throws ClassNotFoundException if the class cannot be located.
      */
-    public static Class<?> addNMSClass(String name) throws ClassNotFoundException {
+    @NotNull
+    public static Class<?> addNMSClass(@NotNull String name) throws ClassNotFoundException {
         return addNMSClass(name, new String[0]);
     }
 
@@ -78,7 +80,8 @@ public class BukkitLookup extends EasyLookup {
      * @return        Added class.
      * @throws ClassNotFoundException if the class cannot be located.
      */
-    public static Class<?> addNMSClass(String name, String... aliases) throws ClassNotFoundException {
+    @NotNull
+    public static Class<?> addNMSClass(@NotNull String name, @NotNull String... aliases) throws ClassNotFoundException {
         return addClass(nmsClass(name, aliases), aliases);
     }
 
@@ -93,11 +96,13 @@ public class BukkitLookup extends EasyLookup {
      * @return        Added class.
      * @throws ClassNotFoundException if the class cannot be located.
      */
-    public static Class<?> addNMSClassId(String id, String name, String... aliases) throws ClassNotFoundException {
+    @NotNull
+    public static Class<?> addNMSClassId(@NotNull String id, @NotNull String name, @NotNull String... aliases) throws ClassNotFoundException {
         return addClassId(id, nmsClass(name, aliases), aliases);
     }
 
-    private static String nmsClass(String name, String... aliases) {
+    @NotNull
+    private static String nmsClass(@NotNull String name, @NotNull String... aliases) {
         for (int i = 0; i < aliases.length; i++) {
             final String alias = aliases[i];
             if (alias.contains(".")) {
@@ -119,7 +124,8 @@ public class BukkitLookup extends EasyLookup {
      * @return        Added class.
      * @throws ClassNotFoundException if the class cannot be located.
      */
-    public static Class<?> addOBCClass(String name) throws ClassNotFoundException {
+    @NotNull
+    public static Class<?> addOBCClass(@NotNull String name) throws ClassNotFoundException {
         return addOBCClass(name, new String[0]);
     }
 
@@ -132,7 +138,8 @@ public class BukkitLookup extends EasyLookup {
      * @return        Added class.
      * @throws ClassNotFoundException if the class cannot be located.
      */
-    public static Class<?> addOBCClass(String name, String... aliases) throws ClassNotFoundException {
+    @NotNull
+    public static Class<?> addOBCClass(@NotNull String name, @NotNull String... aliases) throws ClassNotFoundException {
         return addClass(obcClass(name, aliases), aliases);
     }
 
@@ -146,11 +153,13 @@ public class BukkitLookup extends EasyLookup {
      * @return        Added class.
      * @throws ClassNotFoundException if the class cannot be located.
      */
-    public static Class<?> addOBCClassId(String id, String name, String... aliases) throws ClassNotFoundException {
+    @NotNull
+    public static Class<?> addOBCClassId(@NotNull String id, @NotNull String name, @NotNull String... aliases) throws ClassNotFoundException {
         return addClassId(id, obcClass(name, aliases), aliases);
     }
 
-    private static String obcClass(String name, String... aliases) {
+    @NotNull
+    private static String obcClass(@NotNull String name, @NotNull String... aliases) {
         for (int i = 0; i < aliases.length; i++) {
             final String alias = aliases[i];
             if (alias.contains(".")) {
