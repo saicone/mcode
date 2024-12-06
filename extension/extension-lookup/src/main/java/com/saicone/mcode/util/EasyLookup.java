@@ -26,10 +26,10 @@ public class EasyLookup {
     private static final boolean DEBUG = "true".equals(System.getProperty("saicone.easylookup.debug"));
     private static final Logger LOGGER = Logger.getLogger("EasyLookup");
 
-    private static final MethodHandles.Lookup lookup = MethodHandles.lookup();
-    private static final Map<Class<?>, MethodHandles.Lookup> privateLookups = new HashMap<>();
-    private static final Map<String, Class<?>> classes = new HashMap<>();
-    private static final MethodPredicate[] methodPredicates = new MethodPredicate[] {
+    private static final MethodHandles.Lookup LOOKUP = MethodHandles.lookup();
+    private static final Map<Class<?>, MethodHandles.Lookup> PRIVATE_LOOKUPS = new HashMap<>();
+    private static final Map<String, Class<?>> CLASS_ID_MAP = new HashMap<>();
+    private static final MethodPredicate[] METHOD_PREDICATES = new MethodPredicate[] {
             (m, type, params) -> m.getReturnType().equals(type) && Arrays.equals(m.getParameterTypes(), params),
             (m, type, params) -> type.isAssignableFrom(m.getReturnType()) && Arrays.equals(m.getParameterTypes(), params),
             (m, type, params) -> m.getReturnType().equals(type) && isAssignableFrom(params, m.getParameterTypes()),
@@ -80,7 +80,7 @@ public class EasyLookup {
      */
     @NotNull
     public static Class<?> classById(@NotNull String id) {
-        final Class<?> clazz = classes.get(id);
+        final Class<?> clazz = CLASS_ID_MAP.get(id);
         if (clazz == null) {
             throw new IllegalArgumentException("The class with ID '" + id + "' doesn't exist");
         }
@@ -186,12 +186,12 @@ public class EasyLookup {
     @NotNull
     public static Class<?> addClassId(@NotNull String id, @NotNull Class<?> clazz) {
         if (DEBUG) {
-            final Class<?> value = classes.get(id);
+            final Class<?> value = CLASS_ID_MAP.get(id);
             if (value != null && !value.equals(clazz)) {
                 LOGGER.info("Replacing class ID: '" + id + "' [old = " + value.getName() + ", new = " + clazz.getName() + "]");
             }
         }
-        classes.put(id, clazz);
+        CLASS_ID_MAP.put(id, clazz);
         return clazz;
     }
 
@@ -203,9 +203,9 @@ public class EasyLookup {
      */
     @Nullable
     public static MethodHandles.Lookup privateLookup(@NotNull Class<?> clazz) {
-        return privateLookups.computeIfAbsent(clazz, c -> {
+        return PRIVATE_LOOKUPS.computeIfAbsent(clazz, c -> {
             try {
-                return MethodHandles.privateLookupIn(clazz, lookup);
+                return MethodHandles.privateLookupIn(clazz, LOOKUP);
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
                 return null;
@@ -232,7 +232,7 @@ public class EasyLookup {
     public static MethodHandle constructor(@NotNull Object clazz, @NotNull Object... parameterTypes) throws NoSuchMethodException, IllegalAccessException {
         final Class<?> from = classOf(clazz);
         try {
-            return lookup.findConstructor(from, type(void.class, parameterTypes));
+            return LOOKUP.findConstructor(from, type(void.class, parameterTypes));
         } catch (IllegalAccessException e) {
             if (DEBUG) {
                 LOGGER.info("unreflectConstructor = '" + from.getName() + '(' + String.join(", ", names(classesOf(parameterTypes))) + ")'");
@@ -258,10 +258,10 @@ public class EasyLookup {
     @NotNull
     public static MethodHandle unreflectConstructor(@NotNull Constructor<?> constructor) throws IllegalAccessException {
         try {
-            return lookup.unreflectConstructor(constructor);
+            return LOOKUP.unreflectConstructor(constructor);
         } catch (IllegalAccessException e) {
             constructor.setAccessible(true);
-            return lookup.unreflectConstructor(constructor);
+            return LOOKUP.unreflectConstructor(constructor);
         }
     }
 
@@ -283,7 +283,7 @@ public class EasyLookup {
     public static MethodHandle unreflectConstructor(@NotNull Object clazz, @NotNull Object... parameterTypes) throws NoSuchMethodException, IllegalAccessException {
         Constructor<?> c = classOf(clazz).getDeclaredConstructor(classesOf(parameterTypes));
         c.setAccessible(true);
-        return lookup.unreflectConstructor(c);
+        return LOOKUP.unreflectConstructor(c);
     }
 
     /**
@@ -337,7 +337,7 @@ public class EasyLookup {
     public static MethodHandle method(@NotNull Object clazz, @NotNull String name, @NotNull Object returnType, @NotNull Object... parameterTypes) throws NoSuchMethodException, IllegalAccessException {
         final Class<?> from = classOf(clazz);
         try {
-            return lookup.findVirtual(from, name, type(returnType, parameterTypes));
+            return LOOKUP.findVirtual(from, name, type(returnType, parameterTypes));
         } catch (IllegalAccessException e) {
             if (DEBUG) {
                 LOGGER.info("unreflectMethod = '" + classOf(returnType).getName() + ' ' + name + '(' + String.join(", ", names(classesOf(parameterTypes))) + ")' inside class " + from.getName());
@@ -363,10 +363,10 @@ public class EasyLookup {
     @NotNull
     public static MethodHandle unreflectMethod(@NotNull Method method) throws IllegalAccessException {
         try {
-            return lookup.unreflect(method);
+            return LOOKUP.unreflect(method);
         } catch (IllegalAccessException e) {
             method.setAccessible(true);
-            return lookup.unreflect(method);
+            return LOOKUP.unreflect(method);
         }
     }
 
@@ -389,7 +389,7 @@ public class EasyLookup {
     public static MethodHandle unreflectMethod(@NotNull Object clazz, @NotNull String name, @NotNull Object... parameterTypes) throws NoSuchMethodException, IllegalAccessException {
         Method m = classOf(clazz).getDeclaredMethod(name, classesOf(parameterTypes));
         m.setAccessible(true);
-        return lookup.unreflect(m);
+        return LOOKUP.unreflect(m);
     }
 
     /**
@@ -414,7 +414,7 @@ public class EasyLookup {
     public static MethodHandle staticMethod(@NotNull Object clazz, @NotNull String name, @NotNull Object returnType, @NotNull Object... parameterTypes) throws NoSuchMethodException, IllegalAccessException {
         final Class<?> from = classOf(clazz);
         try {
-            return lookup.findStatic(from, name, type(returnType, parameterTypes));
+            return LOOKUP.findStatic(from, name, type(returnType, parameterTypes));
         } catch (IllegalAccessException e) {
             if (DEBUG) {
                 LOGGER.info("unreflectMethod = 'static " + classOf(returnType).getName() + ' ' + name + '(' + String.join(", ", names(classesOf(parameterTypes))) + ")' inside class " + from.getName());
@@ -454,7 +454,7 @@ public class EasyLookup {
         final Method[] declaredMethods = Arrays.stream(from.getDeclaredMethods()).filter(m -> Modifier.isStatic(m.getModifiers()) == isStatic).toArray(Method[]::new);
 
         Method foundMethod = null;
-        for (MethodPredicate predicate : methodPredicates) {
+        for (MethodPredicate predicate : METHOD_PREDICATES) {
             for (Method method : declaredMethods) {
                 if (predicate.test(method, returnType, parameterTypes)) {
                     if (method.getName().equals(name)) {
@@ -515,7 +515,7 @@ public class EasyLookup {
         final Class<?> from = classOf(clazz);
         final Class<?> type = classOf(returnType);
         try {
-            return lookup.findGetter(from, name, type);
+            return LOOKUP.findGetter(from, name, type);
         } catch (IllegalAccessException e) {
             if (DEBUG) {
                 LOGGER.info("unreflectGetter = '" + type.getName() + ' ' + name + "' inside class " + from.getName());
@@ -542,10 +542,10 @@ public class EasyLookup {
     @NotNull
     public static MethodHandle unreflectGetter(@NotNull Field field) throws IllegalAccessException {
         try {
-            return lookup.unreflectGetter(field);
+            return LOOKUP.unreflectGetter(field);
         } catch (IllegalAccessException e) {
             field.setAccessible(true);
-            return lookup.unreflectGetter(field);
+            return LOOKUP.unreflectGetter(field);
         }
     }
 
@@ -564,7 +564,7 @@ public class EasyLookup {
      */
     @NotNull
     public static MethodHandle unreflectGetter(@NotNull Object clazz, @NotNull String name) throws NoSuchFieldException, IllegalAccessException {
-        return lookup.unreflectGetter(field(classOf(clazz), name));
+        return LOOKUP.unreflectGetter(field(classOf(clazz), name));
     }
 
     /**
@@ -588,7 +588,7 @@ public class EasyLookup {
         final Class<?> from = classOf(clazz);
         final Class<?> type = classOf(returnType);
         try {
-            return lookup.findStaticGetter(from, name, type);
+            return LOOKUP.findStaticGetter(from, name, type);
         } catch (IllegalAccessException e) {
             if (DEBUG) {
                 LOGGER.info("unreflectGetter = 'static " + type.getName() + ' ' + name + "' inside class " + from.getName());
@@ -624,7 +624,7 @@ public class EasyLookup {
         final Class<?> from = classOf(clazz);
         final Class<?> type = classOf(returnType);
         try {
-            return lookup.findSetter(from, name, type);
+            return LOOKUP.findSetter(from, name, type);
         } catch (IllegalAccessException e) {
             if (DEBUG) {
                 LOGGER.info("unreflectSetter = '" + type.getName() + ' ' + name + "' inside class " + from.getName());
@@ -651,10 +651,10 @@ public class EasyLookup {
     @NotNull
     public static MethodHandle unreflectSetter(@NotNull Field field) throws IllegalAccessException {
         try {
-            return lookup.unreflectSetter(field);
+            return LOOKUP.unreflectSetter(field);
         } catch (IllegalAccessException e) {
             field.setAccessible(true);
-            return lookup.unreflectSetter(field);
+            return LOOKUP.unreflectSetter(field);
         }
     }
 
@@ -673,7 +673,7 @@ public class EasyLookup {
      */
     @NotNull
     public static MethodHandle unreflectSetter(@NotNull Object clazz, @NotNull String name) throws NoSuchFieldException, IllegalAccessException {
-        return lookup.unreflectSetter(field(classOf(clazz), name));
+        return LOOKUP.unreflectSetter(field(classOf(clazz), name));
     }
 
     /**
@@ -697,7 +697,7 @@ public class EasyLookup {
         final Class<?> from = classOf(clazz);
         final Class<?> type = classOf(returnType);
         try {
-            return lookup.findStaticSetter(from, name, type);
+            return LOOKUP.findStaticSetter(from, name, type);
         } catch (IllegalAccessException e) {
             if (DEBUG) {
                 LOGGER.info("unreflectSetter = 'static " + type.getName() + ' ' + name + "' inside class " + from.getName());

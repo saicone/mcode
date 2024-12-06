@@ -7,8 +7,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class BukkitLookup extends EasyLookup {
 
-    private static final String nmsPackage = MC.version().isUniversal() ? "net.minecraft." : ("net.minecraft.server." + MC.version().bukkitPackage() + ".");
-    private static final String obcPackage = Bukkit.getServer().getClass().getPackage().getName() + ".";
+    private static final String MINECRAFT = MC.version().isUniversal() ? "net.minecraft." : ("net.minecraft.server." + MC.version().bukkitPackage() + ".");
+    private static final String BUKKIT = Bukkit.getServer().getClass().getPackage().getName() + ".";
 
     static {
         try {
@@ -106,13 +106,13 @@ public class BukkitLookup extends EasyLookup {
         for (int i = 0; i < aliases.length; i++) {
             final String alias = aliases[i];
             if (alias.contains(".")) {
-                aliases[i] = nmsPackage + alias;
+                aliases[i] = MINECRAFT + alias;
             }
         }
         if (MC.version().isUniversal()) {
-            return nmsPackage + name;
+            return MINECRAFT + name;
         } else {
-            return nmsPackage + (name.contains(".") ? name.substring(name.lastIndexOf('.') + 1) : name);
+            return MINECRAFT + (name.contains(".") ? name.substring(name.lastIndexOf('.') + 1) : name);
         }
     }
 
@@ -163,9 +163,9 @@ public class BukkitLookup extends EasyLookup {
         for (int i = 0; i < aliases.length; i++) {
             final String alias = aliases[i];
             if (alias.contains(".")) {
-                aliases[i] = obcPackage + alias;
+                aliases[i] = BUKKIT + alias;
             }
         }
-        return obcPackage + name;
+        return BUKKIT + name;
     }
 }
