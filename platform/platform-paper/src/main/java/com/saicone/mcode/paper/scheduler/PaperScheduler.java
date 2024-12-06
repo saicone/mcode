@@ -1,4 +1,4 @@
-package com.saicone.mcode.folia.scheduler;
+package com.saicone.mcode.paper.scheduler;
 
 import com.saicone.mcode.module.task.Scheduler;
 import com.saicone.mcode.module.task.TaskTimer;
@@ -11,11 +11,11 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.TimeUnit;
 
-public class FoliaScheduler implements Scheduler<ScheduledTask> {
+public class PaperScheduler implements Scheduler<ScheduledTask> {
 
     private final Plugin plugin;
 
-    public FoliaScheduler(@NotNull Plugin plugin) {
+    public PaperScheduler(@NotNull Plugin plugin) {
         this.plugin = plugin;
     }
 
@@ -102,7 +102,7 @@ public class FoliaScheduler implements Scheduler<ScheduledTask> {
                 if (delay > 0) {
                     return async ? laterAsync(runnable, delay, unit) : later(runnable, delay, unit);
                 }
-                return async ? runAsync(runnable) : FoliaScheduler.this.run(runnable);
+                return async ? runAsync(runnable) : PaperScheduler.this.run(runnable);
             }
 
             @Override

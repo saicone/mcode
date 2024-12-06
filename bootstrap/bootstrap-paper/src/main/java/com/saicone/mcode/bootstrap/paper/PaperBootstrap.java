@@ -115,8 +115,8 @@ public class PaperBootstrap extends JavaPlugin implements Bootstrap {
         }
         if (this.addons.contains(Addon.MODULE_TASK)) {
             final String schedulerName;
-            if (ServerInstance.Platform.FOLIA) {
-                schedulerName = "com.saicone.mcode.folia.scheduler.FoliaScheduler";
+            if (ServerInstance.Type.MULTITHREADING) {
+                schedulerName = "com.saicone.mcode.paper.scheduler.PaperScheduler";
             } else {
                 schedulerName = "com.saicone.mcode.bukkit.scheduler.BukkitScheduler";
             }

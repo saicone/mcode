@@ -25,6 +25,13 @@ public class ServerInstance {
          * Return true if server instance has craftbukkit package relocated.
          */
         public static final boolean CRAFTBUKKIT_RELOCATED;
+        /**
+         * Return true if server instance is a multi-thread implementation, some examples:<br>
+         * - Folia<br>
+         * - ShreddedPaper<br>
+         * - UniverseSpigot
+         */
+        public static final boolean MULTITHREADING;
 
         static {
             boolean mojangMapped = false;
@@ -36,6 +43,13 @@ public class ServerInstance {
 
             final String serverPackage = Bukkit.getServer().getClass().getPackage().getName();
             CRAFTBUKKIT_RELOCATED = serverPackage.startsWith("org.bukkit.craftbukkit.v1_");
+
+            boolean multithreading = false;
+            try {
+                Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
+                multithreading = true;
+            } catch (ClassNotFoundException ignored) { }
+            MULTITHREADING = multithreading;
         }
     }
 
@@ -54,11 +68,6 @@ public class ServerInstance {
          */
         public static final boolean PAPER;
         /**
-         * Return true if server instance is a Folia server.<br>
-         * <a href="https://papermc.io/software/folia">PaperMC.io</a>
-         */
-        public static final boolean FOLIA;
-        /**
          * Return true if server instance is a PurpurMC server.<br>
          * <a href="https://purpurmc.org/">PurpurMC.org</a>
          */
@@ -67,7 +76,6 @@ public class ServerInstance {
         static {
             boolean spigot = false;
             boolean paper = false;
-            boolean folia = false;
             boolean purpur = false;
             try {
                 Class.forName("org.spigotmc.SpigotConfig");
@@ -78,16 +86,11 @@ public class ServerInstance {
                 paper = true;
             } catch (ClassNotFoundException ignored) { }
             try {
-                Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
-                folia = true;
-            } catch (ClassNotFoundException ignored) { }
-            try {
                 ItemStack.class.getDeclaredMethod("hasLore");
                 purpur = true;
             } catch (NoSuchMethodException ignored) { }
             SPIGOT = spigot;
             PAPER = paper;
-            FOLIA = folia;
             PURPUR = purpur;
         }
     }
