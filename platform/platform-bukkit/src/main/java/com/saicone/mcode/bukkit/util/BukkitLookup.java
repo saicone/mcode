@@ -13,39 +13,39 @@ public class BukkitLookup extends EasyLookup {
     static {
         try {
             // NBT
-            addNMSClass("nbt.NBTBase", "Tag");
-            addNMSClass("nbt.NBTTagByte", "ByteTag");
-            addNMSClass("nbt.NBTTagByteArray", "ByteArrayTag");
-            addNMSClass("nbt.NBTTagCompound", "CompoundTag");
-            addNMSClass("nbt.NBTTagDouble", "DoubleTag");
-            addNMSClass("nbt.NBTTagFloat", "FloatTag");
-            addNMSClass("nbt.NBTTagInt", "IntTag");
-            addNMSClass("nbt.NBTTagIntArray", "IntArrayTag");
-            addNMSClass("nbt.NBTTagList", "ListTag");
-            addNMSClass("nbt.NBTTagLong", "LongTag");
+            addMinecraftClass("nbt.NBTBase", "Tag");
+            addMinecraftClass("nbt.NBTTagByte", "ByteTag");
+            addMinecraftClass("nbt.NBTTagByteArray", "ByteArrayTag");
+            addMinecraftClass("nbt.NBTTagCompound", "CompoundTag");
+            addMinecraftClass("nbt.NBTTagDouble", "DoubleTag");
+            addMinecraftClass("nbt.NBTTagFloat", "FloatTag");
+            addMinecraftClass("nbt.NBTTagInt", "IntTag");
+            addMinecraftClass("nbt.NBTTagIntArray", "IntArrayTag");
+            addMinecraftClass("nbt.NBTTagList", "ListTag");
+            addMinecraftClass("nbt.NBTTagLong", "LongTag");
             if (MC.version().isNewerThanOrEquals(MC.V_1_12)) {
-                addNMSClass("nbt.NBTTagLongArray", "LongArrayTag");
+                addMinecraftClass("nbt.NBTTagLongArray", "LongArrayTag");
             }
-            addNMSClass("nbt.NBTTagShort", "ShortTag");
-            addNMSClass("nbt.NBTTagString", "StringTag");
-            addNMSClass("nbt.NBTCompressedStreamTools", "NbtIo");
-            addNMSClass("nbt.NBTReadLimiter", "NbtAccounter");
-            addNMSClass("nbt.MojangsonParser", "TagParser");
+            addMinecraftClass("nbt.NBTTagShort", "ShortTag");
+            addMinecraftClass("nbt.NBTTagString", "StringTag");
+            addMinecraftClass("nbt.NBTCompressedStreamTools", "NbtIo");
+            addMinecraftClass("nbt.NBTReadLimiter", "NbtAccounter");
+            addMinecraftClass("nbt.MojangsonParser", "TagParser");
             if (MC.version().isFlat()) {
-                addNMSClass("nbt.DynamicOpsNBT", "NbtOps");
+                addMinecraftClass("nbt.DynamicOpsNBT", "NbtOps");
             }
 
             // DataComponent
             if (MC.version().isComponent()) {
-                addNMSClass("core.component.DataComponentHolder");
-                addNMSClass("core.component.DataComponentMap");
-                addNMSClassId("DataComponentMap.Builder", "core.component.DataComponentMap$a", "core.component.DataComponentMap$Builder");
-                addNMSClassId("DataComponentMap.SimpleMap", "core.component.DataComponentMap$a$a", "core.component.DataComponentMap$Builder$SimpleMap");
-                addNMSClass("core.component.DataComponentPatch");
-                addNMSClassId("DataComponentPatch.Builder", "core.component.DataComponentPatch$a", "core.component.DataComponentPatch$Builder");
-                addNMSClass("core.component.PatchedDataComponentMap");
-                addNMSClass("core.component.TypedDataComponent");
-                addNMSClass("core.component.DataComponentType");
+                addMinecraftClass("core.component.DataComponentHolder");
+                addMinecraftClass("core.component.DataComponentMap");
+                addMinecraftClassId("DataComponentMap.Builder", "core.component.DataComponentMap$a", "core.component.DataComponentMap$Builder");
+                addMinecraftClassId("DataComponentMap.SimpleMap", "core.component.DataComponentMap$a$a", "core.component.DataComponentMap$Builder$SimpleMap");
+                addMinecraftClass("core.component.DataComponentPatch");
+                addMinecraftClassId("DataComponentPatch.Builder", "core.component.DataComponentPatch$a", "core.component.DataComponentPatch$Builder");
+                addMinecraftClass("core.component.PatchedDataComponentMap");
+                addMinecraftClass("core.component.TypedDataComponent");
+                addMinecraftClass("core.component.DataComponentType");
             }
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
@@ -66,8 +66,8 @@ public class BukkitLookup extends EasyLookup {
      * @throws ClassNotFoundException if the class cannot be located.
      */
     @NotNull
-    public static Class<?> addNMSClass(@NotNull String name) throws ClassNotFoundException {
-        return addNMSClass(name, new String[0]);
+    public static Class<?> addMinecraftClass(@NotNull String name) throws ClassNotFoundException {
+        return addMinecraftClass(name, new String[0]);
     }
 
     /**
@@ -81,8 +81,8 @@ public class BukkitLookup extends EasyLookup {
      * @throws ClassNotFoundException if the class cannot be located.
      */
     @NotNull
-    public static Class<?> addNMSClass(@NotNull String name, @NotNull String... aliases) throws ClassNotFoundException {
-        return addClass(nmsClass(name, aliases), aliases);
+    public static Class<?> addMinecraftClass(@NotNull String name, @NotNull String... aliases) throws ClassNotFoundException {
+        return addClass(minecraftClass(name, aliases), aliases);
     }
 
     /**
@@ -97,12 +97,12 @@ public class BukkitLookup extends EasyLookup {
      * @throws ClassNotFoundException if the class cannot be located.
      */
     @NotNull
-    public static Class<?> addNMSClassId(@NotNull String id, @NotNull String name, @NotNull String... aliases) throws ClassNotFoundException {
-        return addClassId(id, nmsClass(name, aliases), aliases);
+    public static Class<?> addMinecraftClassId(@NotNull String id, @NotNull String name, @NotNull String... aliases) throws ClassNotFoundException {
+        return addClassId(id, minecraftClass(name, aliases), aliases);
     }
 
     @NotNull
-    private static String nmsClass(@NotNull String name, @NotNull String... aliases) {
+    private static String minecraftClass(@NotNull String name, @NotNull String... aliases) {
         for (int i = 0; i < aliases.length; i++) {
             final String alias = aliases[i];
             if (alias.contains(".")) {
@@ -125,8 +125,8 @@ public class BukkitLookup extends EasyLookup {
      * @throws ClassNotFoundException if the class cannot be located.
      */
     @NotNull
-    public static Class<?> addOBCClass(@NotNull String name) throws ClassNotFoundException {
-        return addOBCClass(name, new String[0]);
+    public static Class<?> addBukkitClass(@NotNull String name) throws ClassNotFoundException {
+        return addBukkitClass(name, new String[0]);
     }
 
     /**
@@ -139,8 +139,8 @@ public class BukkitLookup extends EasyLookup {
      * @throws ClassNotFoundException if the class cannot be located.
      */
     @NotNull
-    public static Class<?> addOBCClass(@NotNull String name, @NotNull String... aliases) throws ClassNotFoundException {
-        return addClass(obcClass(name, aliases), aliases);
+    public static Class<?> addBukkitClass(@NotNull String name, @NotNull String... aliases) throws ClassNotFoundException {
+        return addClass(bukkitClass(name, aliases), aliases);
     }
 
     /**
@@ -154,12 +154,12 @@ public class BukkitLookup extends EasyLookup {
      * @throws ClassNotFoundException if the class cannot be located.
      */
     @NotNull
-    public static Class<?> addOBCClassId(@NotNull String id, @NotNull String name, @NotNull String... aliases) throws ClassNotFoundException {
-        return addClassId(id, obcClass(name, aliases), aliases);
+    public static Class<?> addBukkitClassId(@NotNull String id, @NotNull String name, @NotNull String... aliases) throws ClassNotFoundException {
+        return addClassId(id, bukkitClass(name, aliases), aliases);
     }
 
     @NotNull
-    private static String obcClass(@NotNull String name, @NotNull String... aliases) {
+    private static String bukkitClass(@NotNull String name, @NotNull String... aliases) {
         for (int i = 0; i < aliases.length; i++) {
             final String alias = aliases[i];
             if (alias.contains(".")) {

@@ -61,8 +61,8 @@ public class SkullTexture {
         MethodHandle set$profile = null;
         MethodHandle get$value = null;
         try {
-            BukkitLookup.addOBCClass("entity.CraftPlayer");
-            BukkitLookup.addOBCClass("inventory.CraftMetaSkull");
+            BukkitLookup.addBukkitClass("entity.CraftPlayer");
+            BukkitLookup.addBukkitClass("inventory.CraftMetaSkull");
 
             get$profile = BukkitLookup.method("CraftPlayer", "getProfile", GameProfile.class);
             // Unreflect reason:
