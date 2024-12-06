@@ -110,15 +110,15 @@ public class EasyLookup {
             final String name = s.substring(space + 1);
             if (modifier.contains("set")) {
                 if (modifier.contains("static")) {
-                    return staticSetter(clazz, name, type);
+                    return staticSetter(clazz, type, name);
                 } else {
-                    return setter(clazz, name, type);
+                    return setter(clazz, type, name);
                 }
             } else {
                 if (modifier.contains("static")) {
-                    return staticGetter(clazz, name, type);
+                    return staticGetter(clazz, type, name);
                 } else {
-                    return getter(clazz, name, type);
+                    return getter(clazz, type, name);
                 }
             }
         }
@@ -135,9 +135,9 @@ public class EasyLookup {
         final String type = modifier.substring(modifier.lastIndexOf(' ') + 1);
         final String name = s1.substring(space + 1);
         if (modifier.contains("static")) {
-            return staticMethod(clazz, name, type, parameterTypes);
+            return staticMethod(clazz, type, name, parameterTypes);
         } else {
-            return method(clazz, name, type, parameterTypes);
+            return method(clazz, type, name, parameterTypes);
         }
     }
 
@@ -407,24 +407,24 @@ public class EasyLookup {
     /**
      * Easy way to invoke {@link MethodHandles.Lookup#findVirtual(Class, String, MethodType)} without
      * creating a MethodType, this method require to specify the return type class of reflected {@link Method}
-     * and its only compatible with instance public methods, see {@link #staticMethod(Object, String, Object, Object...)}
+     * and its only compatible with instance public methods, see {@link #staticMethod(Object, Object, String, Object...)}
      * for static public methods.<br>
-     *
+     * <p>
      * Required classes can be Strings to get by {@link #classById(String)}.<br>
-     *
+     * <p>
      * See also {@link #unreflectMethod(Object, String, Object...)} for private methods.
      *
      * @param clazz          Class to find public method.
-     * @param name           Method name.
      * @param returnType     Return type class for method.
+     * @param name           Method name.
      * @param parameterTypes Required classes in method.
-     * @return               A MethodHandle representing a instance method for provided class.
+     * @return A MethodHandle representing a instance method for provided class.
      * @throws NoSuchMethodException  if the method does not exist.
      * @throws IllegalAccessException if access checking fails, or if the method is static, or if the method's
      *                                variable arity modifier bit is set and asVarargsCollector fails.
      */
     @NotNull
-    public static MethodHandle method(@NotNull Object clazz, @NotNull String name, @NotNull Object returnType, @NotNull Object... parameterTypes) throws NoSuchMethodException, IllegalAccessException {
+    public static MethodHandle method(@NotNull Object clazz, @NotNull Object returnType, @NotNull String name, @NotNull Object... parameterTypes) throws NoSuchMethodException, IllegalAccessException {
         final Class<?> from = classOf(clazz);
         try {
             return LOOKUP.findVirtual(from, name, type(returnType, parameterTypes));
@@ -437,7 +437,7 @@ public class EasyLookup {
             if (DEBUG) {
                 LOGGER.info("findMethod = '" + classOf(returnType).getName() + ' ' + name + '(' + String.join(", ", names(classesOf(parameterTypes))) + ")' inside class " + from.getName());
             }
-            return unreflectMethod(findMethod(from, false, name, classOf(returnType), classesOf(parameterTypes)));
+            return unreflectMethod(findMethod(from, false, classOf(returnType), name, classesOf(parameterTypes)));
         }
     }
 
@@ -486,22 +486,22 @@ public class EasyLookup {
      * Easy way to invoke {@link MethodHandles.Lookup#findStatic(Class, String, MethodType)} without
      * creating a MethodType, this method require to specify the return type class of reflected {@link Method}
      * and only compatible with static methods.<br>
-     *
+     * <p>
      * Required classes can be Strings to get by {@link #classById(String)}.<br>
-     *
+     * <p>
      * See also {@link #unreflectMethod(Object, String, Object...)} for private methods.
      *
      * @param clazz          Class to find method.
-     * @param name           Method name.
      * @param returnType     Return type class for method.
+     * @param name           Method name.
      * @param parameterTypes Required classes in method.
-     * @return               A MethodHandle representing a static method for provided class.
+     * @return A MethodHandle representing a static method for provided class.
      * @throws NoSuchMethodException  if the method does not exist.
      * @throws IllegalAccessException if access checking fails, or if the method is not static, or if the method's
      *                                variable arity modifier bit is set and asVarargsCollector fails.
      */
     @NotNull
-    public static MethodHandle staticMethod(@NotNull Object clazz, @NotNull String name, @NotNull Object returnType, @NotNull Object... parameterTypes) throws NoSuchMethodException, IllegalAccessException {
+    public static MethodHandle staticMethod(@NotNull Object clazz, @NotNull Object returnType, @NotNull String name, @NotNull Object... parameterTypes) throws NoSuchMethodException, IllegalAccessException {
         final Class<?> from = classOf(clazz);
         try {
             return LOOKUP.findStatic(from, name, type(returnType, parameterTypes));
@@ -514,28 +514,28 @@ public class EasyLookup {
             if (DEBUG) {
                 LOGGER.info("findMethod = 'static " + classOf(returnType).getName() + ' ' + name + '(' + String.join(", ", names(classesOf(parameterTypes))) + ")' inside class " + from.getName());
             }
-            return unreflectMethod(findMethod(from, true, name, classOf(returnType), classesOf(parameterTypes)));
+            return unreflectMethod(findMethod(from, true, classOf(returnType), name, classesOf(parameterTypes)));
         }
     }
 
     /**
      * Find method inside class using recursirve searching and
      * invoke {@link MethodHandles.Lookup#unreflect(Method)}.<br>
-     *
+     * <p>
      * Required classes can be Strings to get by {@link #classById(String)}.
      *
      * @param from           Class to find method.
      * @param isStatic       True if method is static.
-     * @param name           Method name.
      * @param returnType     Return type class for method.
+     * @param name           Method name.
      * @param parameterTypes Required classes in method.
-     * @return               A method from provided class.
+     * @return A method from provided class.
      * @throws NoSuchMethodException  if the method does not exist.
      * @throws IllegalAccessException if access checking fails, or if the method is not static, or if the method's
      *                                variable arity modifier bit is set and asVarargsCollector fails.
      */
     @NotNull
-    public static Method findMethod(@NotNull Class<?> from, boolean isStatic, @NotNull String name, @NotNull Class<?> returnType, @NotNull Class<?>... parameterTypes) throws NoSuchMethodException, IllegalAccessException {
+    public static Method findMethod(@NotNull Class<?> from, boolean isStatic, @NotNull Class<?> returnType, @NotNull String name, @NotNull Class<?>... parameterTypes) throws NoSuchMethodException, IllegalAccessException {
         // Find with reflection
         try {
             return from.getDeclaredMethod(name, parameterTypes);
@@ -586,22 +586,22 @@ public class EasyLookup {
     /**
      * Easy way to invoke {@link MethodHandles.Lookup#findGetter(Class, String, Class)} without
      * creating a MethodType, this method require to specify the return type class of {@link Field}
-     * and its only compatible with public instance fields, see {@link #staticGetter(Object, String, Object)}
+     * and its only compatible with public instance fields, see {@link #staticGetter(Object, Object, String)}
      * for static getter.<br>
-     *
+     * <p>
      * Required classes can be Strings to get by {@link #classById(String)}.<br>
-     *
+     * <p>
      * See also {@link #unreflectGetter(Object, String)} for private getters.
      *
      * @param clazz      Class to find getter.
-     * @param name       Field name.
      * @param returnType Return type class for provided field name.
-     * @return           A MethodHandle representing a field getter for provided class.
+     * @param name       Field name.
+     * @return A MethodHandle representing a field getter for provided class.
      * @throws NoSuchFieldException   if the field does not exist.
-     * @throws IllegalAccessException  if access checking fails, or if the field is static.
+     * @throws IllegalAccessException if access checking fails, or if the field is static.
      */
     @NotNull
-    public static MethodHandle getter(@NotNull Object clazz, @NotNull String name, @NotNull Object returnType) throws NoSuchFieldException, IllegalAccessException {
+    public static MethodHandle getter(@NotNull Object clazz, @NotNull Object returnType, @NotNull String name) throws NoSuchFieldException, IllegalAccessException {
         final Class<?> from = classOf(clazz);
         final Class<?> type = classOf(returnType);
         try {
@@ -615,7 +615,7 @@ public class EasyLookup {
             if (DEBUG) {
                 LOGGER.info("findGetter = '" + type.getName() + ' ' + name + "' inside class " + from.getName());
             }
-            return unreflectGetter(findField(from, false, name, type));
+            return unreflectGetter(findField(from, false, type, name));
         }
     }
 
@@ -661,20 +661,20 @@ public class EasyLookup {
      * Easy way to invoke {@link MethodHandles.Lookup#findStaticGetter(Class, String, Class)} without
      * creating a MethodType, this method require to specify the return type class of {@link Field}
      * and its only compatible with instance fields<br>
-     *
+     * <p>
      * Required classes can be Strings to get by {@link #classById(String)}.<br>
-     *
+     * <p>
      * See also {@link #unreflectGetter(Object, String)} for private getters.
      *
      * @param clazz      Class to find getter.
-     * @param name       Field name.
      * @param returnType Return type class for provided field name.
-     * @return           A MethodHandle representing a field getter for provided class.
+     * @param name       Field name.
+     * @return A MethodHandle representing a field getter for provided class.
      * @throws NoSuchFieldException   if the field does not exist.
      * @throws IllegalAccessException if access checking fails, or if the field is not static.
      */
     @NotNull
-    public static MethodHandle staticGetter(@NotNull Object clazz, @NotNull String name, @NotNull Object returnType) throws NoSuchFieldException, IllegalAccessException {
+    public static MethodHandle staticGetter(@NotNull Object clazz, @NotNull Object returnType, @NotNull String name) throws NoSuchFieldException, IllegalAccessException {
         final Class<?> from = classOf(clazz);
         final Class<?> type = classOf(returnType);
         try {
@@ -688,29 +688,29 @@ public class EasyLookup {
             if (DEBUG) {
                 LOGGER.info("unreflectGetter = 'static " + type.getName() + ' ' + name + "' inside class " + from.getName());
             }
-            return unreflectGetter(findField(from, true, name, type));
+            return unreflectGetter(findField(from, true, type, name));
         }
     }
 
     /**
      * Easy way to invoke {@link MethodHandles.Lookup#findSetter(Class, String, Class)} without
      * creating a MethodType, this method require to specify the return type class of {@link Field}
-     * and its only compatible with public instance fields, see {@link #staticSetter(Object, String, Object)}
+     * and its only compatible with public instance fields, see {@link #staticSetter(Object, Object, String)}
      * for static setter.<br>
-     *
+     * <p>
      * Required classes can be Strings to get by {@link #classById(String)}.<br>
-     *
+     * <p>
      * See also {@link #unreflectSetter(Object, String)} for private setters.
      *
      * @param clazz      Class to find setter.
-     * @param name       Field name.
      * @param returnType Return type class for provided field name.
-     * @return           A MethodHandle representing a field setter for provided class.
+     * @param name       Field name.
+     * @return A MethodHandle representing a field setter for provided class.
      * @throws NoSuchFieldException   if the field does not exist.
-     * @throws IllegalAccessException  if access checking fails, or if the field is static.
+     * @throws IllegalAccessException if access checking fails, or if the field is static.
      */
     @NotNull
-    public static MethodHandle setter(@NotNull Object clazz, @NotNull String name, @NotNull Object returnType) throws NoSuchFieldException, IllegalAccessException {
+    public static MethodHandle setter(@NotNull Object clazz, @NotNull Object returnType, @NotNull String name) throws NoSuchFieldException, IllegalAccessException {
         final Class<?> from = classOf(clazz);
         final Class<?> type = classOf(returnType);
         try {
@@ -724,7 +724,7 @@ public class EasyLookup {
             if (DEBUG) {
                 LOGGER.info("findSetter = '" + type.getName() + ' ' + name + "' inside class " + from.getName());
             }
-            return unreflectSetter(findField(from, false, name, type));
+            return unreflectSetter(findField(from, false, type, name));
         }
     }
 
@@ -770,20 +770,20 @@ public class EasyLookup {
      * Easy way to invoke {@link MethodHandles.Lookup#findStaticSetter(Class, String, Class)} without
      * creating a MethodType, this method require to specify the return type class of {@link Field}
      * and its only compatible with instance fields<br>
-     *
+     * <p>
      * Required classes can be Strings to get by {@link #classById(String)}.<br>
-     *
+     * <p>
      * See also {@link #unreflectSetter(Object, String)} for private setters.
      *
      * @param clazz      Class to find setter.
-     * @param name       Field name.
      * @param returnType Return type class for provided field name.
-     * @return           A MethodHandle representing a field setter for provided class.
+     * @param name       Field name.
+     * @return A MethodHandle representing a field setter for provided class.
      * @throws NoSuchFieldException   if the field does not exist.
      * @throws IllegalAccessException if access checking fails, or if the field is not static.
      */
     @NotNull
-    public static MethodHandle staticSetter(@NotNull Object clazz, @NotNull String name, @NotNull Object returnType) throws NoSuchFieldException, IllegalAccessException {
+    public static MethodHandle staticSetter(@NotNull Object clazz, @NotNull Object returnType, @NotNull String name) throws NoSuchFieldException, IllegalAccessException {
         final Class<?> from = classOf(clazz);
         final Class<?> type = classOf(returnType);
         try {
@@ -797,7 +797,7 @@ public class EasyLookup {
             if (DEBUG) {
                 LOGGER.info("findSetter = 'static " + type.getName() + ' ' + name + "' inside class " + from.getName());
             }
-            return unreflectSetter(findField(from, true, name, type));
+            return unreflectSetter(findField(from, true, type, name));
         }
     }
 
@@ -806,14 +806,14 @@ public class EasyLookup {
      *
      * @param from     Class to find the field.
      * @param isStatic True if field is static.
-     * @param name     Field name.
      * @param type     Return type class for provided field name.
-     * @return         A field from provided class.
+     * @param name     Field name.
+     * @return A field from provided class.
      * @throws NoSuchFieldException   if the field does not exist.
      * @throws IllegalAccessException if access checking fails, or if the field is not static.
      */
     @NotNull
-    public static Field findField(@NotNull Class<?> from, boolean isStatic, @NotNull String name, @NotNull Class<?> type) throws NoSuchFieldException, IllegalAccessException {
+    public static Field findField(@NotNull Class<?> from, boolean isStatic, @NotNull Class<?> type, @NotNull String name) throws NoSuchFieldException, IllegalAccessException {
         // Find with name
         try {
             final Field field = from.getDeclaredField(name);

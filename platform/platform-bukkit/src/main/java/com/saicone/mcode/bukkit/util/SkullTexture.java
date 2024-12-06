@@ -64,7 +64,7 @@ public class SkullTexture {
             BukkitLookup.addBukkitClass("entity.CraftPlayer");
             BukkitLookup.addBukkitClass("inventory.CraftMetaSkull");
 
-            get$profile = BukkitLookup.method("CraftPlayer", "getProfile", GameProfile.class);
+            get$profile = BukkitLookup.method("CraftPlayer", GameProfile.class, "getProfile");
             // Unreflect reason:
             // Private method/field
             if (MC.version().isNewerThanOrEquals(MC.V_1_15)) {
@@ -81,7 +81,7 @@ public class SkullTexture {
                     break;
                 }
             }
-            get$value = BukkitLookup.method(Property.class, value, String.class);
+            get$value = BukkitLookup.method(Property.class, String.class, value);
         } catch (NoSuchFieldException | IllegalAccessException | ClassNotFoundException | NoSuchMethodException e) {
             e.printStackTrace();
         }
