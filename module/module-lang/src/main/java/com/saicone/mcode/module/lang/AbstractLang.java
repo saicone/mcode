@@ -69,7 +69,7 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
     }
 
     protected void loadDisplays(@NotNull String language, @NotNull File file) {
-        for (var entry : getObjects(file).entrySet()) {
+        for (var entry : getObjects(language, file).entrySet()) {
             final Display<SenderT> display = loadDisplayOrNull(entry.getValue());
             if (display != null) {
                 this.put(language, entry.getKey(), display);
@@ -126,7 +126,7 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
     }
 
     @NotNull
-    private Map<String, Object> getObjects(@NotNull File file) {
+    private Map<String, Object> getObjects(@NotNull String language, @NotNull File file) {
         final Map<?, ?> objects;
         if (useSettings) {
             objects = SettingsData.of(file.getName()).load(file.getParentFile()).asLiteralObject();
@@ -139,6 +139,9 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
             }
             for (Path path : this.paths) {
                 if (path.getPath().equals(pathKey) || path.getAliases().contains(pathKey)) {
+                    if (path instanceof Value) {
+                        ((Value<?>) path).setValue(language, value);
+                    }
                     return false;
                 }
             }

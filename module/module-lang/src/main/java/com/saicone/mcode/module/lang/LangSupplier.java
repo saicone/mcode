@@ -1,8 +1,10 @@
 package com.saicone.mcode.module.lang;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
@@ -62,17 +64,93 @@ public interface LangSupplier {
         return DEFAULT_LOG_LEVEL;
     }
 
+    @NotNull
+    static <T> Value<T> value(@NotNull String path, @NotNull String... oldPaths) {
+        return new Value<>(path, oldPaths);
+    }
+
+    @NotNull
+    static Path path(@NotNull String path, @NotNull String... oldPaths) {
+        return new Path(path, oldPaths);
+    }
+
+    class Value<T> extends Path {
+
+        private BiFunction<Object, Object, T> parser;
+        private boolean memoize;
+
+        private transient final Map<String, Object> values = new HashMap<>();
+        private transient final Map<String, T> cache = new HashMap<>();
+
+        public Value(@NotNull String path, @NotNull String[] aliases) {
+            super(path, aliases);
+        }
+
+        @NotNull
+        @Contract("_ -> this")
+        public Value<T> parser(@NotNull Function<Object, T> parser) {
+            this.parser = (player, object) -> parser.apply(object);
+            this.memoize = true;
+            return this;
+        }
+
+        @NotNull
+        @Contract("_ -> this")
+        public Value<T> parser(@NotNull BiFunction<Object, Object, T> parser) {
+            this.parser = parser;
+            this.memoize = false;
+            return this;
+        }
+
+        @NotNull
+        @Contract("_ -> this")
+        public Value<T> memoize(boolean memoize) {
+            this.memoize = memoize;
+            return this;
+        }
+
+        public <SenderT> T get(@NotNull SenderT sender) {
+            if (this.memoize) {
+                final String language = getHolder().getEffectiveLanguage(sender);
+                T cached = this.cache.get(language);
+                if (cached == null) {
+                    cached = this.parser.apply(sender, getValue(language));
+                    this.cache.put(language, cached);
+                }
+                return cached;
+            }
+            return this.parser.apply(sender, getValue(getHolder().getEffectiveLanguage(sender)));
+        }
+
+        @Nullable
+        public Object getValue(@NotNull String language) {
+            final Object value = this.values.get(language);
+            if (value != null) {
+                return value;
+            }
+            return this.values.get(getHolder().getLanguage());
+        }
+
+        public void setValue(@Nullable Object value) {
+            setValue(getHolder().getLanguage(), value);
+        }
+
+        public void setValue(@NotNull String language, @Nullable Object value) {
+            this.values.put(language, value);
+        }
+
+        public void clear() {
+            this.values.clear();
+            this.cache.clear();
+        }
+    }
+
     class Path {
 
         private final String path;
         private final Set<String> aliases;
 
         private DisplayHolder<?> holder = null;
-
-        @NotNull
-        public static Path of(@NotNull String path, @NotNull String... oldPaths) {
-            return new Path(path, oldPaths);
-        }
 
         public Path(@NotNull String path, @NotNull String[] aliases) {
             this.path = path;
@@ -89,7 +167,6 @@ public interface LangSupplier {
             return aliases;
         }
 
-        @Nullable
         public DisplayHolder<?> getHolder() {
             return holder;
         }
