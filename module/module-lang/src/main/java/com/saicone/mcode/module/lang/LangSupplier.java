@@ -65,7 +65,7 @@ public interface LangSupplier {
     class Path {
 
         private final String path;
-        private final String[] oldPaths;
+        private final Set<String> aliases;
 
         private DisplayHolder<?> holder = null;
 
@@ -74,9 +74,9 @@ public interface LangSupplier {
             return new Path(path, oldPaths);
         }
 
-        public Path(@NotNull String path, @NotNull String[] oldPaths) {
+        public Path(@NotNull String path, @NotNull String[] aliases) {
             this.path = path;
-            this.oldPaths = oldPaths;
+            this.aliases = Set.of(aliases);
         }
 
         @NotNull
@@ -85,8 +85,8 @@ public interface LangSupplier {
         }
 
         @NotNull
-        public String[] getOldPaths() {
-            return oldPaths;
+        public Set<String> getAliases() {
+            return aliases;
         }
 
         @Nullable

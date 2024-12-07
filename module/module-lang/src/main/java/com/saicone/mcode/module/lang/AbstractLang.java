@@ -1,7 +1,6 @@
 package com.saicone.mcode.module.lang;
 
 import com.saicone.mcode.util.DMap;
-import com.saicone.settings.Settings;
 import com.saicone.settings.SettingsData;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -128,16 +127,23 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
 
     @NotNull
     private Map<String, Object> getObjects(@NotNull File file) {
-        if (!useSettings) {
-            return DMap.of(getFileObjects(file)).asDeepPath(".",
-                    (value) -> !(value instanceof Map) || DMap.of((Map<?, ?>) value).getIgnoreCase("type") == null);
+        final Map<?, ?> objects;
+        if (useSettings) {
+            objects = SettingsData.of(file.getName()).load(file.getParentFile()).asLiteralObject();
+        } else {
+            objects = getFileObjects(file);
         }
-        final Settings settings = SettingsData.of(file.getName()).load(file.getParentFile());
-        final Map<String, Object> map = new HashMap<>();
-        for (String[] path : settings.paths()) {
-            map.put(String.join(".", path), settings.get(path).asLiteralObject());
-        }
-        return map;
+        return DMap.of(objects).asDeepPath(".", (pathKey, value) -> {
+            if (value instanceof Map) {
+                return DMap.of((Map<?, ?>) value).getIgnoreCase("type") == null;
+            }
+            for (Path path : this.paths) {
+                if (path.getPath().equals(pathKey) || path.getAliases().contains(pathKey)) {
+                    return false;
+                }
+            }
+            return true;
+        });
     }
 
     @NotNull

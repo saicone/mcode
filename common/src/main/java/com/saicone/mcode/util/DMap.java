@@ -127,18 +127,24 @@ public class DMap implements Map<String, Object> {
 
     @NotNull
     public Map<String, Object> asDeepPath(@NotNull String separator) {
-        return asDeepPath(separator, null);
+        return asDeepPath(separator, "", null);
     }
 
     @NotNull
-    public Map<String, Object> asDeepPath(@NotNull String separator, @Nullable Predicate<Object> filter) {
+    public Map<String, Object> asDeepPath(@NotNull String separator, @Nullable BiPredicate<String, Object> filter) {
+        return asDeepPath(separator, "", filter);
+    }
+
+    @NotNull
+    public Map<String, Object> asDeepPath(@NotNull String separator, @NotNull String prefix, @Nullable BiPredicate<String, Object> filter) {
         final Map<String, Object> finalMap = new HashMap<>();
         for (Entry<String, Object> entry : map.entrySet()) {
-            if (filter == null || !filter.test(entry.getValue())) {
+            final String pathKey = prefix + entry.getKey();
+            if (filter == null || !filter.test(pathKey, entry.getValue())) {
                 if (entry.getValue() instanceof Map) {
                     final DMap child = of((Map<?, ?>) entry.getValue(), false);
                     if (child != null) {
-                        child.asDeepPath(separator, filter).forEach((key, value) -> finalMap.put(entry.getKey() + separator + key, value));
+                        child.asDeepPath(separator, pathKey + separator, filter).forEach((key, value) -> finalMap.put(entry.getKey() + separator + key, value));
                         continue;
                     }
                 }
