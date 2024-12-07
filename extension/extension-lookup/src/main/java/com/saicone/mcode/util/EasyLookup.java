@@ -171,7 +171,8 @@ public class EasyLookup {
     }
 
     /**
-     * Get previously saved class by it ID.
+     * Get previously saved class by it ID or save itself
+     * if the ID is the name representation.
      *
      * @param id Class ID.
      * @return   A class represented by provided ID or null.
@@ -180,12 +181,15 @@ public class EasyLookup {
     public static Class<?> classById(@NotNull String id) {
         final Class<?> clazz = CLASS_ID_MAP.get(id);
         if (clazz == null) {
-            if (id.endsWith("[]")) {
-                final Class<?> nonArray = classById(id.substring(0, id.length() - 2));
-                try {
-                    return Class.forName("[" + nonArray);
-                } catch (ClassNotFoundException ignored) { }
-            }
+            try {
+                if (id.endsWith("[]")) {
+                    final Class<?> nonArray = classById(id.substring(0, id.length() - 2));
+                    return addClassId(id, "[" + nonArray);
+                }
+                if (id.contains(".")) {
+                    return addClass(id);
+                }
+            } catch (ClassNotFoundException ignored) { }
             throw new IllegalArgumentException("The class with ID '" + id + "' doesn't exist");
         }
         return clazz;
