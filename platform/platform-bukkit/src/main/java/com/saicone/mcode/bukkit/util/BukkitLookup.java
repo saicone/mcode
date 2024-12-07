@@ -17,39 +17,42 @@ public class BukkitLookup extends EasyLookup {
     static {
         try {
             // NBT
-            addMinecraftClass("nbt.NBTBase", "Tag");
-            addMinecraftClass("nbt.NBTTagByte", "ByteTag");
-            addMinecraftClass("nbt.NBTTagByteArray", "ByteArrayTag");
-            addMinecraftClass("nbt.NBTTagCompound", "CompoundTag");
-            addMinecraftClass("nbt.NBTTagDouble", "DoubleTag");
-            addMinecraftClass("nbt.NBTTagFloat", "FloatTag");
-            addMinecraftClass("nbt.NBTTagInt", "IntTag");
-            addMinecraftClass("nbt.NBTTagIntArray", "IntArrayTag");
-            addMinecraftClass("nbt.NBTTagList", "ListTag");
-            addMinecraftClass("nbt.NBTTagLong", "LongTag");
+            addMinecraftClass("nbt.Tag", "NBTBase");
+            addMinecraftClass("nbt.ByteTag", "NBTTagByte");
+            addMinecraftClass("nbt.ByteArrayTag", "NBTTagByteArray");
+            addMinecraftClass("nbt.CompoundTag", "NBTTagCompound");
+            addMinecraftClass("nbt.DoubleTag", "NBTTagDouble");
+            addMinecraftClass("nbt.FloatTag", "NBTTagFloat");
+            addMinecraftClass("nbt.IntTag", "NBTTagInt");
+            addMinecraftClass("nbt.IntArrayTag", "NBTTagIntArray");
+            addMinecraftClass("nbt.ListTag", "NBTTagList");
+            addMinecraftClass("nbt.LongTag", "NBTTagLong");
             if (MC.version().isNewerThanOrEquals(MC.V_1_12)) {
-                addMinecraftClass("nbt.NBTTagLongArray", "LongArrayTag");
+                addMinecraftClass("nbt.LongArrayTag", "NBTTagLongArray");
             }
-            addMinecraftClass("nbt.NBTTagShort", "ShortTag");
-            addMinecraftClass("nbt.NBTTagString", "StringTag");
-            addMinecraftClass("nbt.NBTCompressedStreamTools", "NbtIo");
-            addMinecraftClass("nbt.NBTReadLimiter", "NbtAccounter");
-            addMinecraftClass("nbt.MojangsonParser", "TagParser");
+            addMinecraftClass("nbt.ShortTag", "NBTTagShort");
+            addMinecraftClass("nbt.StringTag", "NBTTagString");
+            addMinecraftClass("nbt.NbtIo", "NBTCompressedStreamTools");
+            addMinecraftClass("nbt.NbtAccounter", "NBTReadLimiter");
+            addMinecraftClass("nbt.TagParser", "MojangsonParser");
             if (MC.version().isFlat()) {
-                addMinecraftClass("nbt.DynamicOpsNBT", "NbtOps");
+                addMinecraftClass("nbt.NbtOps", "DynamicOpsNBT");
             }
 
             // DataComponent
             if (MC.version().isComponent()) {
                 addMinecraftClass("core.component.DataComponentHolder");
                 addMinecraftClass("core.component.DataComponentMap");
-                addMinecraftClassId("DataComponentMap.Builder", "core.component.DataComponentMap$a", "core.component.DataComponentMap$Builder");
-                addMinecraftClassId("DataComponentMap.SimpleMap", "core.component.DataComponentMap$a$a", "core.component.DataComponentMap$Builder$SimpleMap");
+                addMinecraftClassId("DataComponentMap.Builder", "core.component.DataComponentMap$Builder", "core.component.DataComponentMap$a");
+                addMinecraftClassId("DataComponentMap.SimpleMap", "core.component.DataComponentMap$Builder$SimpleMap", "core.component.DataComponentMap$a$a");
                 addMinecraftClass("core.component.DataComponentPatch");
-                addMinecraftClassId("DataComponentPatch.Builder", "core.component.DataComponentPatch$a", "core.component.DataComponentPatch$Builder");
+                addMinecraftClassId("DataComponentPatch.Builder", "core.component.DataComponentPatch$Builder", "core.component.DataComponentPatch$a");
                 addMinecraftClass("core.component.PatchedDataComponentMap");
                 addMinecraftClass("core.component.TypedDataComponent");
                 addMinecraftClass("core.component.DataComponentType");
+                addMinecraftClassId("HolderLookup.Provider", "core.HolderLookup$Provider", "core.HolderLookup$a");
+            } else if (MC.version().isNewerThanOrEquals(MC.V_1_19_3)) {
+                addMinecraftClassId("HolderLookup.Provider", "core.HolderLookup$Provider", "core.HolderLookup$b");
             }
         } catch (ClassNotFoundException e) {
             e.printStackTrace();

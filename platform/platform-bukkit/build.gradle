@@ -30,7 +30,7 @@ dependencies {
     compileOnly project(':module:module-env')
 
     // Compatibility
-    compileOnly project(':extension:extension-lookup')
+    compileOnlyApi project(':extension:extension-lookup')
     compileOnly libs.delivery4j
     compileOnly libs.settings
 

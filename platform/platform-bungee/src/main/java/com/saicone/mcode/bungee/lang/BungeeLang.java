@@ -5,6 +5,7 @@ import com.saicone.mcode.module.lang.Displays;
 import com.saicone.mcode.module.lang.display.ActionBarDisplay;
 import com.saicone.mcode.module.lang.display.TextDisplay;
 import com.saicone.mcode.module.lang.display.TitleDisplay;
+import com.saicone.mcode.platform.MC;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ProxyServer;
@@ -30,6 +31,8 @@ import java.util.Set;
 import java.util.logging.Level;
 
 public class BungeeLang extends AbstractLang<CommandSender> {
+
+    private static final String ITEM_HOVER = "{\"id\":\"%s\",\"count\":%d,\"components\": %s}";
 
     public static final ActionBarLoader ACTIONBAR = new ActionBarLoader();
     public static final TextLoader TEXT = new TextLoader();
@@ -211,7 +214,7 @@ public class BungeeLang extends AbstractLang<CommandSender> {
         }
 
         @Override
-        public void append(@NotNull String s, @NotNull Set<TextDisplay.Event> events) {
+        public void append(@NotNull CommandSender type, @NotNull String s, @NotNull Set<TextDisplay.Event> events) {
             final ComponentBuilder component = new ComponentBuilder();
             component.append(s);
             for (TextDisplay.Event event : events) {
@@ -223,12 +226,17 @@ public class BungeeLang extends AbstractLang<CommandSender> {
                             builder.event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text(event.getString())));
                             break;
                         case SHOW_ITEM:
-                            final String tag = event.getItemTag();
-                            builder.event(new HoverEvent(HoverEvent.Action.SHOW_ITEM, new Item(
-                                    event.getItemId(),
-                                    event.getItemCount(),
-                                    tag == null ? null : ItemTag.ofNbt(tag)
-                            )));
+                            if (type instanceof ProxiedPlayer player && player.getPendingConnection().getVersion() >= MC.V_1_20_5.protocol()) {
+                                final String nbt = String.format(ITEM_HOVER, event.getItemId(), event.getItemCount(), event.getItemComponents());
+                                builder.event(new HoverEvent(HoverEvent.Action.SHOW_ITEM, new BaseComponent[]{ new TextComponent(nbt) }));
+                            } else {
+                                final String tag = event.getItemTag();
+                                builder.event(new HoverEvent(HoverEvent.Action.SHOW_ITEM, new Item(
+                                        event.getItemId(),
+                                        event.getItemCount(),
+                                        tag == null ? null : ItemTag.ofNbt(tag)
+                                )));
+                            }
                             break;
                         case SHOW_ENTITY:
                             builder.event(new HoverEvent(HoverEvent.Action.SHOW_ENTITY, new Entity(

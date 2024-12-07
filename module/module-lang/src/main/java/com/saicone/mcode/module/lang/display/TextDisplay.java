@@ -2,6 +2,7 @@ package com.saicone.mcode.module.lang.display;
 
 import com.saicone.mcode.module.lang.Display;
 import com.saicone.mcode.module.lang.DisplayLoader;
+import com.saicone.mcode.platform.MC;
 import com.saicone.mcode.util.DMap;
 import com.saicone.mcode.util.MStrings;
 import com.saicone.mcode.util.Strings;
@@ -108,7 +109,7 @@ public abstract class TextDisplay<SenderT> implements Display<SenderT> {
                 if (index > 0 && index + 1 < s.length()) {
                     final String str = s.substring(index + 1);
                     builder.sum(MStrings.getFontLength(str));
-                    builder.append(str, events.getOrDefault(s.substring(0, index), Set.of()));
+                    builder.append(type, str, events.getOrDefault(s.substring(0, index), Set.of()));
                 } else {
                     builder.append("<event." + s + "</event>");
                 }
@@ -137,9 +138,13 @@ public abstract class TextDisplay<SenderT> implements Display<SenderT> {
 
         public abstract void append(@NotNull String s, boolean before);
 
-        public abstract void append(@NotNull String s, @NotNull Set<Event> events);
+        public abstract void append(@NotNull SenderT type, @NotNull String s, @NotNull Set<Event> events);
 
         public abstract void sendTo(@NotNull SenderT type);
+
+        protected int protocol(@NotNull SenderT type) {
+            return MC.version().protocol();
+        }
 
         public void sendTo(@NotNull SenderT type, int width) {
             if (width > 0) {
@@ -359,8 +364,14 @@ public abstract class TextDisplay<SenderT> implements Display<SenderT> {
         }
 
         @Nullable
+        @Deprecated
         public String getItemTag() {
             return (String) ((Map<String, Object>) value).get("tag");
+        }
+
+        @Nullable
+        public String getItemComponents() {
+            return (String) ((Map<String, Object>) value).getOrDefault("components", "{}");
         }
 
         @Nullable

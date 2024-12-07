@@ -1,6 +1,7 @@
 package com.saicone.mcode.bukkit.lang;
 
 import com.saicone.mcode.module.lang.display.TextDisplay;
+import com.saicone.mcode.platform.MC;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.inventory.ItemStack;
@@ -19,39 +20,42 @@ public class BukkitTextEvent extends TextDisplay.Event {
     private static final MethodHandle getTag;
 
     static {
-        final String craftBukkit = Bukkit.getServer().getClass().getPackage().getName() + ".";
-        final String minecraftServer;
-        final boolean universal;
-        final String version;
-        if (craftBukkit.startsWith("org.bukkit.craftbukkit.v1_") && Integer.parseInt((version = craftBukkit.split("\\.")[3]).split("_")[1]) <= 16) {
-            minecraftServer = "net.minecraft.server." + version + ".";
-            universal = false;
-        } else {
-            minecraftServer = "net.minecraft.";
-            universal = true;
-        }
-
-        MethodHandles.Lookup lookup = MethodHandles.lookup();
         MethodHandle method$asNMSCopy = null;
         MethodHandle method$getTag = null;
-        try {
-            method$asNMSCopy = lookup.unreflect(Class.forName(craftBukkit + "inventory.CraftItemStack").getDeclaredMethod("asNMSCopy", ItemStack.class));
-            Class<?> compoundClass;
+        if (!MC.version().isComponent()) {
             try {
-                compoundClass = Class.forName(minecraftServer + (universal ? "nbt." : "") + "NBTTagCompound");
-            } catch (ClassNotFoundException e) {
-                // Mojang mapped
-                compoundClass = Class.forName(minecraftServer + "nbt.CompoundTag");
-            }
-            for (Field field : Class.forName(minecraftServer + (universal ? "world.item." : "") + "ItemStack").getDeclaredFields()) {
-                if (!Modifier.isStatic(field.getModifiers()) && compoundClass.isAssignableFrom(field.getType())) {
-                    field.setAccessible(true);
-                    method$getTag = lookup.unreflectGetter(field);
-                    break;
+                final String craftBukkit = Bukkit.getServer().getClass().getPackage().getName() + ".";
+                final String minecraftServer;
+                final boolean universal;
+                final String version;
+                if (craftBukkit.startsWith("org.bukkit.craftbukkit.v1_") && Integer.parseInt((version = craftBukkit.split("\\.")[3]).split("_")[1]) <= 16) {
+                    minecraftServer = "net.minecraft.server." + version + ".";
+                    universal = false;
+                } else {
+                    minecraftServer = "net.minecraft.";
+                    universal = true;
                 }
+
+                MethodHandles.Lookup lookup = MethodHandles.lookup();
+
+                method$asNMSCopy = lookup.unreflect(Class.forName(craftBukkit + "inventory.CraftItemStack").getDeclaredMethod("asNMSCopy", ItemStack.class));
+                Class<?> compoundClass;
+                try {
+                    compoundClass = Class.forName(minecraftServer + (universal ? "nbt." : "") + "NBTTagCompound");
+                } catch (ClassNotFoundException e) {
+                    // Mojang mapped
+                    compoundClass = Class.forName(minecraftServer + "nbt.CompoundTag");
+                }
+                for (Field field : Class.forName(minecraftServer + (universal ? "world.item." : "") + "ItemStack").getDeclaredFields()) {
+                    if (!Modifier.isStatic(field.getModifiers()) && compoundClass.isAssignableFrom(field.getType())) {
+                        field.setAccessible(true);
+                        method$getTag = lookup.unreflectGetter(field);
+                        break;
+                    }
+                }
+            } catch (ClassNotFoundException | IllegalAccessException | NoSuchMethodException e) {
+                e.printStackTrace();
             }
-        } catch (ClassNotFoundException | IllegalAccessException | NoSuchMethodException e) {
-            e.printStackTrace();
         }
         asNMSCopy = method$asNMSCopy;
         getTag = method$getTag;
@@ -80,6 +84,7 @@ public class BukkitTextEvent extends TextDisplay.Event {
     }
 
     @Override
+    @Deprecated
     public @Nullable String getItemTag() {
         if (getValue() instanceof ItemStack) {
             if (itemTag == null) {
@@ -93,6 +98,18 @@ public class BukkitTextEvent extends TextDisplay.Event {
             return itemTag.isBlank() ? null : itemTag;
         }
         return super.getItemTag();
+    }
+
+    @Override
+    public @Nullable String getItemComponents() {
+        if (getValue() instanceof ItemStack) {
+            if (((ItemStack) getValue()).hasItemMeta()) {
+                return ((ItemStack) getValue()).getItemMeta().getAsString();
+            } else {
+                return "{}";
+            }
+        }
+        return super.getItemComponents();
     }
 
     @Override

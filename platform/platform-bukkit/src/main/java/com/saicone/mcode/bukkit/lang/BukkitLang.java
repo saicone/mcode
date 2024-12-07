@@ -10,10 +10,12 @@ import com.saicone.mcode.module.lang.Displays;
 import com.saicone.mcode.module.lang.display.*;
 import com.saicone.mcode.util.DMap;
 import com.saicone.mcode.platform.MC;
+import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.ItemTag;
+import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.chat.hover.content.Entity;
 import net.md_5.bungee.api.chat.hover.content.Item;
 import net.md_5.bungee.api.chat.hover.content.Text;
@@ -40,6 +42,8 @@ import java.util.*;
 import java.util.logging.Level;
 
 public class BukkitLang extends AbstractLang<CommandSender> {
+
+    private static final String ITEM_HOVER = "{\"id\":\"%s\",\"count\":%d,\"components\": %s}";
 
     // Loadable display types
     public static final ActionBarLoader ACTIONBAR = new ActionBarLoader();
@@ -331,7 +335,7 @@ public class BukkitLang extends AbstractLang<CommandSender> {
         }
 
         @Override
-        public void append(@NotNull String s, @NotNull Set<TextDisplay.Event> events) {
+        public void append(@NotNull CommandSender type, @NotNull String s, @NotNull Set<TextDisplay.Event> events) {
             final ComponentBuilder component = new ComponentBuilder();
             component.append(s);
             for (TextDisplay.Event event : events) {
@@ -343,12 +347,17 @@ public class BukkitLang extends AbstractLang<CommandSender> {
                             builder.event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text(event.getString())));
                             break;
                         case SHOW_ITEM:
-                            final String tag = event.getItemTag();
-                            builder.event(new HoverEvent(HoverEvent.Action.SHOW_ITEM, new Item(
-                                    event.getItemId(),
-                                    event.getItemCount(),
-                                    tag == null ? null : ItemTag.ofNbt(tag)
-                            )));
+                            if (MC.version().isComponent()) {
+                                final String nbt = String.format(ITEM_HOVER, event.getItemId(), event.getItemCount(), event.getItemComponents());
+                                builder.event(new HoverEvent(HoverEvent.Action.SHOW_ITEM, new BaseComponent[]{ new TextComponent(nbt) }));
+                            } else {
+                                final String tag = event.getItemTag();
+                                builder.event(new HoverEvent(HoverEvent.Action.SHOW_ITEM, new Item(
+                                        event.getItemId(),
+                                        event.getItemCount(),
+                                        tag == null ? null : ItemTag.ofNbt(tag)
+                                )));
+                            }
                             break;
                         case SHOW_ENTITY:
                             builder.event(new HoverEvent(HoverEvent.Action.SHOW_ENTITY, new Entity(

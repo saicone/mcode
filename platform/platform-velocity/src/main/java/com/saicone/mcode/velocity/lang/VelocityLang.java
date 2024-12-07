@@ -4,6 +4,7 @@ import com.moandjiezana.toml.Toml;
 import com.saicone.mcode.module.lang.AdventureLang;
 import com.saicone.mcode.module.lang.AbstractLang;
 import com.saicone.mcode.module.lang.Displays;
+import com.saicone.mcode.module.lang.display.TextDisplay;
 import com.saicone.mcode.velocity.VelocityPlatform;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
@@ -28,7 +29,20 @@ public class VelocityLang extends AbstractLang<CommandSource> implements Adventu
     public static final AdventureLang.BossBarLoader<CommandSource> BOSSBAR = new AdventureLang.BossBarLoader<>();
     public static final AdventureLang.MiniMessageLoader<CommandSource> MINIMESSAGE = new AdventureLang.MiniMessageLoader<>();
     public static final AdventureLang.SoundLoader<CommandSource> SOUND = new AdventureLang.SoundLoader<>();
-    public static final AdventureLang.TextLoader<CommandSource> TEXT = new AdventureLang.TextLoader<>();
+    public static final AdventureLang.TextLoader<CommandSource> TEXT = new AdventureLang.TextLoader<>() {
+        @Override
+        protected @NotNull TextDisplay.Builder<CommandSource> newBuilder() {
+            return new AdventureLang.TextBuilder<>() {
+                @Override
+                protected int protocol(@NotNull CommandSource type) {
+                    if (type instanceof Player player) {
+                        return player.getProtocolVersion().getProtocol();
+                    }
+                    return super.protocol(type);
+                }
+            };
+        }
+    };
     public static final AdventureLang.TitleLoader<CommandSource> TITLE = new AdventureLang.TitleLoader<>();
 
     static {

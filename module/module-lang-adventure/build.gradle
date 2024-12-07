@@ -2,6 +2,7 @@ dependencies {
     api project(':module:module-lang')
 
     compileOnly libs.adventure.api
+    compileOnly libs.adventure.nbt
     compileOnly libs.adventure.text.minimessage
     compileOnly libs.adventure.text.serializer.legacy
 }

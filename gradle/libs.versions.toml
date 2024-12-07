@@ -9,8 +9,8 @@ guava = "33.3.1-jre"
 caffeine = "3.1.8"
 annotations = "26.0.1"
 
-adventure = "4.15.0"
-adventure-platform = "4.3.2"
+adventure = "4.17.0"
+adventure-platform = "4.3.4"
 
 authlib = "1.5.26" # 3.11.50
 brigadier = "1.0.18"
@@ -38,6 +38,7 @@ caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "c
 annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
 
 adventure-api = { module = "net.kyori:adventure-api", version.ref = "adventure" }
+adventure-nbt = { module = "net.kyori:adventure-nbt", version.ref = "adventure" }
 adventure-text-minimessage = { module = "net.kyori:adventure-text-minimessage", version.ref = "adventure" }
 adventure-text-serializer-legacy = { module = "net.kyori:adventure-text-serializer-legacy", version.ref = "adventure" }
 adventure-platform-bukkit = { module = "net.kyori:adventure-platform-bukkit", version.ref = "adventure-platform" }

@@ -1,21 +1,31 @@
 package com.saicone.mcode.module.lang;
 
 import com.saicone.mcode.module.lang.display.*;
+import com.saicone.mcode.platform.MC;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.key.Key;
+import net.kyori.adventure.nbt.BinaryTag;
+import net.kyori.adventure.nbt.CompoundBinaryTag;
+import net.kyori.adventure.nbt.TagStringIO;
 import net.kyori.adventure.nbt.api.BinaryTagHolder;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.DataComponentValue;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.title.Title;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -66,7 +76,7 @@ public interface AdventureLang<SenderT> extends DisplaySupplier<SenderT> {
 
         @Override
         @SuppressWarnings("deprecation")
-        public void append(@NotNull String s, @NotNull Set<TextDisplay.Event> events) {
+        public void append(@NotNull T type, @NotNull String s, @NotNull Set<TextDisplay.Event> events) {
             final TextComponent.Builder component = Component.text();
             component.append(LegacyComponentSerializer.legacyAmpersand().deserialize(s));
             for (TextDisplay.Event event : events) {
@@ -99,12 +109,26 @@ public interface AdventureLang<SenderT> extends DisplaySupplier<SenderT> {
                             component.hoverEvent(HoverEvent.showText(LegacyComponentSerializer.legacyAmpersand().deserialize(event.getString())));
                             break;
                         case SHOW_ITEM:
-                            final String tag = event.getItemTag();
-                            component.hoverEvent(HoverEvent.showItem(
-                                    Key.key(event.getItemId()),
-                                    event.getItemCount(),
-                                    tag == null ? null : BinaryTagHolder.of(tag)
-                            ));
+                            // TODO: Make an implementation to get this hover event directly from Paper API
+                            if (protocol(type) >= MC.V_1_20_5.protocol()) {
+                                try {
+                                    final Map<Key, DataComponentValue> map = new HashMap<>();
+                                    final CompoundBinaryTag components = TagStringIO.get().asCompound(event.getItemComponents());
+                                    for (Map.Entry<String, ? extends BinaryTag> entry : components) {
+                                        map.put(Key.key(entry.getKey()), BinaryTagHolder.binaryTagHolder(write(entry.getValue())));
+                                    }
+                                    component.hoverEvent(HoverEvent.showItem(Key.key(event.getItemId()), event.getItemCount(), map));
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            } else {
+                                final String tag = event.getItemTag();
+                                component.hoverEvent(HoverEvent.showItem(
+                                        Key.key(event.getItemId()),
+                                        event.getItemCount(),
+                                        tag == null ? null : BinaryTagHolder.of(tag) // BinaryTagHolder.binaryTagHolder(tag) on newer versions
+                                ));
+                            }
                             break;
                         case SHOW_ENTITY:
                             final String name = event.getEntityName();
@@ -120,6 +144,25 @@ public interface AdventureLang<SenderT> extends DisplaySupplier<SenderT> {
                 }
             }
             builder.append(component.build());
+        }
+
+        @NotNull
+        private static String write(BinaryTag tag) {
+            // PD: I hate adventure
+            final StringBuilder builder = new StringBuilder();
+            try {
+                final Class<? extends AutoCloseable> writer = Class.forName("net.kyori.adventure.nbt.TagStringWriter").asSubclass(AutoCloseable.class);
+                final Constructor<? extends AutoCloseable> constructor = writer.getDeclaredConstructor(Appendable.class, String.class);
+                constructor.setAccessible(true);
+                final Method method = writer.getDeclaredMethod("writeTag", BinaryTag.class);
+
+                try (AutoCloseable w = constructor.newInstance(builder, "")) {
+                    method.invoke(w, tag);
+                }
+            } catch (Throwable t) {
+                t.printStackTrace();
+            }
+            return builder.toString();
         }
 
         @Override
