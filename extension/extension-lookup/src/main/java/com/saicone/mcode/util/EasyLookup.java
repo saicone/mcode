@@ -83,12 +83,10 @@ public class EasyLookup {
     protected EasyLookup() {
     }
 
-    @Nullable
     public static MethodHandle find(@NotNull Object clazz, @NotNull String any) {
         return find(clazz, () -> any);
     }
 
-    @Nullable
     public static MethodHandle find(@NotNull Object clazz, @NotNull Supplier<String> any) {
         try {
             return unsafeFind(clazz, any);
@@ -97,7 +95,6 @@ public class EasyLookup {
         }
     }
 
-    @Nullable
     public static MethodHandle unsafeFind(@NotNull Object clazz, @NotNull Supplier<String> any) throws NoSuchFieldException, IllegalAccessException, NoSuchMethodException {
         final String s = any.get();
         if (s == null) {

@@ -4,7 +4,6 @@ import com.saicone.mcode.util.EasyLookup;
 import com.saicone.mcode.platform.MC;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.lang.invoke.MethodHandle;
 import java.util.function.Supplier;
@@ -63,12 +62,10 @@ public class BukkitLookup extends EasyLookup {
         super();
     }
 
-    @Nullable
     public static MethodHandle find(@NotNull Object clazz, @NotNull String any, @NotNull Supplier<String> unmappedName) {
         return find(clazz, () -> any, unmappedName);
     }
 
-    @Nullable
     public static MethodHandle find(@NotNull Object clazz, @NotNull Supplier<String> any, @NotNull Supplier<String> unmappedName) {
         return find(clazz, () -> {
             final String s = any.get();
