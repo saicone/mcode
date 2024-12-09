@@ -2,7 +2,7 @@ package com.saicone.mcode.bungee;
 
 import com.saicone.mcode.Platform;
 import com.saicone.mcode.platform.PlatformType;
-import com.saicone.mcode.util.MStrings;
+import com.saicone.mcode.util.text.MStrings;
 import com.saicone.mcode.platform.MC;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.connection.ProxiedPlayer;

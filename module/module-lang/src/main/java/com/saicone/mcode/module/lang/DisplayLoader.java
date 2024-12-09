@@ -1,7 +1,7 @@
 package com.saicone.mcode.module.lang;
 
 import com.saicone.mcode.util.DMap;
-import com.saicone.mcode.util.Strings;
+import com.saicone.mcode.util.text.Strings;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

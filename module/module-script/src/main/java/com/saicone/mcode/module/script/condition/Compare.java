@@ -3,7 +3,7 @@ package com.saicone.mcode.module.script.condition;
 import com.saicone.mcode.module.script.Condition;
 import com.saicone.mcode.module.script.EvalUser;
 import com.saicone.mcode.module.script.ScriptFunction;
-import com.saicone.mcode.util.Strings;
+import com.saicone.mcode.util.text.Strings;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.regex.Pattern;

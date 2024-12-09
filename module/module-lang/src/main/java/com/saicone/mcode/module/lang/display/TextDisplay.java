@@ -4,8 +4,8 @@ import com.saicone.mcode.module.lang.Display;
 import com.saicone.mcode.module.lang.DisplayLoader;
 import com.saicone.mcode.platform.MC;
 import com.saicone.mcode.util.DMap;
-import com.saicone.mcode.util.MStrings;
-import com.saicone.mcode.util.Strings;
+import com.saicone.mcode.util.text.MStrings;
+import com.saicone.mcode.util.text.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

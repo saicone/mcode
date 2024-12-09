@@ -3,7 +3,7 @@ package com.saicone.mcode.bukkit;
 import com.saicone.mcode.Platform;
 import com.saicone.mcode.bukkit.util.ServerInstance;
 import com.saicone.mcode.platform.PlatformType;
-import com.saicone.mcode.util.MStrings;
+import com.saicone.mcode.util.text.MStrings;
 import com.saicone.mcode.platform.MC;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;

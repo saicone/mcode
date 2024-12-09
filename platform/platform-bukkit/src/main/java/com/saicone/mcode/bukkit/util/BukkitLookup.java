@@ -1,6 +1,6 @@
 package com.saicone.mcode.bukkit.util;
 
-import com.saicone.mcode.util.EasyLookup;
+import com.saicone.mcode.util.invoke.EasyLookup;
 import com.saicone.mcode.platform.MC;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;

@@ -2,7 +2,7 @@ package com.saicone.mcode.ap;
 
 import com.saicone.mcode.bootstrap.Addon;
 import com.saicone.mcode.bootstrap.PluginDescription;
-import com.saicone.mcode.util.Strings;
+import com.saicone.mcode.util.text.Strings;
 
 import java.io.BufferedWriter;
 import java.util.LinkedHashMap;

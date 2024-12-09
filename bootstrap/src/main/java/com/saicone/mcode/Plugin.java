@@ -3,7 +3,7 @@ package com.saicone.mcode;
 import com.saicone.mcode.bootstrap.Bootstrap;
 import com.saicone.mcode.env.Env;
 import com.saicone.mcode.env.Executes;
-import com.saicone.mcode.util.Strings;
+import com.saicone.mcode.util.text.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
