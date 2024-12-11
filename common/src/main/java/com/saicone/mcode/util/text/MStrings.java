@@ -34,6 +34,13 @@ public class MStrings {
      */
     public static final Map<Character, Integer> FONT_LENGTH;
     /**
+     * Unmodifiable list of "latin letter small capital" characters (Looks cool on MC).
+     */
+    public static final List<Character> SMALL_FONT = List.of(
+            '\u1D00', '\u0299', '\u1D04', '\u1D05', '\u1D07', '\uA730', '\u0262', '\u029C', '\u026A', '\u1D0A', '\u1D0B', '\u029F', '\u1D0D',
+            '\u0274', '\u1D0F', '\u1D18', '\uA7EF', '\u0280', '\uA731', '\u1D1B', '\u1D1C', '\u1D20', '\u1D21', '\u0078', '\u028F', '\u1D22'
+    );
+    /**
      * Minecraft color character.
      */
     public static final char COLOR_CHAR = '\u00a7';
@@ -106,7 +113,7 @@ public class MStrings {
     public static int getFontLength(@NotNull String s, char colorChar) {
         int px = 0;
         boolean bold = false;
-        char[] chars = s.toCharArray();
+        final char[] chars = s.toCharArray();
         for (int i = 0; i < chars.length; i++) {
             final char c = chars[i];
             // Verify color char
@@ -158,6 +165,61 @@ public class MStrings {
             }
         }
         return px;
+    }
+
+    /**
+     * Get small font representation of provided character.
+     *
+     * @param c the character to get.
+     * @return  a small font representation if exists, the same character otherwise.
+     */
+    public static char getSmallFont(char c) {
+        final int index = Character.toUpperCase(c) - 'A';
+        return index < SMALL_FONT.size() ? SMALL_FONT.get(index) : c;
+    }
+
+    /**
+     * Convert provided String into small font representation.
+     *
+     * @param s         the text to convert.
+     * @return          a small font representation of text on compatible parts.
+     */
+    @NotNull
+    public static String getSmallFont(@NotNull String s) {
+        return getSmallFont(s, '&');
+    }
+
+    /**
+     * Convert provided String into small font representation.
+     *
+     * @param s         the text to convert.
+     * @param colorChar the colored text character, other than {@link #COLOR_CHAR}.
+     * @return          a small font representation of text on compatible parts.
+     */
+    @NotNull
+    public static String getSmallFont(@NotNull String s, char colorChar) {
+        final char[] chars = s.toCharArray();
+        for (int i = 0; i < chars.length; i++) {
+            final char c = chars[i];
+            // Verify color char
+            final boolean mcChar;
+            if (i + 1 < chars.length && ((mcChar = (c == COLOR_CHAR)) || c == colorChar)) {
+                final char c1 = chars[i + 1];
+                // Skip RGB color
+                if (BUNGEE_HEX && c1 == 'x' && isHexFormat(chars, i + 2, 2, mcChar ? COLOR_CHAR : colorChar)) {
+                    i = i + 12;
+                } else if (c1 == '#' && isHexFormat(chars, i + 2, 1, mcChar ? COLOR_CHAR : colorChar)) {
+                    i = i + 6;
+                } else if (!isColorCode(c1)) { // Skip legacy color code
+                    chars[i] = getSmallFont(c);
+                    chars[i + 1] = getSmallFont(c1);
+                }
+                i++;
+            } else {
+                chars[i] = getSmallFont(c);
+            }
+        }
+        return new String(chars);
     }
 
     /**
