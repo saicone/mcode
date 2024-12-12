@@ -16,6 +16,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -91,6 +92,9 @@ public class EasyLookup {
         try {
             return unsafeFind(clazz, any);
         } catch (Throwable t) {
+            if (DEBUG) {
+                LOGGER.log(Level.WARNING, "Cannot find '" + any.get() + "' from class " + classOf(clazz).getName(), t);
+            }
             return null;
         }
     }
