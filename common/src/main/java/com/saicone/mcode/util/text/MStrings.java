@@ -540,6 +540,12 @@ public class MStrings {
                     total = colorHex(colorChar, builder, chars, i);
                 } else if (colorType == '$') { // Special type
                     total = colorSpecial(colorChar, s, builder, chars, i);
+                } else if (BUNGEE_HEX && colorType == 'x' && isHexFormat(chars, i + 2, 2, colorChar)) {
+                    total = i + 14;
+                    for (int i1 = i + 2; i1 < total; i1 += 2) {
+                        builder.append(COLOR_CHAR);
+                        builder.append(chars[i1 + 1]);
+                    }
                 } else {
                     builder.append(chars[i]);
                     continue;
