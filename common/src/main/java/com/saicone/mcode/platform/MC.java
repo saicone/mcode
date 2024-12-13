@@ -143,12 +143,12 @@ public enum MC {
         final String revisionFormatted = revision >= 10 ? String.valueOf(revision) : "0" + revision;
 
         this.featRevision = Float.parseFloat(feature + "." + revisionFormatted);
-        this.fullRevision = Integer.parseInt(split[1] + featureFormatted + revisionFormatted);
-        this.bukkitPackage = "v" + split[1] + "_" + feature + "_R" + revision;
+        this.fullRevision = Integer.parseInt(major + featureFormatted + revisionFormatted);
+        this.bukkitPackage = "v" + major + "_" + feature + "_R" + revision;
 
-        this.legacy = major <= 12;
-        this.flat = major >= 13;
-        this.universal = major >= 17;
+        this.legacy = feature <= 12;
+        this.flat = feature >= 13;
+        this.universal = feature >= 17;
         this.component = dataVersion != null && dataVersion >= 3837;
     }
 
