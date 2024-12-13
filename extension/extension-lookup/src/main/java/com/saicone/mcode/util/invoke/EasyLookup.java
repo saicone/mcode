@@ -84,10 +84,40 @@ public class EasyLookup {
     protected EasyLookup() {
     }
 
+    /**
+     * Find field, constructor or method declaration from provided class.
+     *
+     * @see #setter(Object, Object, String)
+     * @see #staticSetter(Object, Object, String)
+     * @see #getter(Object, Object, String)
+     * @see #staticGetter(Object, Object, String)
+     * @see #constructor(Object, Object...)
+     * @see #method(Object, Object, String, Object...)
+     * @see #staticMethod(Object, Object, String, Object...)
+     *
+     * @param clazz Class to find into.
+     * @param any   The value to find.
+     * @return      The reflected value that was found as MethodHandle, null otherwise.
+     */
     public static MethodHandle find(@NotNull Object clazz, @NotNull String any) {
         return find(clazz, () -> any);
     }
 
+    /**
+     * Find supplied field, constructor or method declaration from provided class.
+     *
+     * @see #setter(Object, Object, String)
+     * @see #staticSetter(Object, Object, String)
+     * @see #getter(Object, Object, String)
+     * @see #staticGetter(Object, Object, String)
+     * @see #constructor(Object, Object...)
+     * @see #method(Object, Object, String, Object...)
+     * @see #staticMethod(Object, Object, String, Object...)
+     *
+     * @param clazz Class to find into.
+     * @param any   Supplier that return the value to find.
+     * @return      The reflected value that was found as MethodHandle, null otherwise.
+     */
     public static MethodHandle find(@NotNull Object clazz, @NotNull Supplier<String> any) {
         try {
             return unsafeFind(clazz, any);
@@ -99,12 +129,31 @@ public class EasyLookup {
         }
     }
 
+    /**
+     * Find supplied field, constructor or method declaration from provided class.
+     *
+     * @see #setter(Object, Object, String)
+     * @see #staticSetter(Object, Object, String)
+     * @see #getter(Object, Object, String)
+     * @see #staticGetter(Object, Object, String)
+     * @see #constructor(Object, Object...)
+     * @see #method(Object, Object, String, Object...)
+     * @see #staticMethod(Object, Object, String, Object...)
+     *
+     * @param clazz Class to find into.
+     * @param any   Supplier that return the value to find.
+     * @return      The reflected value that was found as MethodHandle.
+     * @throws NoSuchFieldException   if the field does not exist
+     * @throws IllegalAccessException if access checking fails.
+     * @throws NoSuchMethodException  if the constructor or method does not exist.
+     */
     public static MethodHandle unsafeFind(@NotNull Object clazz, @NotNull Supplier<String> any) throws NoSuchFieldException, IllegalAccessException, NoSuchMethodException {
-        final String s = any.get();
+        String s = any.get();
         if (s == null) {
             return null;
         }
-        final int bracket = s.trim().indexOf('(');
+        s = s.trim();
+        final int bracket = s.indexOf('(');
         if (bracket < 0) { // Field
             final int space = s.lastIndexOf(' ');
             final String modifier = s.substring(0, space);
@@ -126,7 +175,7 @@ public class EasyLookup {
         }
 
         final Object[] parameterTypes;
-        if (bracket + 1 >= s.length()) {
+        if (bracket + 2 >= s.length()) {
             parameterTypes = new String[0];
         } else {
             parameterTypes = Arrays.stream(s.substring(bracket + 1, s.length() - 1).split(","))

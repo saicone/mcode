@@ -62,10 +62,44 @@ public class BukkitLookup extends EasyLookup {
         super();
     }
 
+    /**
+     * Find field, constructor or method declaration from provided class by
+     * providing an unmapped name to use if server instance is not using mojang mappings.
+     *
+     * @see #setter(Object, Object, String)
+     * @see #staticSetter(Object, Object, String)
+     * @see #getter(Object, Object, String)
+     * @see #staticGetter(Object, Object, String)
+     * @see #constructor(Object, Object...)
+     * @see #method(Object, Object, String, Object...)
+     * @see #staticMethod(Object, Object, String, Object...)
+     *
+     * @param clazz        Class to find into.
+     * @param any          The value to find.
+     * @param unmappedName Supplier that return the unmapped name.
+     * @return             The reflected value that was found as MethodHandle, null otherwise.
+     */
     public static MethodHandle find(@NotNull Object clazz, @NotNull String any, @NotNull Supplier<String> unmappedName) {
         return find(clazz, () -> any, unmappedName);
     }
 
+    /**
+     * Find supplied field, constructor or method declaration from provided class by
+     * providing an unmapped name to use if server instance is not using mojang mappings.
+     *
+     * @see #setter(Object, Object, String)
+     * @see #staticSetter(Object, Object, String)
+     * @see #getter(Object, Object, String)
+     * @see #staticGetter(Object, Object, String)
+     * @see #constructor(Object, Object...)
+     * @see #method(Object, Object, String, Object...)
+     * @see #staticMethod(Object, Object, String, Object...)
+     *
+     * @param clazz        Class to find into.
+     * @param any          Supplier that return the value to find.
+     * @param unmappedName Supplier that return the unmapped name.
+     * @return             The reflected value that was found as MethodHandle, null otherwise.
+     */
     public static MethodHandle find(@NotNull Object clazz, @NotNull Supplier<String> any, @NotNull Supplier<String> unmappedName) {
         return find(clazz, () -> {
             final String s = any.get();
