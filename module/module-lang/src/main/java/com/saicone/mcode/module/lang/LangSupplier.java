@@ -64,16 +64,6 @@ public interface LangSupplier {
         return DEFAULT_LOG_LEVEL;
     }
 
-    @NotNull
-    default <T> Value<T> value(@NotNull String path, @NotNull String... oldPaths) {
-        return new Value<>(path, oldPaths);
-    }
-
-    @NotNull
-    default Path path(@NotNull String path, @NotNull String... oldPaths) {
-        return new Path(path, oldPaths);
-    }
-
     class Value<T> extends Path {
 
         private BiFunction<Object, Object, T> parser;
@@ -82,7 +72,12 @@ public interface LangSupplier {
         private transient final Map<String, Object> values = new HashMap<>();
         private transient final Map<String, T> cache = new HashMap<>();
 
-        public Value(@NotNull String path, @NotNull String[] aliases) {
+        @NotNull
+        static <T> Value<T> path(@NotNull String path, @NotNull String... aliases) {
+            return new Value<>(path, aliases);
+        }
+
+        public Value(@NotNull String path, @NotNull String... aliases) {
             super(path, aliases);
         }
 
@@ -152,7 +147,12 @@ public interface LangSupplier {
 
         private DisplayHolder<?> holder = null;
 
-        public Path(@NotNull String path, @NotNull String[] aliases) {
+        @NotNull
+        static Path of(@NotNull String path, @NotNull String... aliases) {
+            return new Path(path, aliases);
+        }
+
+        public Path(@NotNull String path, @NotNull String... aliases) {
             this.path = path;
             this.aliases = Set.of(aliases);
         }
