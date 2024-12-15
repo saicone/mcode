@@ -65,12 +65,12 @@ public interface LangSupplier {
     }
 
     @NotNull
-    static <T> Value<T> value(@NotNull String path, @NotNull String... oldPaths) {
+    default <T> Value<T> value(@NotNull String path, @NotNull String... oldPaths) {
         return new Value<>(path, oldPaths);
     }
 
     @NotNull
-    static Path path(@NotNull String path, @NotNull String... oldPaths) {
+    default Path path(@NotNull String path, @NotNull String... oldPaths) {
         return new Path(path, oldPaths);
     }
 
