@@ -73,7 +73,7 @@ public interface LangSupplier {
         private transient final Map<String, T> cache = new HashMap<>();
 
         @NotNull
-        static <T> Value<T> path(@NotNull String path, @NotNull String... aliases) {
+        public static <T> Value<T> path(@NotNull String path, @NotNull String... aliases) {
             return new Value<>(path, aliases);
         }
 
@@ -148,7 +148,7 @@ public interface LangSupplier {
         private DisplayHolder<?> holder = null;
 
         @NotNull
-        static Path of(@NotNull String path, @NotNull String... aliases) {
+        public static Path of(@NotNull String path, @NotNull String... aliases) {
             return new Path(path, aliases);
         }
 

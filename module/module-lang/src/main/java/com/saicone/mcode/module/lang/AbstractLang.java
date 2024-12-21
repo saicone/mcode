@@ -134,9 +134,6 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
             objects = getFileObjects(file);
         }
         return DMap.of(objects).asDeepPath(".", (pathKey, value) -> {
-            if (value instanceof Map) {
-                return DMap.of((Map<?, ?>) value).getIgnoreCase("type") == null;
-            }
             for (Path path : this.paths) {
                 if (path.getPath().equals(pathKey) || path.getAliases().contains(pathKey)) {
                     if (path instanceof Value) {
@@ -144,6 +141,9 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
                     }
                     return false;
                 }
+            }
+            if (value instanceof Map) {
+                return DMap.of((Map<?, ?>) value).getIgnoreCase("type") == null;
             }
             return true;
         });

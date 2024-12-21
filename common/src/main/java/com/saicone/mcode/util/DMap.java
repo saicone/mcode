@@ -140,7 +140,7 @@ public class DMap implements Map<String, Object> {
         final Map<String, Object> finalMap = new HashMap<>();
         for (Entry<String, Object> entry : map.entrySet()) {
             final String pathKey = prefix + entry.getKey();
-            if (filter == null || !filter.test(pathKey, entry.getValue())) {
+            if (filter == null || filter.test(pathKey, entry.getValue())) {
                 if (entry.getValue() instanceof Map) {
                     final DMap child = of((Map<?, ?>) entry.getValue(), false);
                     if (child != null) {
