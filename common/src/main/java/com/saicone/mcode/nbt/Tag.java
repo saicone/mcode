@@ -367,12 +367,12 @@ public class Tag<T> {
         if (!(object instanceof Tag)) return false;
 
         final Tag<?> tag = (Tag<?>) object;
-        return getId() == tag.getId();
+        return isValid() ? getId() == tag.getId() : getName().equals(tag.getName());
     }
 
     @Override
     public int hashCode() {
-        return getId();
+        return isValid() ? getId() : getName().hashCode();
     }
 
     @NotNull

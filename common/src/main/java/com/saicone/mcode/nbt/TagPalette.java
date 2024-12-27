@@ -18,8 +18,10 @@ public class TagPalette {
             .key("aqua")
             .type("gold")
             .type(Tag.STRING, "green")
-            .type(Tag.END, "red")
+            .type(Tag.BOOLEAN, "red")
+            .type(Tag.END, "dark_red")
             .suffix("red")
+            .suffix(Tag.BOOLEAN, "")
             .end("reset");
 
     public static final TagPalette DEFAULT = new TagPalette()
@@ -27,8 +29,10 @@ public class TagPalette {
             .key("\u00a7b%s")
             .type("\u00a76%s")
             .type(Tag.STRING, "\u00a7a%s")
-            .type(Tag.END, "\u00a7c%s")
+            .type(Tag.BOOLEAN, "\u00a7c%s")
+            .type(Tag.END, "\u00a74%s")
             .suffix("\u00a7c%s")
+            .suffix(Tag.BOOLEAN, "")
             .end("\u00a7r");
     public static final TagPalette JSON = new TagPalette() {
         @Override
@@ -44,23 +48,29 @@ public class TagPalette {
             .key("{\"type\":\"text\",\"color\":\"aqua\",\"text\":\"%s\"},")
             .type("{\"type\":\"text\",\"color\":\"gold\",\"text\":\"%s\"},")
             .type(Tag.STRING, "{\"type\":\"text\",\"color\":\"green\",\"text\":\"%s\"},")
-            .type(Tag.END, "{\"type\":\"text\",\"color\":\"red\",\"text\":\"%s\"},")
-            .suffix("{\"type\":\"text\",\"color\":\"red\",\"text\":\"%s\"},");
+            .type(Tag.BOOLEAN, "{\"type\":\"text\",\"color\":\"red\",\"text\":\"%s\"},")
+            .type(Tag.END, "{\"type\":\"text\",\"color\":\"dark_red\",\"text\":\"%s\"},")
+            .suffix("{\"type\":\"text\",\"color\":\"red\",\"text\":\"%s\"},")
+            .suffix(Tag.BOOLEAN, "");
     public static final TagPalette ANSI = new TagPalette()
             .base("\u001B[0m%s")
             .key("\u001B[96m%s")
             .type("\u001B[33m%s")
             .type(Tag.STRING, "\u001B[92m%s")
+            .type(Tag.BOOLEAN, "\u001B[91m%s")
             .type(Tag.END, "\u001B[31m%s")
             .suffix("\u001B[91m%s")
+            .suffix(Tag.BOOLEAN, "")
             .end("\u001B[0m");
     public static final TagPalette MINI_MESSAGE = new TagPalette()
             .base("<white>%s")
             .key("<aqua>%s")
             .type("<gold>%s")
             .type(Tag.STRING, "<green>%s")
-            .type(Tag.END, "<red>%s")
+            .type(Tag.BOOLEAN, "<red>%s")
+            .type(Tag.END, "<dark_red>%s")
             .suffix("<red>%s")
+            .suffix(Tag.BOOLEAN, "")
             .end("<reset>");
 
     private String base = "";
