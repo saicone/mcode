@@ -35,6 +35,17 @@ public class Tag<T> {
             output.writeByte(object);
         }
     };
+    protected static final Tag<Boolean> BOOLEAN = new Tag<>(1, "BYTE", "TAG_Byte") {
+        @Override
+        public @NotNull Boolean read(@NotNull DataInput input, @NotNull TagMapper<Object> mapper) throws IOException {
+            return input.readByte() == (byte) 1;
+        }
+
+        @Override
+        public void write(@NotNull DataOutput output, @NotNull Boolean object, @NotNull TagMapper<Object> mapper) throws IOException {
+            output.writeByte(object ? (byte) 1 : (byte) 0);
+        }
+    };
     public static final Tag<Short> SHORT = new Tag<>(2, "SHORT", "TAG_Short", 's') {
         @Override
         public @NotNull Short read(@NotNull DataInput input, @NotNull TagMapper<Object> mapper) throws IOException {
@@ -249,6 +260,8 @@ public class Tag<T> {
         TYPES_MAP.put(Object.class, END);
         TYPES_MAP.put(byte.class, BYTE);
         TYPES_MAP.put(Byte.class, BYTE);
+        TYPES_MAP.put(boolean.class, BOOLEAN);
+        TYPES_MAP.put(Boolean.class, BOOLEAN);
         TYPES_MAP.put(short.class, SHORT);
         TYPES_MAP.put(Short.class, SHORT);
         TYPES_MAP.put(int.class, INT);
@@ -324,13 +337,9 @@ public class Tag<T> {
         return suffix;
     }
 
-    @Override
-    public final boolean equals(Object object) {
-        if (this == object) return true;
-        if (!(object instanceof Tag)) return false;
-
-        final Tag<?> tag = (Tag<?>) object;
-        return getId() == tag.getId();
+    @NotNull
+    public String asString(@NotNull T t) {
+        return String.valueOf(t) + getSuffix();
     }
 
     @NotNull
@@ -350,6 +359,15 @@ public class Tag<T> {
 
     public void write(@NotNull DataOutput output, @NotNull T object, @NotNull TagMapper<Object> mapper) throws IOException {
         throw new IllegalStateException("Cannot write data for tag " + getName());
+    }
+
+    @Override
+    public final boolean equals(Object object) {
+        if (this == object) return true;
+        if (!(object instanceof Tag)) return false;
+
+        final Tag<?> tag = (Tag<?>) object;
+        return getId() == tag.getId();
     }
 
     @Override

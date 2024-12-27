@@ -28,6 +28,9 @@ public class TagJson {
             return JsonNull.INSTANCE;
         }
         final Object value = mapper.extract(object);
+        if (value instanceof Boolean) {
+            return new JsonPrimitive((Boolean) value);
+        }
         final Tag<?> type = Tag.getType(value);
         switch (type.getId()) {
             case 0: // end

@@ -32,8 +32,10 @@ public class TagConfig {
         final Object value = mapper.extract(object);
         if (value == null) {
             return null;
+        } else if (value instanceof Boolean) {
+            return value;
         }
-        final Tag<?> type = Tag.getType(value);
+        final Tag<Object> type = Tag.getType(value);
         switch (type.getId()) {
             case 0: // end
                 return null;
@@ -45,7 +47,7 @@ public class TagConfig {
             case 4: // long
             case 5: // float
             case 6: // double
-                return String.valueOf(value) + type.getSuffix();
+                return type.asString(value);
             case 7: // byte[]
             case 11: // int[]
             case 12: // long[]
@@ -100,6 +102,8 @@ public class TagConfig {
     public <T> T fromConfigValue(@Nullable Object value, @NotNull TagMapper<T> mapper) {
         if (value == null) {
             return null;
+        } else if (value instanceof Boolean) {
+            return mapper.build(Tag.BYTE, (Boolean) value ? (byte) 1 : (byte) 0);
         }
 
         final Tag<?> type = Tag.getType(value);
