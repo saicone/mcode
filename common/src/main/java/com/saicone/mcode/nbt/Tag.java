@@ -143,7 +143,7 @@ public class Tag<T> {
             final List<Object> list = new ArrayList<>(size);
 
             for (int i = 0; i < size; i++) {
-                list.add(mapper.build(type, type.read(input)));
+                list.add(mapper.build(type, type.read(input, mapper)));
             }
 
             return list;
@@ -162,7 +162,7 @@ public class Tag<T> {
             output.writeInt(object.size());
 
             for (Object element : object) {
-                type.write(output, mapper.extract(element));
+                type.write(output, mapper.extract(element), mapper);
             }
         }
     };
@@ -176,7 +176,7 @@ public class Tag<T> {
                 final Tag<?> type = getType(id);
 
                 final String key = input.readUTF();
-                final Object value = type.read(input);
+                final Object value = type.read(input, mapper);
                 map.put(key, mapper.build(type, value));
             }
 
@@ -191,7 +191,7 @@ public class Tag<T> {
                 output.writeByte(type.getId());
                 if (type != END) {
                     output.writeUTF(entry.getKey());
-                    type.write(output, value);
+                    type.write(output, value, mapper);
                 }
             }
             output.writeByte(END.getId());
