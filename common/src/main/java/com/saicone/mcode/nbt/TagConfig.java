@@ -4,17 +4,15 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.StringJoiner;
 
 public class TagConfig {
 
-    private static final Set<Character> NUMBER_SUFFIX = Set.of('b', 's', 'L', 'f', 'd');
+    private static final Set<Character> NUMBER_SUFFIX = Set.of('b', 'B', 's', 'S', 'l', 'L', 'f', 'F', 'd', 'D');
 
     @Nullable
     @Contract("!null -> !null")
@@ -40,18 +38,17 @@ public class TagConfig {
             case 0: // end
                 return null;
             case 3: // int
+            case 6: // double
             case 8: // String
                 return value;
             case 1: // byte
             case 2: // short
             case 4: // long
             case 5: // float
-            case 6: // double
-                return type.asString(value);
             case 7: // byte[]
             case 11: // int[]
             case 12: // long[]
-                return arrayToConfigValue(type, value);
+                return type.snbt(value, (TagMapper<Object>) mapper);
             case 9: // List
                 final List<Object> list = new ArrayList<>();
                 for (Object o : (List<Object>) value) {
@@ -73,23 +70,6 @@ public class TagConfig {
             default:
                 throw new IllegalArgumentException("Invalid tag type: " + type.getName());
         }
-    }
-
-    @NotNull
-    private static String arrayToConfigValue(@NotNull Tag<?> tag, @NotNull Object array) {
-        final StringJoiner joiner = new StringJoiner(", ", '[' + tag.getSuffix() + "; ", "]");
-        final char suffix;
-        if (tag == Tag.INT_ARRAY) {
-            suffix = '\0';
-        } else {
-            suffix = tag.getSuffix();
-        }
-        final int size = Array.getLength(array);
-        for (int i = 0; i < size; i++) {
-            final Object value = Array.get(array, i);
-            joiner.add(String.valueOf(value) + suffix);
-        }
-        return joiner.toString();
     }
 
     @Nullable
@@ -200,14 +180,19 @@ public class TagConfig {
             if (isNumber(s)) {
                 switch (suffix) {
                     case 'b':
+                    case 'B':
                         return mapper.build(Tag.BYTE, Byte.parseByte(s));
                     case 's':
+                    case 'S':
                         return mapper.build(Tag.SHORT, Short.parseShort(s));
+                    case 'l':
                     case 'L':
                         return mapper.build(Tag.LONG, Long.parseLong(s));
                     case 'f':
+                    case 'F':
                         return mapper.build(Tag.FLOAT, Float.parseFloat(s));
                     case 'd':
+                    case 'D':
                         return mapper.build(Tag.DOUBLE, Double.parseDouble(s));
                 }
             }

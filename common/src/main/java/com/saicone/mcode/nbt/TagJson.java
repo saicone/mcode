@@ -95,7 +95,7 @@ public class TagJson {
         } else if (element.isJsonArray()) {
             final JsonArray array = element.getAsJsonArray();
             if (array.isEmpty()) {
-                return mapper.build(Tag.LIST, new ArrayList<>());
+                return mapper.build(Tag.LIST, new ArrayList<T>());
             }
             final JsonElement first = array.get(0);
             if (first.isJsonPrimitive()) {

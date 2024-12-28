@@ -1,5 +1,7 @@
-package com.saicone.mcode.nbt;
+package com.saicone.mcode.nbt.io;
 
+import com.saicone.mcode.nbt.Tag;
+import com.saicone.mcode.nbt.TagMapper;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

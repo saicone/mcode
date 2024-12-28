@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 
 public class Tag<T> {
 
@@ -31,19 +32,19 @@ public class Tag<T> {
         }
 
         @Override
-        public void write(@NotNull DataOutput output, @NotNull Byte object, @NotNull TagMapper<Object> mapper) throws IOException {
-            output.writeByte(object);
+        public void write(@NotNull DataOutput output, @NotNull Byte b, @NotNull TagMapper<Object> mapper) throws IOException {
+            output.writeByte(b);
         }
     };
-    protected static final Tag<Boolean> BOOLEAN = new Tag<>(1, "BYTE", "TAG_Byte") {
+    public static final Tag<Boolean> BOOLEAN = new Tag<>(1, "BYTE", "TAG_Byte") {
         @Override
         public @NotNull Boolean read(@NotNull DataInput input, @NotNull TagMapper<Object> mapper) throws IOException {
             return input.readByte() == (byte) 1;
         }
 
         @Override
-        public void write(@NotNull DataOutput output, @NotNull Boolean object, @NotNull TagMapper<Object> mapper) throws IOException {
-            output.writeByte(object ? (byte) 1 : (byte) 0);
+        public void write(@NotNull DataOutput output, @NotNull Boolean b, @NotNull TagMapper<Object> mapper) throws IOException {
+            output.writeByte(b ? (byte) 1 : (byte) 0);
         }
     };
     public static final Tag<Short> SHORT = new Tag<>(2, "SHORT", "TAG_Short", 's') {
@@ -53,8 +54,8 @@ public class Tag<T> {
         }
 
         @Override
-        public void write(@NotNull DataOutput output, @NotNull Short object, @NotNull TagMapper<Object> mapper) throws IOException {
-            output.writeShort(object);
+        public void write(@NotNull DataOutput output, @NotNull Short s, @NotNull TagMapper<Object> mapper) throws IOException {
+            output.writeShort(s);
         }
     };
     public static final Tag<Integer> INT = new Tag<>(3, "INT", "TAG_Int") {
@@ -64,8 +65,8 @@ public class Tag<T> {
         }
 
         @Override
-        public void write(@NotNull DataOutput output, @NotNull Integer object, @NotNull TagMapper<Object> mapper) throws IOException {
-            output.writeInt(object);
+        public void write(@NotNull DataOutput output, @NotNull Integer i, @NotNull TagMapper<Object> mapper) throws IOException {
+            output.writeInt(i);
         }
     };
     public static final Tag<Long> LONG = new Tag<>(4, "LONG", "TAG_Long", 'l') {
@@ -75,8 +76,8 @@ public class Tag<T> {
         }
 
         @Override
-        public void write(@NotNull DataOutput output, @NotNull Long object, @NotNull TagMapper<Object> mapper) throws IOException {
-            output.writeLong(object);
+        public void write(@NotNull DataOutput output, @NotNull Long l, @NotNull TagMapper<Object> mapper) throws IOException {
+            output.writeLong(l);
         }
     };
     public static final Tag<Float> FLOAT = new Tag<>(5, "FLOAT", "TAG_Float", 'f') {
@@ -86,22 +87,36 @@ public class Tag<T> {
         }
 
         @Override
-        public void write(@NotNull DataOutput output, @NotNull Float object, @NotNull TagMapper<Object> mapper) throws IOException {
-            output.writeFloat(object);
+        public void write(@NotNull DataOutput output, @NotNull Float f, @NotNull TagMapper<Object> mapper) throws IOException {
+            output.writeFloat(f);
         }
     };
     public static final Tag<Double> DOUBLE = new Tag<>(6, "DOUBLE", "TAG_Double", 'd') {
+        @Override
+        public @NotNull String snbt(@NotNull Double d, TagMapper<Object> mapper) {
+            return String.valueOf(d);
+        }
+
         @Override
         public @NotNull Double read(@NotNull DataInput input, @NotNull TagMapper<Object> mapper) throws IOException {
             return input.readDouble();
         }
 
         @Override
-        public void write(@NotNull DataOutput output, @NotNull Double object, @NotNull TagMapper<Object> mapper) throws IOException {
-            output.writeDouble(object);
+        public void write(@NotNull DataOutput output, @NotNull Double d, @NotNull TagMapper<Object> mapper) throws IOException {
+            output.writeDouble(d);
         }
     };
     public static final Tag<byte[]> BYTE_ARRAY = new Tag<>(7, "BYTE[]", "TAG_Byte_Array", 'B') {
+        @Override
+        public @NotNull String snbt(byte @NotNull [] bytes, TagMapper<Object> mapper) {
+            final StringJoiner joiner = new StringJoiner(",", '[' + getSuffix() + ";", "]");
+            for (byte b : bytes) {
+                joiner.add(String.valueOf(b) + getSuffix());
+            }
+            return joiner.toString();
+        }
+
         @Override
         public byte @NotNull [] read(@NotNull DataInput input, @NotNull TagMapper<Object> mapper) throws IOException {
             final int size = input.readInt();
@@ -114,23 +129,66 @@ public class Tag<T> {
         }
 
         @Override
-        public void write(@NotNull DataOutput output, byte @NotNull [] object, @NotNull TagMapper<Object> mapper) throws IOException {
-            output.writeInt(object.length);
-            output.write(object);
+        public void write(@NotNull DataOutput output, byte @NotNull [] bytes, @NotNull TagMapper<Object> mapper) throws IOException {
+            output.writeInt(bytes.length);
+            output.write(bytes);
+        }
+    };
+    public static final Tag<boolean[]> BOOLEAN_ARRAY = new Tag<>(7, "BYTE[]", "TAG_Byte_Array", 'B') {
+        @Override
+        public @NotNull String snbt(boolean @NotNull [] booleans, TagMapper<Object> mapper) {
+            final StringJoiner joiner = new StringJoiner(",", '[' + getSuffix() + ";", "]");
+            for (boolean b : booleans) {
+                joiner.add(String.valueOf(b));
+            }
+            return joiner.toString();
+        }
+
+        @Override
+        public boolean @NotNull [] read(@NotNull DataInput input, @NotNull TagMapper<Object> mapper) throws IOException {
+            final int size = input.readInt();
+            if (size >= 16L * 1024 * 1024) {
+                throw new IllegalArgumentException("Cannot read array with more than 16MB of data");
+            }
+            final byte[] array = new byte[size];
+            input.readFully(array);
+            return mapper.booleanArray(array);
+        }
+
+        @Override
+        public void write(@NotNull DataOutput output, boolean @NotNull [] booleans, @NotNull TagMapper<Object> mapper) throws IOException {
+            output.writeInt(booleans.length);
+            output.write(mapper.byteArray(booleans));
         }
     };
     public static final Tag<String> STRING = new Tag<>(8, "STRING", "TAG_String") {
+        @Override
+        public @NotNull String snbt(@NotNull String s, TagMapper<Object> mapper) {
+            return '"' + s.replace("\"", "\\\"") + '"';
+        }
+
         @Override
         public @NotNull String read(@NotNull DataInput input, @NotNull TagMapper<Object> mapper) throws IOException {
             return input.readUTF();
         }
 
         @Override
-        public void write(@NotNull DataOutput output, @NotNull String object, @NotNull TagMapper<Object> mapper) throws IOException {
-            output.writeUTF(object);
+        public void write(@NotNull DataOutput output, @NotNull String s, @NotNull TagMapper<Object> mapper) throws IOException {
+            output.writeUTF(s);
         }
     };
     public static final Tag<List<Object>> LIST = new Tag<>(9, "LIST", "TAG_List") {
+        @Override
+        public @NotNull String snbt(@NotNull List<Object> objects, TagMapper<Object> mapper) {
+            final StringJoiner joiner = new StringJoiner(",", "[", "]");
+            for (Object object : objects) {
+                final Object value = mapper.extract(object);
+                final Tag<Object> type = getType(value);
+                joiner.add(type.snbt(value, mapper));
+            }
+            return joiner.toString();
+        }
+
         @Override
         public @NotNull List<Object> read(@NotNull DataInput input, @NotNull TagMapper<Object> mapper) throws IOException {
             final byte id = input.readByte();
@@ -150,23 +208,40 @@ public class Tag<T> {
         }
 
         @Override
-        public void write(@NotNull DataOutput output, @NotNull List<Object> object, @NotNull TagMapper<Object> mapper) throws IOException {
+        public void write(@NotNull DataOutput output, @NotNull List<Object> list, @NotNull TagMapper<Object> mapper) throws IOException {
             final Tag<Object> type;
-            if (object.isEmpty()) {
+            if (list.isEmpty()) {
                 type = END;
             } else {
-                type = getType(object.get(0));
+                type = getType(mapper.extract(list.get(0)));
             }
 
             output.writeByte(type.getId());
-            output.writeInt(object.size());
+            output.writeInt(list.size());
 
-            for (Object element : object) {
-                type.write(output, mapper.extract(element), mapper);
+            for (Object object : list) {
+                type.write(output, mapper.extract(object), mapper);
             }
         }
     };
     public static final Tag<Map<String, Object>> COMPOUND = new Tag<>(10, "COMPOUND", "TAG_Compound") {
+        @Override
+        public @NotNull String snbt(@NotNull Map<String, Object> map, TagMapper<Object> mapper) {
+            final StringJoiner joiner = new StringJoiner(",", "{", "}");
+            for (Map.Entry<String, Object> entry : map.entrySet()) {
+                final String key;
+                if (isUnquoted(entry.getKey())) {
+                    key = entry.getKey();
+                } else {
+                    key = '"' + entry.getKey() + '"';
+                }
+                final Object value = mapper.extract(entry.getValue());
+                final Tag<Object> type = getType(value);
+                joiner.add(key + ":" + type.snbt(value, mapper));
+            }
+            return joiner.toString();
+        }
+
         @Override
         public @NotNull Map<String, Object> read(@NotNull DataInput input, @NotNull TagMapper<Object> mapper) throws IOException {
             final Map<String, Object> map = new HashMap<>();
@@ -184,8 +259,8 @@ public class Tag<T> {
         }
 
         @Override
-        public void write(@NotNull DataOutput output, @NotNull Map<String, Object> object, @NotNull TagMapper<Object> mapper) throws IOException {
-            for (Map.Entry<String, Object> entry : object.entrySet()) {
+        public void write(@NotNull DataOutput output, @NotNull Map<String, Object> map, @NotNull TagMapper<Object> mapper) throws IOException {
+            for (Map.Entry<String, Object> entry : map.entrySet()) {
                 final Object value = mapper.extract(entry.getValue());
                 final Tag<Object> type = getType(value);
                 output.writeByte(type.getId());
@@ -198,6 +273,15 @@ public class Tag<T> {
         }
     };
     public static final Tag<int[]> INT_ARRAY = new Tag<>(11, "INT[]", "TAG_Int_Array", 'I') {
+        @Override
+        public @NotNull String snbt(int @NotNull [] ints, TagMapper<Object> mapper) {
+            final StringJoiner joiner = new StringJoiner(",", '[' + getSuffix() + ";", "]");
+            for (int i : ints) {
+                joiner.add(String.valueOf(i));
+            }
+            return joiner.toString();
+        }
+
         @Override
         public int @NotNull [] read(@NotNull DataInput input, @NotNull TagMapper<Object> mapper) throws IOException {
             final int size = input.readInt();
@@ -212,14 +296,23 @@ public class Tag<T> {
         }
 
         @Override
-        public void write(@NotNull DataOutput output, int @NotNull [] object, @NotNull TagMapper<Object> mapper) throws IOException {
-            output.writeInt(object.length);
-            for (int i : object) {
+        public void write(@NotNull DataOutput output, int @NotNull [] ints, @NotNull TagMapper<Object> mapper) throws IOException {
+            output.writeInt(ints.length);
+            for (int i : ints) {
                 output.writeInt(i);
             }
         }
     };
     public static final Tag<long[]> LONG_ARRAY = new Tag<>(12, "LONG[]", "TAG_Long_Array", 'L') {
+        @Override
+        public @NotNull String snbt(long @NotNull [] longs, TagMapper<Object> mapper) {
+            final StringJoiner joiner = new StringJoiner(",", '[' + getSuffix() + ";", "]");
+            for (long l : longs) {
+                joiner.add(String.valueOf(l) + getSuffix());
+            }
+            return joiner.toString();
+        }
+
         @Override
         public long @NotNull [] read(@NotNull DataInput input, @NotNull TagMapper<Object> mapper) throws IOException {
             final int size = input.readInt();
@@ -231,9 +324,9 @@ public class Tag<T> {
         }
 
         @Override
-        public void write(@NotNull DataOutput output, long @NotNull [] object, @NotNull TagMapper<Object> mapper) throws IOException {
-            output.writeInt(object.length);
-            for (long l : object) {
+        public void write(@NotNull DataOutput output, long @NotNull [] longs, @NotNull TagMapper<Object> mapper) throws IOException {
+            output.writeInt(longs.length);
+            for (long l : longs) {
                 output.writeLong(l);
             }
         }
@@ -254,30 +347,57 @@ public class Tag<T> {
             INT_ARRAY,
             LONG_ARRAY
     };
-    private static final Map<Class<?>, Tag<?>> TYPES_MAP = new HashMap<>();
+    private static final Map<Class<?>, Tag<?>> CLASS_TYPES = new HashMap<>();
+    private static final Map<Character, Tag<?>> SUFFIX_TYPES = new HashMap<>() {
+        @Override
+        public Tag<?> put(Character key, Tag<?> value) {
+            super.put(Character.toLowerCase(key), value);
+            return super.put(key, value);
+        }
+    };
+    private static final Map<Character, Tag<?>> ARRAY_SUFFIX_TYPES = new HashMap<>() {
+        @Override
+        public Tag<?> put(Character key, Tag<?> value) {
+            super.put(Character.toLowerCase(key), value);
+            return super.put(key, value);
+        }
+    };
 
     static {
-        TYPES_MAP.put(Object.class, END);
-        TYPES_MAP.put(byte.class, BYTE);
-        TYPES_MAP.put(Byte.class, BYTE);
-        TYPES_MAP.put(boolean.class, BOOLEAN);
-        TYPES_MAP.put(Boolean.class, BOOLEAN);
-        TYPES_MAP.put(short.class, SHORT);
-        TYPES_MAP.put(Short.class, SHORT);
-        TYPES_MAP.put(int.class, INT);
-        TYPES_MAP.put(Integer.class, INT);
-        TYPES_MAP.put(long.class, LONG);
-        TYPES_MAP.put(Long.class, LONG);
-        TYPES_MAP.put(float.class, FLOAT);
-        TYPES_MAP.put(Float.class, FLOAT);
-        TYPES_MAP.put(double.class, DOUBLE);
-        TYPES_MAP.put(Double.class, DOUBLE);
-        TYPES_MAP.put(byte[].class, BYTE_ARRAY);
-        TYPES_MAP.put(String.class, STRING);
-        TYPES_MAP.put(List.class, LIST);
-        TYPES_MAP.put(Map.class, COMPOUND);
-        TYPES_MAP.put(int[].class, INT_ARRAY);
-        TYPES_MAP.put(long[].class, LONG_ARRAY);
+        CLASS_TYPES.put(Object.class, END);
+        CLASS_TYPES.put(byte.class, BYTE);
+        CLASS_TYPES.put(Byte.class, BYTE);
+        CLASS_TYPES.put(boolean.class, BOOLEAN);
+        CLASS_TYPES.put(Boolean.class, BOOLEAN);
+        CLASS_TYPES.put(short.class, SHORT);
+        CLASS_TYPES.put(Short.class, SHORT);
+        CLASS_TYPES.put(int.class, INT);
+        CLASS_TYPES.put(Integer.class, INT);
+        CLASS_TYPES.put(long.class, LONG);
+        CLASS_TYPES.put(Long.class, LONG);
+        CLASS_TYPES.put(float.class, FLOAT);
+        CLASS_TYPES.put(Float.class, FLOAT);
+        CLASS_TYPES.put(double.class, DOUBLE);
+        CLASS_TYPES.put(Double.class, DOUBLE);
+        CLASS_TYPES.put(byte[].class, BYTE_ARRAY);
+        CLASS_TYPES.put(Byte[].class, BYTE_ARRAY);
+        CLASS_TYPES.put(boolean[].class, BOOLEAN_ARRAY);
+        CLASS_TYPES.put(Boolean[].class, BOOLEAN_ARRAY);
+        CLASS_TYPES.put(String.class, STRING);
+        CLASS_TYPES.put(List.class, LIST);
+        CLASS_TYPES.put(Map.class, COMPOUND);
+        CLASS_TYPES.put(int[].class, INT_ARRAY);
+        CLASS_TYPES.put(Integer[].class, INT_ARRAY);
+        CLASS_TYPES.put(long[].class, LONG_ARRAY);
+        CLASS_TYPES.put(Long[].class, LONG_ARRAY);
+        SUFFIX_TYPES.put('B', BYTE);
+        SUFFIX_TYPES.put('S', SHORT);
+        SUFFIX_TYPES.put('L', LONG);
+        SUFFIX_TYPES.put('F', FLOAT);
+        SUFFIX_TYPES.put('D', DOUBLE);
+        ARRAY_SUFFIX_TYPES.put('B', BYTE_ARRAY);
+        ARRAY_SUFFIX_TYPES.put('I', INT_ARRAY);
+        ARRAY_SUFFIX_TYPES.put('L', LONG_ARRAY);
     }
 
     private final byte id;
@@ -306,6 +426,10 @@ public class Tag<T> {
 
     public boolean isValue() {
         return isPrimitive() || id == 8;
+    }
+
+    public boolean isDecimal() {
+        return id == 5 || id == 6;
     }
 
     public boolean isArray() {
@@ -338,7 +462,12 @@ public class Tag<T> {
     }
 
     @NotNull
-    public String asString(@NotNull T t) {
+    public String snbt(@NotNull T t) {
+        return snbt(t, TagMapper.DEFAULT);
+    }
+
+    @NotNull
+    public String snbt(@NotNull T t, TagMapper<Object> mapper) {
         return String.valueOf(t) + getSuffix();
     }
 
@@ -353,11 +482,11 @@ public class Tag<T> {
         throw new IllegalStateException("Cannot read data for tag " + getName());
     }
 
-    public void write(@NotNull DataOutput output, @NotNull T object) throws IOException {
-        write(output, object, TagMapper.DEFAULT);
+    public void write(@NotNull DataOutput output, @NotNull T t) throws IOException {
+        write(output, t, TagMapper.DEFAULT);
     }
 
-    public void write(@NotNull DataOutput output, @NotNull T object, @NotNull TagMapper<Object> mapper) throws IOException {
+    public void write(@NotNull DataOutput output, @NotNull T t, @NotNull TagMapper<Object> mapper) throws IOException {
         throw new IllegalStateException("Cannot write data for tag " + getName());
     }
 
@@ -373,6 +502,23 @@ public class Tag<T> {
     @Override
     public int hashCode() {
         return isValid() ? getId() : getName().hashCode();
+    }
+
+    protected boolean isUnquoted(@NotNull String s) {
+        for (int i = 0; i < s.length(); i++) {
+            if (!isUnquoted(s.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    protected boolean isUnquoted(char c) {
+        return c >= '0' && c <= '9'
+            || c >= 'A' && c <= 'Z'
+            || c >= 'a' && c <= 'z'
+            || c == '_' || c == '-'
+            || c == '.' || c == '+';
     }
 
     @NotNull
@@ -404,7 +550,7 @@ public class Tag<T> {
     @NotNull
     @SuppressWarnings("unchecked")
     public static <T> Tag<T> getType(@NotNull Class<?> type) {
-        Tag<?> result = TYPES_MAP.get(type);
+        Tag<?> result = CLASS_TYPES.get(type);
         if (result == null) {
             if (List.class.isAssignableFrom(type)) {
                 result = LIST;
@@ -420,5 +566,35 @@ public class Tag<T> {
             }
         }
         return (Tag<T>) result;
+    }
+
+    @NotNull
+    @SuppressWarnings("unchecked")
+    public static <T> Tag<T> getType(char suffix) {
+        final Tag<?> type = SUFFIX_TYPES.get(suffix);
+        if (type == null) {
+            return new Tag<>(-1, "INVALID(" + suffix + ")", "UNKNOWN_" + suffix) {
+                @Override
+                public boolean isValid() {
+                    return false;
+                }
+            };
+        }
+        return (Tag<T>) type;
+    }
+
+    @NotNull
+    @SuppressWarnings("unchecked")
+    public static <T> Tag<T> getArrayType(char suffix) {
+        final Tag<?> type = ARRAY_SUFFIX_TYPES.get(suffix);
+        if (type == null) {
+            return new Tag<>(-1, "INVALID(" + suffix + ")", "UNKNOWN_" + suffix) {
+                @Override
+                public boolean isValid() {
+                    return false;
+                }
+            };
+        }
+        return (Tag<T>) type;
     }
 }
