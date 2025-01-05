@@ -13,7 +13,9 @@ import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 import java.util.logging.Level;
@@ -76,6 +78,9 @@ public class EasyLookup {
             addClassId("String", String.class);
             addClassId("BigInteger", BigInteger.class);
             addClassId("BigDecimal", BigDecimal.class);
+            addClassId("Map", Map.class);
+            addClassId("List", List.class);
+            addClassId("Collection", Collection.class);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
@@ -180,9 +185,9 @@ public class EasyLookup {
         } else {
             parameterTypes = Arrays.stream(s.substring(bracket + 1, s.length() - 1).split(","))
                     .map(parameter -> {
-                        final int space = parameter.lastIndexOf(' ');
-                        if (space > 0) {
-                            return parameter.substring(0, space);
+                        final int separator = Math.min(parameter.indexOf('<'), parameter.lastIndexOf(' '));
+                        if (separator > 0) {
+                            return parameter.substring(0, separator);
                         }
                         return parameter;
                     })

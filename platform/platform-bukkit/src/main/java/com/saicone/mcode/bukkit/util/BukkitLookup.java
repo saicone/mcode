@@ -21,6 +21,7 @@ public class BukkitLookup extends EasyLookup {
             addMinecraftClass("nbt.ByteArrayTag", "NBTTagByteArray");
             addMinecraftClass("nbt.CompoundTag", "NBTTagCompound");
             addMinecraftClass("nbt.DoubleTag", "NBTTagDouble");
+            addMinecraftClass("nbt.EndTag", "NBTTagEnd");
             addMinecraftClass("nbt.FloatTag", "NBTTagFloat");
             addMinecraftClass("nbt.IntTag", "NBTTagInt");
             addMinecraftClass("nbt.IntArrayTag", "NBTTagIntArray");

@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public enum MC {
 
@@ -274,5 +275,44 @@ public enum MC {
             }
         }
         return null;
+    }
+
+    @NotNull
+    public static <T> Supplier<T> supply(@Nullable T t, @NotNull MC version, @Nullable T... def) {
+        return () -> {
+            if (MC.version().isNewerThanOrEquals(version)) {
+                return t;
+            } else {
+                return def.length > 0 ? def[0] : null;
+            }
+        };
+    }
+
+    @NotNull
+    public static <T> Supplier<T> supply(@Nullable T t1, @NotNull MC version1, @Nullable T t2, @NotNull MC version2, @Nullable T... def) {
+        return () -> {
+            if (MC.version().isNewerThanOrEquals(version1)) {
+                return t1;
+            } else if (MC.version().isNewerThanOrEquals(version2)) {
+                return t2;
+            } else {
+                return def.length > 0 ? def[0] : null;
+            }
+        };
+    }
+
+    @NotNull
+    public static <T> Supplier<T> supply(@Nullable T t1, @NotNull MC version1, @Nullable T t2, @NotNull MC version2, @Nullable T t3, @NotNull MC version3, @Nullable T... def) {
+        return () -> {
+            if (MC.version().isNewerThanOrEquals(version1)) {
+                return t1;
+            } else if (MC.version().isNewerThanOrEquals(version2)) {
+                return t2;
+            } else if (MC.version().isNewerThanOrEquals(version3)) {
+                return t3;
+            } else {
+                return def.length > 0 ? def[0] : null;
+            }
+        };
     }
 }
