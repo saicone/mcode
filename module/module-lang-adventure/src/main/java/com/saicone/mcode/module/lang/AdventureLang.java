@@ -250,5 +250,10 @@ public interface AdventureLang<SenderT> extends DisplaySupplier<SenderT> {
         protected void sendMiniMessage(@NotNull T type, @NotNull Component miniMessage) {
             getAudience(type).sendMessage(miniMessage);
         }
+
+        @Override
+        public Audience getAudience(@NotNull T type) {
+            return AudienceSupplier.super.getAudience(type);
+        }
     }
 }
