@@ -9,8 +9,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.Predicate;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -470,17 +469,17 @@ public class Strings {
     }
 
     @NotNull
-    public static <T> String replaceBracketPlaceholder(@Nullable T type, @NotNull String s, @NotNull Predicate<String> predicate, @NotNull BiFunction<T, String, Object> function) {
-        return replacePlaceholder(type, s, '{', '}', predicate, function);
+    public static String replaceBracketPlaceholder(@Nullable Object subject, @Nullable Object relative, @NotNull String s, @NotNull Function<String, Replacer> lookup) {
+        return replacePlaceholder(subject, relative, s, '{', '}', lookup);
     }
 
     @NotNull
-    public static <T> String replacePlaceholder(@Nullable T type, @NotNull String s, @NotNull Predicate<String> predicate, @NotNull BiFunction<T, String, Object> function) {
-        return replacePlaceholder(type, s, '%', '%', predicate, function);
+    public static String replacePlaceholder(@Nullable Object subject, @Nullable Object relative, @NotNull String s, @NotNull Function<String, Replacer> lookup) {
+        return replacePlaceholder(subject, relative, s, '%', '%', lookup);
     }
 
     @NotNull
-    public static <T> String replacePlaceholder(@Nullable T type, @NotNull String s, char start, char end, @NotNull Predicate<String> predicate, @NotNull BiFunction<T, String, Object> function) {
+    public static String replacePlaceholder(@Nullable Object subject, @Nullable Object relative, @NotNull String s, char start, char end, @NotNull Function<String, Replacer> lookup) {
         if (s.isBlank() || !s.contains("" + start) || s.length() < 4) {
             return s;
         }
@@ -505,12 +504,15 @@ public class Strings {
                 if (c1 == '_') {
                     if (i > mark1 && i + 2 < chars.length) {
                         final String id = s.substring(mark1, i);
-                        if (predicate.test(id)) {
+                        final Replacer replacer = lookup.apply(id);
+                        if (replacer != null) {
                             final int mark2 = i + 1;
                             while (++i < chars.length) {
                                 final char c2 = chars[i];
                                 if (c2 == end) {
-                                    builder.replace(mark, i, String.valueOf(function.apply(type, s.substring(mark2, i))));
+                                    final String params = s.substring(mark2, i);
+                                    final Object result = relative == null ? replacer.replace(subject, params) : replacer.replace(subject, relative, params);
+                                    builder.replace(mark, i, String.valueOf(result));
                                     break;
                                 } else {
                                     builder.append(c2);

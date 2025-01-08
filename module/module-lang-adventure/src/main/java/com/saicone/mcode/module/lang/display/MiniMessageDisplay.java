@@ -2,6 +2,7 @@ package com.saicone.mcode.module.lang.display;
 
 import com.saicone.mcode.module.lang.Display;
 import com.saicone.mcode.module.lang.DisplayLoader;
+import com.saicone.mcode.platform.Text;
 import com.saicone.mcode.util.DMap;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
@@ -45,9 +46,18 @@ public abstract class MiniMessageDisplay<SenderT> implements Display<SenderT> {
         }
     }
 
-    private final String text;
+    @NotNull
+    public static Component deserialize(@NotNull Audience audience, @NotNull Text text) {
+        if (isPlaceholderPresent()) {
+            return MiniMessage.miniMessage().deserialize(text.getAsString().getValue(), getAudiencePlaceholders(audience));
+        } else {
+            return MiniMessage.miniMessage().deserialize(text.getAsString().getValue());
+        }
+    }
 
-    public MiniMessageDisplay(@NotNull String text) {
+    private final Text text;
+
+    public MiniMessageDisplay(@NotNull Text text) {
         this.text = text;
     }
 
@@ -60,26 +70,25 @@ public abstract class MiniMessageDisplay<SenderT> implements Display<SenderT> {
         }
     }
 
-    @NotNull
     @Override
-    public String getText() {
+    public @NotNull Text getText() {
         return text;
     }
 
     @Override
-    public void sendTo(@NotNull SenderT type, @NotNull Function<String, String> parser) {
+    public void sendTo(@NotNull SenderT type, @NotNull Function<Text, Text> parser) {
         sendMiniMessage(type, parser.apply(text));
     }
 
     @Override
-    public void sendTo(@NotNull Collection<? extends SenderT> senders, @NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
-        String minimessage = parser.apply(text);
+    public void sendTo(@NotNull Collection<? extends SenderT> senders, @NotNull Function<Text, Text> parser, @NotNull BiFunction<SenderT, Text, Text> playerParser) {
+        Text minimessage = parser.apply(text);
         for (SenderT player : senders) {
             sendMiniMessage(player, playerParser.apply(player, minimessage));
         }
     }
 
-    protected abstract void sendMiniMessage(@NotNull SenderT type, @NotNull String miniMessage);
+    protected abstract void sendMiniMessage(@NotNull SenderT type, @NotNull Text text);
 
     public static abstract class Loader<SenderT> extends DisplayLoader<SenderT> {
 
@@ -92,14 +101,11 @@ public abstract class MiniMessageDisplay<SenderT> implements Display<SenderT> {
             if (text.isEmpty()) {
                 return null;
             }
-            return new MiniMessageDisplay<>(text) {
+            return new MiniMessageDisplay<>(Text.valueOf(text)) {
                 @Override
-                protected void sendMiniMessage(@NotNull SenderT type, @NotNull String miniMessage) {
-                    if (isPlaceholderPresent()) {
-                        Loader.this.sendMiniMessage(type, MiniMessage.miniMessage().deserialize(miniMessage, getAudiencePlaceholders(getAudience(type))));
-                    } else {
-                        Loader.this.sendMiniMessage(type, MiniMessage.miniMessage().deserialize(miniMessage));
-                    }
+                protected void sendMiniMessage(@NotNull SenderT type, @NotNull Text text) {
+                    final Audience audience = getAudience(type);
+                    Loader.this.sendMiniMessage(audience, deserialize(audience, text));
                 }
             };
         }
@@ -120,6 +126,6 @@ public abstract class MiniMessageDisplay<SenderT> implements Display<SenderT> {
 
         protected abstract Audience getAudience(@NotNull SenderT type);
 
-        protected abstract void sendMiniMessage(@NotNull SenderT type, @NotNull Component miniMessage);
+        protected abstract void sendMiniMessage(@NotNull Audience audience, @NotNull Component miniMessage);
     }
 }

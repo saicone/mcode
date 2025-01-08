@@ -8,20 +8,17 @@ import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.platform.bungeecord.BungeeAudiences;
 import net.md_5.bungee.api.CommandSender;
+import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Plugin;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 public class BungeeAdventureLang extends BungeeLang implements AdventureLang<CommandSender> {
 
     private final BungeeAudiences audiences;
 
-    private final AdventureLang.ActionBarLoader<CommandSender> actionbar = new AdventureLang.ActionBarLoader<>() {
-        @Override
-        public Audience getAudience(@NotNull CommandSender type) {
-            return getAudiences().sender(type);
-        }
-    };
-    private final AdventureLang.BossBarLoader<CommandSender> bossBar = new AdventureLang.BossBarLoader<>() {
+    private final AdventureLang.ActionBarLoader<CommandSender> actionbar = new AdventureLang.ActionBarLoader<>(this);
+    private final AdventureLang.BossBarLoader<CommandSender> bossbar = new AdventureLang.BossBarLoader<>(this) {
         @Override
         protected BossBarDisplay.Holder newHolder(@NotNull BossBar bossBar) {
             return new AdventureBossBar(bossBar) {
@@ -43,43 +40,49 @@ public class BungeeAdventureLang extends BungeeLang implements AdventureLang<Com
             };
         }
     };
-    private final AdventureLang.MiniMessageLoader<CommandSender> miniMessage = new AdventureLang.MiniMessageLoader<>() {
+    private final AdventureLang.MiniMessageLoader<CommandSender> minimessage = new AdventureLang.MiniMessageLoader<>(this);
+    private final AdventureLang.TextLoader<CommandSender> text = new AdventureLang.TextLoader<>(this) {
         @Override
-        public Audience getAudience(@NotNull CommandSender type) {
-            return getAudiences().sender(type);
-        }
-    };
-    private final AdventureLang.TextLoader<CommandSender> text = new AdventureLang.TextLoader<>() {
-        @Override
-        public Audience getAudience(@NotNull CommandSender type) {
-            return getAudiences().sender(type);
-        }
-
-        @NotNull
-        @Override
-        protected TextDisplay.Builder<CommandSender> newBuilder() {
-            return new AdventureLang.TextBuilder<>() {
+        protected @NotNull TextDisplay.Builder<CommandSender> newBuilder() {
+            return new AdventureLang.TextBuilder<>(BungeeAdventureLang.this) {
                 @Override
-                public Audience getAudience(@NotNull CommandSender type) {
-                    return getAudiences().sender(type);
+                protected int protocol(@NotNull CommandSender type) {
+                    if (type instanceof ProxiedPlayer player) {
+                        return player.getPendingConnection().getVersion();
+                    }
+                    return super.protocol(type);
                 }
             };
         }
     };
-    private final AdventureLang.TitleLoader<CommandSender> title = new AdventureLang.TitleLoader<>() {
-        @Override
-        public Audience getAudience(@NotNull CommandSender type) {
-            return getAudiences().sender(type);
-        }
-    };
+    private final AdventureLang.TitleLoader<CommandSender> title = new AdventureLang.TitleLoader<>(this);
+
+    private transient boolean useMiniMessage;
 
     public BungeeAdventureLang(@NotNull Plugin plugin, @NotNull Object... providers) {
         super(plugin, providers);
         this.audiences = BungeeAudiences.create(plugin);
     }
 
+    @Override
+    public boolean useMiniMessage() {
+        return useMiniMessage;
+    }
+
+    @Override
+    public @NotNull Audience getAudience(@NotNull CommandSender sender) {
+        return getAudiences().sender(sender);
+    }
+
     @NotNull
     public BungeeAudiences getAudiences() {
         return audiences;
+    }
+
+    @NotNull
+    @Contract("_ -> this")
+    public BungeeAdventureLang useMiniMessage(boolean useMiniMessage) {
+        this.useMiniMessage = useMiniMessage;
+        return this;
     }
 }

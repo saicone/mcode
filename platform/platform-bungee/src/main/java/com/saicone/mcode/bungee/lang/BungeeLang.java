@@ -1,18 +1,17 @@
 package com.saicone.mcode.bungee.lang;
 
 import com.saicone.mcode.module.lang.AbstractLang;
-import com.saicone.mcode.module.lang.Displays;
 import com.saicone.mcode.module.lang.display.ActionBarDisplay;
 import com.saicone.mcode.module.lang.display.TextDisplay;
 import com.saicone.mcode.module.lang.display.TitleDisplay;
 import com.saicone.mcode.platform.MC;
+import com.saicone.mcode.platform.Text;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.*;
 import net.md_5.bungee.api.chat.hover.content.Entity;
 import net.md_5.bungee.api.chat.hover.content.Item;
-import net.md_5.bungee.api.chat.hover.content.Text;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.Configuration;
@@ -34,33 +33,11 @@ public class BungeeLang extends AbstractLang<CommandSender> {
 
     private static final String ITEM_HOVER = "{\"id\":\"%s\",\"count\":%d,\"components\": %s}";
 
-    public static final ActionBarLoader ACTIONBAR = new ActionBarLoader();
-    public static final TextLoader TEXT = new TextLoader();
-    public static final TitleLoader TITLE = new TitleLoader();
-
-    private static final boolean USE_ADVENTURE;
-
-    static {
-        boolean useAdventure = false;
-        try {
-            Class.forName("net.kyori.adventure.audience.Audience");
-            useAdventure = true;
-        } catch (Throwable ignored) { }
-        USE_ADVENTURE = useAdventure;
-
-        Displays.register("actionbar", ACTIONBAR);
-        Displays.register("text", TEXT);
-        Displays.register("title", TITLE);
-    }
+    private final ActionBarLoader actionbar = new ActionBarLoader();
+    private final TextLoader text = new TextLoader();
+    private final TitleLoader title = new TitleLoader();
 
     private final Plugin plugin;
-
-    public static BungeeLang of(@NotNull Plugin plugin, @NotNull Object... providers) {
-        if (USE_ADVENTURE) {
-            return new BungeeAdventureLang(plugin, providers);
-        }
-        return new BungeeLang(plugin, providers);
-    }
 
     public BungeeLang(@NotNull Plugin plugin, @NotNull Object... providers) {
         super(providers);
@@ -186,8 +163,8 @@ public class BungeeLang extends AbstractLang<CommandSender> {
 
     public static class TextLoader extends TextDisplay.Loader<CommandSender> {
         @Override
-        protected void sendText(@NotNull CommandSender sender, @NotNull String text) {
-            for (String line : text.split("\n")) {
+        protected void sendText(@NotNull CommandSender sender, @NotNull Text text) {
+            for (String line : text.getAsColored().getValue().split("\n")) {
                 sender.sendMessage(TextComponent.fromLegacyText(line));
             }
         }
@@ -223,7 +200,7 @@ public class BungeeLang extends AbstractLang<CommandSender> {
                 } else if (event.getAction().isHover()) {
                     switch (event.getAction().hover()) {
                         case SHOW_TEXT:
-                            builder.event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text(event.getString())));
+                            builder.event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new net.md_5.bungee.api.chat.hover.content.Text(event.getString())));
                             break;
                         case SHOW_ITEM:
                             if (type instanceof ProxiedPlayer player && player.getPendingConnection().getVersion() >= MC.V_1_20_5.protocol()) {
@@ -261,28 +238,28 @@ public class BungeeLang extends AbstractLang<CommandSender> {
 
     public static class TitleLoader extends TitleDisplay.Loader<CommandSender> {
         @Override
-        protected void sendTitle(@NotNull CommandSender sender, @NotNull String title, @NotNull String subtitle, int fadeIn, int stay, int fadeOut) {
+        protected void sendTitle(@NotNull CommandSender sender, @NotNull Text title, @NotNull Text subtitle, int fadeIn, int stay, int fadeOut) {
             if (sender instanceof ProxiedPlayer) {
                 ((ProxiedPlayer) sender).sendTitle(ProxyServer.getInstance().createTitle()
-                        .title(TextComponent.fromLegacyText(title))
-                        .subTitle(TextComponent.fromLegacyText(subtitle))
+                        .title(TextComponent.fromLegacyText(title.getAsColored().getValue()))
+                        .subTitle(TextComponent.fromLegacyText(subtitle.getAsColored().getValue()))
                         .fadeIn(fadeIn)
                         .stay(stay)
                         .fadeOut(fadeOut));
             } else {
-                sender.sendMessage(TextComponent.fromLegacyText(title));
-                sender.sendMessage(TextComponent.fromLegacyText(subtitle));
+                sender.sendMessage(TextComponent.fromLegacyText(title.getAsColored().getValue()));
+                sender.sendMessage(TextComponent.fromLegacyText(subtitle.getAsColored().getValue()));
             }
         }
     }
 
     public static class ActionBarLoader extends ActionBarDisplay.Loader<CommandSender> {
         @Override
-        protected void sendActionbar(@NotNull CommandSender sender, @NotNull String actionbar) {
+        protected void sendActionbar(@NotNull CommandSender sender, @NotNull Text actionbar) {
             if (sender instanceof ProxiedPlayer) {
-                ((ProxiedPlayer) sender).sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(actionbar));
+                ((ProxiedPlayer) sender).sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(actionbar.getAsColored().getValue()));
             } else {
-                sender.sendMessage(TextComponent.fromLegacyText(actionbar));
+                sender.sendMessage(TextComponent.fromLegacyText(actionbar.getAsColored().getValue()));
             }
         }
     }

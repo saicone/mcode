@@ -8,7 +8,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.UUID;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class EvalUser {
@@ -87,22 +86,23 @@ public class EvalUser {
     @NotNull
     public String parse(@Nullable String s, boolean color) {
         return parse(s, (text) -> {
-            text.parseAgent(subject, agent);
+            text = text.parseAgent(subject, agent);
             if (indexedArgs != null) {
-                text.args(indexedArgs);
+                text = text.args(indexedArgs);
             }
             if (mappedArgs != null) {
-                text.args(mappedArgs);
+                text = text.args(mappedArgs);
             }
             if (color) {
-                text.color();
+                text = text.color();
             }
+            return text;
         });
     }
 
     @NotNull
-    public String parse(@Nullable String s, @NotNull Consumer<Text> consumer) {
-        return s == null ? "null" : Text.of(s, consumer);
+    public String parse(@Nullable String s, @NotNull Function<Text, Text> function) {
+        return s == null ? "null" : function.apply(Text.plain(s)).getAsString().getValue();
     }
 
     @Nullable

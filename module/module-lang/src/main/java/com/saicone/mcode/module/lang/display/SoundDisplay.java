@@ -2,6 +2,7 @@ package com.saicone.mcode.module.lang.display;
 
 import com.saicone.mcode.module.lang.Display;
 import com.saicone.mcode.module.lang.DisplayLoader;
+import com.saicone.mcode.platform.Text;
 import com.saicone.mcode.util.DMap;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -14,11 +15,11 @@ import java.util.function.Function;
 
 public abstract class SoundDisplay<SenderT> implements Display<SenderT> {
 
-    private final String sound;
+    private final Text sound;
     private final float volume;
     private final float pitch;
 
-    public SoundDisplay(@NotNull String sound, float volume, float pitch) {
+    public SoundDisplay(@NotNull Text sound, float volume, float pitch) {
         this.sound = sound;
         this.volume = volume;
         this.pitch = pitch;
@@ -41,7 +42,7 @@ public abstract class SoundDisplay<SenderT> implements Display<SenderT> {
     }
 
     @NotNull
-    public String getSound() {
+    public Text getSound() {
         return sound;
     }
 
@@ -54,7 +55,7 @@ public abstract class SoundDisplay<SenderT> implements Display<SenderT> {
     }
 
     @Override
-    public void sendTo(@NotNull SenderT type, @NotNull Function<String, String> parser) {
+    public void sendTo(@NotNull SenderT type, @NotNull Function<Text, Text> parser) {
         final Object parsedSound = parseSound(parser.apply(sound), volume, pitch);
         if (parsedSound != null) {
             playSound(type, parsedSound, volume, pitch);
@@ -62,7 +63,7 @@ public abstract class SoundDisplay<SenderT> implements Display<SenderT> {
     }
 
     @Override
-    public void sendTo(@NotNull Collection<? extends SenderT> senders, @NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
+    public void sendTo(@NotNull Collection<? extends SenderT> senders, @NotNull Function<Text, Text> parser, @NotNull BiFunction<SenderT, Text, Text> playerParser) {
         final Object parsedSound = parseSound(parser.apply(sound), volume, pitch);
         if (parsedSound != null) {
             for (SenderT player : senders) {
@@ -72,7 +73,7 @@ public abstract class SoundDisplay<SenderT> implements Display<SenderT> {
     }
 
     @Nullable
-    protected abstract Object parseSound(@NotNull String s, float volume, float pitch);
+    protected abstract Object parseSound(@NotNull Text s, float volume, float pitch);
 
     protected abstract void playSound(@NotNull SenderT type, @NotNull Object sound, float volume, float pitch);
 
@@ -106,10 +107,10 @@ public abstract class SoundDisplay<SenderT> implements Display<SenderT> {
             final float volume = map.getBy(o -> Float.parseFloat(String.valueOf(o)), m -> m.getIgnoreCase("volume"), 1.0f);
             final float pitch = map.getBy(o -> Float.parseFloat(String.valueOf(o)), m -> m.getIgnoreCase("pitch"), 1.0f);
 
-            return new SoundDisplay<>(sound, volume, pitch) {
+            return new SoundDisplay<>(Text.valueOf(sound), volume, pitch) {
                 @Override
-                protected @Nullable Object parseSound(@NotNull String s, float volume, float pitch) {
-                    return Loader.this.parseSound(s, volume, pitch);
+                protected @Nullable Object parseSound(@NotNull Text s, float volume, float pitch) {
+                    return Loader.this.parseSound(s.getAsString().getValue(), volume, pitch);
                 }
 
                 @Override

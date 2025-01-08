@@ -53,6 +53,7 @@ public enum Addon {
         map.put("com{}saicone{}ezlib", "com.saicone.ezlib");
         map.put("com{}saicone{}settings", "com.saicone.settings");
         map.put("com{}saicone{}types", "com.saicone.types");
+        map.put("com{}saicone{}nbt", "com.saicone.nbt");
 
         map.put("com{}google{}gson", "com.google.gson");
         map.put("com{}mojang{}brigadier", "com.mojang.brigadier");

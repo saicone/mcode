@@ -3,21 +3,21 @@ package com.saicone.mcode.paper.lang;
 import com.saicone.mcode.bukkit.lang.BukkitLang;
 import com.saicone.mcode.bukkit.lang.BukkitTextEvent;
 import com.saicone.mcode.module.lang.AdventureLang;
-import com.saicone.mcode.module.lang.Displays;
 import com.saicone.mcode.module.lang.display.TextDisplay;
 import org.bukkit.command.CommandSender;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 public class PaperLang extends BukkitLang implements AdventureLang<CommandSender> {
 
     // Loadable display types
-    public static final AdventureLang.ActionBarLoader<CommandSender> ACTIONBAR = new AdventureLang.ActionBarLoader<>();
-    public static final AdventureLang.BossBarLoader<CommandSender> BOSSBAR = new AdventureLang.BossBarLoader<>();
-    public static final AdventureLang.MiniMessageLoader<CommandSender> MINIMESSAGE = new AdventureLang.MiniMessageLoader<>();
-    public static final AdventureLang.SoundLoader<CommandSender> SOUND = new AdventureLang.SoundLoader<>();
-    public static final AdventureLang.TextLoader<CommandSender> TEXT = new AdventureLang.TextLoader<>() {
+    private final AdventureLang.ActionBarLoader<CommandSender> actionbar = new AdventureLang.ActionBarLoader<>(this);
+    private final AdventureLang.BossBarLoader<CommandSender> bossbar = new AdventureLang.BossBarLoader<>(this);
+    private final AdventureLang.MiniMessageLoader<CommandSender> minimessage = new AdventureLang.MiniMessageLoader<>(this);
+    private final AdventureLang.SoundLoader<CommandSender> sound = new AdventureLang.SoundLoader<>(this);
+    private final AdventureLang.TextLoader<CommandSender> text = new AdventureLang.TextLoader<>(this) {
         @Override
         protected @NotNull TextDisplay.Event newEvent(@NotNull TextDisplay.Action action, @NotNull Object value) {
             if (value instanceof ItemStack || value instanceof org.bukkit.entity.Entity) {
@@ -26,20 +26,23 @@ public class PaperLang extends BukkitLang implements AdventureLang<CommandSender
             return super.newEvent(action, value);
         }
     };
-    public static final AdventureLang.TitleLoader<CommandSender> TITLE = new AdventureLang.TitleLoader<>();
+    private final AdventureLang.TitleLoader<CommandSender> title = new AdventureLang.TitleLoader<>(this);
 
-    static {
-        if (!CREATE_AUDIENCE) {
-            Displays.register("actionbar", ACTIONBAR);
-            Displays.register("bossbar", BOSSBAR);
-            Displays.register("minimessage", MINIMESSAGE);
-            Displays.register("sound", SOUND);
-            Displays.register("text", TEXT);
-            Displays.register("title", TITLE);
-        }
-    }
+    private transient boolean useMiniMessage;
 
     public PaperLang(@NotNull Plugin plugin, @NotNull Object... providers) {
         super(plugin, providers);
+    }
+
+    @Override
+    public boolean useMiniMessage() {
+        return useMiniMessage;
+    }
+
+    @NotNull
+    @Contract("_ -> this")
+    public PaperLang useMiniMessage(boolean useMiniMessage) {
+        this.useMiniMessage = useMiniMessage;
+        return this;
     }
 }

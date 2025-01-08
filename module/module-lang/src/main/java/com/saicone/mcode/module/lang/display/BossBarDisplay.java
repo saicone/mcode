@@ -2,6 +2,7 @@ package com.saicone.mcode.module.lang.display;
 
 import com.saicone.mcode.module.lang.Display;
 import com.saicone.mcode.module.lang.DisplayLoader;
+import com.saicone.mcode.platform.Text;
 import com.saicone.mcode.util.DMap;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -16,12 +17,12 @@ import java.util.stream.Collectors;
 public abstract class BossBarDisplay<SenderT> implements Display<SenderT> {
 
     private final float progress;
-    private final String text;
+    private final Text text;
     private final Color color;
     private final Division division;
     private final Set<Flag> flags;
 
-    public BossBarDisplay(float progress, @NotNull String text, @NotNull Color color, @NotNull Division division, @NotNull Set<Flag> flags) {
+    public BossBarDisplay(float progress, @NotNull Text text, @NotNull Color color, @NotNull Division division, @NotNull Set<Flag> flags) {
         this.progress = progress;
         this.text = text;
         this.color = color;
@@ -58,9 +59,8 @@ public abstract class BossBarDisplay<SenderT> implements Display<SenderT> {
         return progress;
     }
 
-    @NotNull
     @Override
-    public String getText() {
+    public @NotNull Text getText() {
         return text;
     }
 
@@ -80,13 +80,13 @@ public abstract class BossBarDisplay<SenderT> implements Display<SenderT> {
     }
 
     @Override
-    public void sendTo(@NotNull SenderT type, @NotNull Function<String, String> parser) {
+    public void sendTo(@NotNull SenderT type, @NotNull Function<Text, Text> parser) {
         createHolder(parser).showTo(type);
     }
 
     @Override
-    public void sendTo(@NotNull Collection<? extends SenderT> senders, @NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
-        final String text = parser.apply(this.text);
+    public void sendTo(@NotNull Collection<? extends SenderT> senders, @NotNull Function<Text, Text> parser, @NotNull BiFunction<SenderT, Text, Text> playerParser) {
+        final Text text = parser.apply(this.text);
         for (SenderT player : senders) {
             createHolder(playerParser.apply(player, text)).showTo(player);
         }
@@ -98,12 +98,12 @@ public abstract class BossBarDisplay<SenderT> implements Display<SenderT> {
     }
 
     @NotNull
-    public Holder createHolder(@NotNull Function<String, String> parser) {
+    public Holder createHolder(@NotNull Function<Text, Text> parser) {
         return createHolder(parser.apply(text));
     }
 
     @NotNull
-    public abstract Holder createHolder(@NotNull String text);
+    public abstract Holder createHolder(@NotNull Text text);
 
     public interface Holder {
 
@@ -174,11 +174,7 @@ public abstract class BossBarDisplay<SenderT> implements Display<SenderT> {
     public static abstract class Loader<SenderT> extends DisplayLoader<SenderT> {
 
         public Loader() {
-            this(true);
-        }
-
-        public Loader(boolean register) {
-            super("(?i)boss(-?bar)?", Map.of("text", "", "progress", 1.0f, "color", "RED", "style", "FLAT"), register);
+            super("(?i)boss(-?bar)?", Map.of("text", "", "progress", 1.0f, "color", "RED", "style", "FLAT"));
         }
 
         @Override
@@ -235,15 +231,15 @@ public abstract class BossBarDisplay<SenderT> implements Display<SenderT> {
                     flags = Set.of();
                 }
             }
-            return new BossBarDisplay<>(progress, text, color, division, flags) {
+            return new BossBarDisplay<>(progress, Text.valueOf(text), color, division, flags) {
                 @Override
-                public @NotNull Holder createHolder(@NotNull String text) {
+                public @NotNull Holder createHolder(@NotNull Text text) {
                     return newHolder(getProgress(), text, getColor(), getDivision(), getFlags());
                 }
             };
         }
 
-        protected abstract Holder newHolder(float progress, @NotNull String text, @NotNull Color color, @NotNull Division division, @NotNull Set<Flag> flags);
+        protected abstract Holder newHolder(float progress, @NotNull Text text, @NotNull Color color, @NotNull Division division, @NotNull Set<Flag> flags);
     }
 
     public enum Color {

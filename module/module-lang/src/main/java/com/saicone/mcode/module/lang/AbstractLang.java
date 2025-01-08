@@ -256,6 +256,7 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
             }
             displayLoaders.add(loader);
             loaded.add(name);
+            Displays.register(name.toLowerCase(), loader);
         });
     }
 

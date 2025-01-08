@@ -3,6 +3,7 @@ package com.saicone.mcode.module.lang.display;
 import com.saicone.mcode.module.lang.Display;
 import com.saicone.mcode.module.lang.DisplayLoader;
 import com.saicone.mcode.platform.MC;
+import com.saicone.mcode.platform.Text;
 import com.saicone.mcode.util.DMap;
 import com.saicone.mcode.util.text.MStrings;
 import com.saicone.mcode.util.text.Strings;
@@ -16,11 +17,11 @@ import java.util.stream.Collectors;
 
 public abstract class TextDisplay<SenderT> implements Display<SenderT> {
 
-    private final String text;
+    private final Text text;
     private final int centerWidth;
     private final Map<String, Set<Event>> events;
 
-    public TextDisplay(@NotNull String text, int centerWidth, @NotNull Map<String, Set<Event>> events) {
+    public TextDisplay(@NotNull Text text, int centerWidth, @NotNull Map<String, Set<Event>> events) {
         this.text = text;
         this.centerWidth = centerWidth;
         this.events = events;
@@ -40,9 +41,8 @@ public abstract class TextDisplay<SenderT> implements Display<SenderT> {
         }
     }
 
-    @NotNull
     @Override
-    public String getText() {
+    public @NotNull Text getText() {
         return text;
     }
 
@@ -61,7 +61,7 @@ public abstract class TextDisplay<SenderT> implements Display<SenderT> {
     }
 
     @NotNull
-    public Map<String, Set<Event>> getParsedEvents(@NotNull Function<String, String> parser) {
+    public Map<String, Set<Event>> getParsedEvents(@NotNull Function<Text, Text> parser) {
         final Map<String, Set<Event>> map = new HashMap<>();
         for (var entry : events.entrySet()) {
             map.put(entry.getKey(), entry.getValue().stream().map(event -> event.parse(parser)).collect(Collectors.toSet()));
@@ -70,7 +70,7 @@ public abstract class TextDisplay<SenderT> implements Display<SenderT> {
     }
 
     @Override
-    public void sendTo(@NotNull SenderT type, @NotNull Function<String, String> parser) {
+    public void sendTo(@NotNull SenderT type, @NotNull Function<Text, Text> parser) {
         if (events.isEmpty()) {
             sendParsed(type, parser.apply(text));
         } else {
@@ -79,8 +79,8 @@ public abstract class TextDisplay<SenderT> implements Display<SenderT> {
     }
 
     @Override
-    public void sendTo(@NotNull Collection<? extends SenderT> senders, @NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
-        final String text = parser.apply(this.text);
+    public void sendTo(@NotNull Collection<? extends SenderT> senders, @NotNull Function<Text, Text> parser, @NotNull BiFunction<SenderT, Text, Text> playerParser) {
+        final Text text = parser.apply(this.text);
         if (events.isEmpty()) {
             for (SenderT player : senders) {
                 sendParsed(player, playerParser.apply(player, text));
@@ -93,7 +93,7 @@ public abstract class TextDisplay<SenderT> implements Display<SenderT> {
         }
     }
 
-    private void sendParsed(@NotNull SenderT type, @NotNull String text) {
+    private void sendParsed(@NotNull SenderT type, @NotNull Text text) {
         if (centerWidth > 0) {
             sendText(type, MStrings.centerText(text, centerWidth));
         } else {
@@ -101,7 +101,7 @@ public abstract class TextDisplay<SenderT> implements Display<SenderT> {
         }
     }
 
-    private void sendParsed(@NotNull SenderT type, @NotNull String text, @NotNull Map<String, Set<Event>> events) {
+    private void sendParsed(@NotNull SenderT type, @NotNull Text text, @NotNull Map<String, Set<Event>> events) {
         final Builder<SenderT> builder = newBuilder();
         Strings.findInside(text, "<event.", "</event>", (s, found) -> {
             if (found) {
@@ -120,7 +120,7 @@ public abstract class TextDisplay<SenderT> implements Display<SenderT> {
         builder.sendTo(type, centerWidth);
     }
 
-    protected abstract void sendText(@NotNull SenderT type, @NotNull String text);
+    protected abstract void sendText(@NotNull SenderT type, @NotNull Text text);
 
     protected abstract Builder<SenderT> newBuilder();
 
@@ -255,7 +255,7 @@ public abstract class TextDisplay<SenderT> implements Display<SenderT> {
             return types;
         }
 
-        protected abstract void sendText(@NotNull SenderT type, @NotNull String text);
+        protected abstract void sendText(@NotNull SenderT type, @NotNull Text text);
 
         @NotNull
         protected abstract Builder<SenderT> newBuilder();
@@ -296,9 +296,9 @@ public abstract class TextDisplay<SenderT> implements Display<SenderT> {
 
         @NotNull
         private TextDisplay<SenderT> newTextDisplay(@NotNull String text, int centerWidth, @NotNull Map<String, Set<Event>> actions) {
-            return new TextDisplay<>(text, centerWidth, actions) {
+            return new TextDisplay<>(Text.valueOf(text), centerWidth, actions) {
                 @Override
-                protected void sendText(@NotNull SenderT type, @NotNull String text) {
+                protected void sendText(@NotNull SenderT type, @NotNull Text text) {
                     Loader.this.sendText(type, text);
                 }
 
@@ -321,14 +321,14 @@ public abstract class TextDisplay<SenderT> implements Display<SenderT> {
         }
 
         @NotNull
-        public Event parse(@NotNull Function<String, String> parser) {
-            if (value instanceof String) {
-                return new Event(action, parser.apply((String) value));
+        public Event parse(@NotNull Function<Text, Text> parser) {
+            if (value instanceof Text) {
+                return new Event(action, parser.apply((Text) value));
             } else if (value instanceof Map) {
                 final Map<String, Object> map = new HashMap<>();
                 for (var entry : ((Map<String, Object>) value).entrySet()) {
-                    if (entry.getValue() instanceof String) {
-                        map.put(entry.getKey(), parser.apply((String) entry.getValue()));
+                    if (entry.getValue() instanceof Text) {
+                        map.put(entry.getKey(), parser.apply((Text) entry.getValue()));
                     } else {
                         map.put(entry.getKey(), entry.getValue());
                     }

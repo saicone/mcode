@@ -2,6 +2,7 @@ package com.saicone.mcode.module.lang.display;
 
 import com.saicone.mcode.module.lang.Display;
 import com.saicone.mcode.module.lang.DisplayLoader;
+import com.saicone.mcode.platform.Text;
 import com.saicone.mcode.util.DMap;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -14,13 +15,13 @@ import java.util.function.Function;
 
 public abstract class TitleDisplay<SenderT> implements Display<SenderT> {
 
-    private final String title;
-    private final String subtitle;
+    private final Text title;
+    private final Text subtitle;
     private final int fadeIn;
     private final int stay;
     private final int fadeOut;
 
-    public TitleDisplay(@NotNull String title, @NotNull String subtitle, int fadeIn, int stay, int fadeOut) {
+    public TitleDisplay(@NotNull Text title, @NotNull Text subtitle, int fadeIn, int stay, int fadeOut) {
         this.title = title;
         this.subtitle = subtitle;
         this.fadeIn = fadeIn;
@@ -49,17 +50,17 @@ public abstract class TitleDisplay<SenderT> implements Display<SenderT> {
     }
 
     @Override
-    public @NotNull String getText() {
-        return title + ' ' + subtitle;
-    }
-
-    @NotNull
-    public String getTitle() {
+    public @NotNull Text getText() {
         return title;
     }
 
     @NotNull
-    public String getSubtitle() {
+    public Text getTitle() {
+        return title;
+    }
+
+    @NotNull
+    public Text getSubtitle() {
         return subtitle;
     }
 
@@ -76,24 +77,24 @@ public abstract class TitleDisplay<SenderT> implements Display<SenderT> {
     }
 
     @Override
-    public void sendTo(@NotNull SenderT type, @NotNull Function<String, String> parser) {
+    public void sendTo(@NotNull SenderT type, @NotNull Function<Text, Text> parser) {
         sendTitle(type, parser.apply(title), parser.apply(subtitle));
     }
 
     @Override
-    public void sendTo(@NotNull Collection<? extends SenderT> senders, @NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
-        final String title = parser.apply(this.title);
-        final String subtitle = parser.apply(this.subtitle);
+    public void sendTo(@NotNull Collection<? extends SenderT> senders, @NotNull Function<Text, Text> parser, @NotNull BiFunction<SenderT, Text, Text> playerParser) {
+        final Text title = parser.apply(this.title);
+        final Text subtitle = parser.apply(this.subtitle);
         for (SenderT player : senders) {
             sendTitle(player, playerParser.apply(player, title), playerParser.apply(player, subtitle));
         }
     }
 
-    protected void sendTitle(@NotNull SenderT type, @NotNull String title, @NotNull String subtitle) {
+    protected void sendTitle(@NotNull SenderT type, @NotNull Text title, @NotNull Text subtitle) {
         sendTitle(type, title, subtitle, fadeIn, stay, fadeOut);
     }
 
-    protected abstract void sendTitle(@NotNull SenderT type, @NotNull String title, @NotNull String subtitle, int fadeIn, int stay, int fadeOut);
+    protected abstract void sendTitle(@NotNull SenderT type, @NotNull Text title, @NotNull Text subtitle, int fadeIn, int stay, int fadeOut);
 
     public static abstract class Loader<SenderT> extends DisplayLoader<SenderT> {
 
@@ -127,14 +128,14 @@ public abstract class TitleDisplay<SenderT> implements Display<SenderT> {
             final int stay = map.getBy(o -> Integer.parseInt(String.valueOf(o)), m -> m.getIgnoreCase("stay"), 70);
             final int fadeOut = map.getBy(o -> Integer.parseInt(String.valueOf(o)), m -> m.getIgnoreCase("fadeOut"), 20);
 
-            return new TitleDisplay<>(title, subtitle, fadeIn, stay, fadeOut) {
+            return new TitleDisplay<>(Text.valueOf(title), Text.valueOf(subtitle), fadeIn, stay, fadeOut) {
                 @Override
-                protected void sendTitle(@NotNull SenderT type, @NotNull String title, @NotNull String subtitle, int fadeIn, int stay, int fadeOut) {
+                protected void sendTitle(@NotNull SenderT type, @NotNull Text title, @NotNull Text subtitle, int fadeIn, int stay, int fadeOut) {
                     Loader.this.sendTitle(type, title, subtitle, fadeIn, stay, fadeOut);
                 }
             };
         }
 
-        protected abstract void sendTitle(@NotNull SenderT type, @NotNull String title, @NotNull String subtitle, int fadeIn, int stay, int fadeOut);
+        protected abstract void sendTitle(@NotNull SenderT type, @NotNull Text title, @NotNull Text subtitle, int fadeIn, int stay, int fadeOut);
     }
 }

@@ -3,6 +3,7 @@ package com.saicone.mcode.bukkit;
 import com.saicone.mcode.Platform;
 import com.saicone.mcode.bukkit.util.ServerInstance;
 import com.saicone.mcode.platform.PlatformType;
+import com.saicone.mcode.platform.Text;
 import com.saicone.mcode.util.text.MStrings;
 import com.saicone.mcode.platform.MC;
 import org.bukkit.Bukkit;
@@ -30,8 +31,8 @@ public class BukkitPlatform extends Platform {
     }
 
     @Override
-    public @NotNull BukkitText getText(@NotNull String s) {
-        return new BukkitText(s);
+    public @NotNull Text getText(byte type, @NotNull Object object) {
+        return BukkitText.valueOf(type, object);
     }
 
     @Override

@@ -3,12 +3,12 @@ package com.saicone.mcode.velocity.lang;
 import com.moandjiezana.toml.Toml;
 import com.saicone.mcode.module.lang.AdventureLang;
 import com.saicone.mcode.module.lang.AbstractLang;
-import com.saicone.mcode.module.lang.Displays;
 import com.saicone.mcode.module.lang.display.TextDisplay;
 import com.saicone.mcode.velocity.VelocityPlatform;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -24,15 +24,19 @@ import java.util.*;
 
 public class VelocityLang extends AbstractLang<CommandSource> implements AdventureLang<CommandSource> {
 
+    private final ProxyServer proxy;
+    private final Object plugin;
+    private final Logger logger;
+
     // Loadable display types
-    public static final AdventureLang.ActionBarLoader<CommandSource> ACTIONBAR = new AdventureLang.ActionBarLoader<>();
-    public static final AdventureLang.BossBarLoader<CommandSource> BOSSBAR = new AdventureLang.BossBarLoader<>();
-    public static final AdventureLang.MiniMessageLoader<CommandSource> MINIMESSAGE = new AdventureLang.MiniMessageLoader<>();
-    public static final AdventureLang.SoundLoader<CommandSource> SOUND = new AdventureLang.SoundLoader<>();
-    public static final AdventureLang.TextLoader<CommandSource> TEXT = new AdventureLang.TextLoader<>() {
+    private final AdventureLang.ActionBarLoader<CommandSource> actionbar = new AdventureLang.ActionBarLoader<>(this);
+    private final AdventureLang.BossBarLoader<CommandSource> bossbar = new AdventureLang.BossBarLoader<>(this);
+    private final AdventureLang.MiniMessageLoader<CommandSource> minimessage = new AdventureLang.MiniMessageLoader<>(this);
+    private final AdventureLang.SoundLoader<CommandSource> sound = new AdventureLang.SoundLoader<>(this);
+    private final AdventureLang.TextLoader<CommandSource> text = new AdventureLang.TextLoader<>(this) {
         @Override
         protected @NotNull TextDisplay.Builder<CommandSource> newBuilder() {
-            return new AdventureLang.TextBuilder<>() {
+            return new AdventureLang.TextBuilder<>(VelocityLang.this) {
                 @Override
                 protected int protocol(@NotNull CommandSource type) {
                     if (type instanceof Player player) {
@@ -43,20 +47,9 @@ public class VelocityLang extends AbstractLang<CommandSource> implements Adventu
             };
         }
     };
-    public static final AdventureLang.TitleLoader<CommandSource> TITLE = new AdventureLang.TitleLoader<>();
+    private final AdventureLang.TitleLoader<CommandSource> title = new AdventureLang.TitleLoader<>(this);
 
-    static {
-        Displays.register("actionbar", ACTIONBAR);
-        Displays.register("bossbar", BOSSBAR);
-        Displays.register("minimessage", MINIMESSAGE);
-        Displays.register("sound", SOUND);
-        Displays.register("text", TEXT);
-        Displays.register("title", TITLE);
-    }
-
-    private final ProxyServer proxy;
-    private final Object plugin;
-    private final Logger logger;
+    private transient boolean useMiniMessage;
 
     public VelocityLang(@NotNull Object plugin, @NotNull Logger logger, @NotNull Object... providers) {
         this(VelocityPlatform.get().getProxy(), plugin, logger, providers);
@@ -67,6 +60,18 @@ public class VelocityLang extends AbstractLang<CommandSource> implements Adventu
         this.proxy = proxy;
         this.plugin = plugin;
         this.logger = logger;
+    }
+
+    @Override
+    public boolean useMiniMessage() {
+        return useMiniMessage;
+    }
+
+    @NotNull
+    @Contract("_ -> this")
+    public VelocityLang useMiniMessage(boolean useMiniMessage) {
+        this.useMiniMessage = useMiniMessage;
+        return this;
     }
 
     @NotNull

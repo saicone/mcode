@@ -10,19 +10,15 @@ import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import org.bukkit.command.CommandSender;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 public class BukkitAdventureLang extends BukkitLang implements AdventureLang<CommandSender> {
 
     private final BukkitAudiences audiences;
 
-    private final AdventureLang.ActionBarLoader<CommandSender> actionbar = new AdventureLang.ActionBarLoader<>() {
-        @Override
-        public Audience getAudience(@NotNull CommandSender type) {
-            return getAudiences().sender(type);
-        }
-    };
-    private final AdventureLang.BossBarLoader<CommandSender> bossBar = new AdventureLang.BossBarLoader<>() {
+    private final AdventureLang.ActionBarLoader<CommandSender> actionbar = new AdventureLang.ActionBarLoader<>(this);
+    private final AdventureLang.BossBarLoader<CommandSender> bossbar = new AdventureLang.BossBarLoader<>(this) {
         @Override
         protected BossBarDisplay.Holder newHolder(@NotNull BossBar bossBar) {
             return new AdventureBossBar(bossBar) {
@@ -44,35 +40,9 @@ public class BukkitAdventureLang extends BukkitLang implements AdventureLang<Com
             };
         }
     };
-    private final AdventureLang.MiniMessageLoader<CommandSender> miniMessage = new AdventureLang.MiniMessageLoader<>() {
-        @Override
-        public Audience getAudience(@NotNull CommandSender type) {
-            return getAudiences().sender(type);
-        }
-    };
-    private final AdventureLang.SoundLoader<CommandSender> sound = new AdventureLang.SoundLoader<>() {
-        @Override
-        public Audience getAudience(@NotNull CommandSender type) {
-            return getAudiences().sender(type);
-        }
-    };
-    private final AdventureLang.TextLoader<CommandSender> text = new AdventureLang.TextLoader<>() {
-        @Override
-        public Audience getAudience(@NotNull CommandSender type) {
-            return getAudiences().sender(type);
-        }
-
-        @NotNull
-        @Override
-        protected TextDisplay.Builder<CommandSender> newBuilder() {
-            return new AdventureLang.TextBuilder<>() {
-                @Override
-                public Audience getAudience(@NotNull CommandSender type) {
-                    return getAudiences().sender(type);
-                }
-            };
-        }
-
+    private final AdventureLang.MiniMessageLoader<CommandSender> minimessage = new AdventureLang.MiniMessageLoader<>(this);
+    private final AdventureLang.SoundLoader<CommandSender> sound = new AdventureLang.SoundLoader<>(this);
+    private final AdventureLang.TextLoader<CommandSender> text = new AdventureLang.TextLoader<>(this) {
         @Override
         protected @NotNull TextDisplay.Event newEvent(@NotNull TextDisplay.Action action, @NotNull Object value) {
             if (value instanceof ItemStack || value instanceof org.bukkit.entity.Entity) {
@@ -81,20 +51,34 @@ public class BukkitAdventureLang extends BukkitLang implements AdventureLang<Com
             return super.newEvent(action, value);
         }
     };
-    private final AdventureLang.TitleLoader<CommandSender> title = new AdventureLang.TitleLoader<>() {
-        @Override
-        public Audience getAudience(@NotNull CommandSender type) {
-            return getAudiences().sender(type);
-        }
-    };
+    private final AdventureLang.TitleLoader<CommandSender> title = new AdventureLang.TitleLoader<>(this);
+
+    private transient boolean useMiniMessage;
 
     public BukkitAdventureLang(@NotNull Plugin plugin, @NotNull Object... providers) {
         super(plugin, providers);
         this.audiences = BukkitAudiences.create(plugin);
     }
 
+    @Override
+    public boolean useMiniMessage() {
+        return useMiniMessage;
+    }
+
+    @Override
+    public @NotNull Audience getAudience(@NotNull CommandSender sender) {
+        return getAudiences().sender(sender);
+    }
+
     @NotNull
     public BukkitAudiences getAudiences() {
         return audiences;
+    }
+
+    @NotNull
+    @Contract("_ -> this")
+    public BukkitAdventureLang useMiniMessage(boolean useMiniMessage) {
+        this.useMiniMessage = useMiniMessage;
+        return this;
     }
 }

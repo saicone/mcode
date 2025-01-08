@@ -1,5 +1,6 @@
 package com.saicone.mcode.module.lang;
 
+import com.saicone.mcode.platform.Text;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -15,14 +16,14 @@ public class DisplayList<SenderT> implements Display<SenderT>, List<Display<Send
     }
 
     @Override
-    public void sendTo(@NotNull SenderT type, @NotNull Function<String, String> parser) {
+    public void sendTo(@NotNull SenderT type, @NotNull Function<Text, Text> parser) {
         for (Display<SenderT> display : list) {
             display.sendTo(type, parser);
         }
     }
 
     @Override
-    public void sendTo(@NotNull Collection<? extends SenderT> senders, @NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
+    public void sendTo(@NotNull Collection<? extends SenderT> senders, @NotNull Function<Text, Text> parser, @NotNull BiFunction<SenderT, Text, Text> playerParser) {
         for (Display<SenderT> display : list) {
             display.sendTo(senders, parser, playerParser);
         }

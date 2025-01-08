@@ -23,10 +23,6 @@ public class DisplayLoader<SenderT> {
     }
 
     public DisplayLoader(@NotNull @Language("RegExp") String regex, @NotNull Map<String, Object> defaults) {
-        this(regex, defaults, true);
-    }
-
-    public DisplayLoader(@NotNull @Language("RegExp") String regex, @NotNull Map<String, Object> defaults, boolean register) {
         this.regex = regex;
         this.pattern = Pattern.compile(regex);
         this.defaults = defaults;

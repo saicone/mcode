@@ -1,5 +1,6 @@
 package com.saicone.mcode.module.lang;
 
+import com.saicone.mcode.platform.Text;
 import com.saicone.mcode.util.text.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -130,7 +131,7 @@ public abstract class DisplayHolder<SenderT> implements LangSupplier {
         sendTo(sender, getLanguageFor(sender), path, parser);
     }
 
-    protected void sendTo(@NotNull SenderT sender, @NotNull String language, @NotNull String path, @NotNull Function<String, String> parser) {
+    protected void sendTo(@NotNull SenderT sender, @NotNull String language, @NotNull String path, @NotNull Function<Text, Text> parser) {
         getDisplayOrDefault(getEffectiveLanguage(language), path).sendTo(sender, parser);
     }
 
@@ -146,7 +147,7 @@ public abstract class DisplayHolder<SenderT> implements LangSupplier {
         getDisplay(getLanguageFor(null), path).sendArgs(getConsole(), args);
     }
 
-    public void sendToConsole(@NotNull String path, @NotNull Function<String, String> parser) {
+    public void sendToConsole(@NotNull String path, @NotNull Function<Text, Text> parser) {
         getDisplay(getLanguageFor(null), path).sendTo(getConsole(), parser);
     }
 
@@ -162,19 +163,19 @@ public abstract class DisplayHolder<SenderT> implements LangSupplier {
         getDisplayOrDefault(getEffectiveLanguage(language), path).sendArgs(getSenders(), args);
     }
 
-    public void sendToAll(@NotNull String path, @NotNull Function<String, String> parser) {
+    public void sendToAll(@NotNull String path, @NotNull Function<Text, Text> parser) {
         getDisplay(getLanguage(), path).sendTo(getSenders(), parser);
     }
 
-    public void sendToAll(@NotNull String language, @NotNull String path, @NotNull Function<String, String> parser) {
+    public void sendToAll(@NotNull String language, @NotNull String path, @NotNull Function<Text, Text> parser) {
         getDisplayOrDefault(getEffectiveLanguage(language), path).sendTo(getSenders(), parser);
     }
 
-    public void sendToAll(@NotNull String path, @NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
+    public void sendToAll(@NotNull String path, @NotNull Function<Text, Text> parser, @NotNull BiFunction<SenderT, Text, Text> playerParser) {
         getDisplay(getLanguage(), path).sendTo(getSenders(), parser, playerParser);
     }
 
-    public void sendToAll(@NotNull String language, @NotNull String path, @NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
+    public void sendToAll(@NotNull String language, @NotNull String path, @NotNull Function<Text, Text> parser, @NotNull BiFunction<SenderT, Text, Text> playerParser) {
         getDisplayOrDefault(getEffectiveLanguage(language), path).sendTo(getSenders(), parser, playerParser);
     }
 

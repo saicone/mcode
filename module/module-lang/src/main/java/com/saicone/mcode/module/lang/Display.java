@@ -1,7 +1,6 @@
 package com.saicone.mcode.module.lang;
 
 import com.saicone.mcode.platform.Text;
-import com.saicone.mcode.util.text.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -20,28 +19,28 @@ public interface Display<SenderT> {
     }
 
     default void sendArgs(@NotNull SenderT type, @Nullable Object... args) {
-        sendTo(type, s -> Text.of(s).args(args).parse(type).color().getString());
+        sendTo(type, text -> text.args(args).parse(type));
     }
 
     default void sendArgs(@NotNull Collection<? extends SenderT> senders, @Nullable Object... args) {
-        sendTo(senders, s -> Strings.replaceArgs(s, args), (player, s) -> Text.of(s).parse(player).color().getString());
+        sendTo(senders, text -> text.args(args), (player, text) -> text.parse(player));
     }
 
     default void sendArgsWith(@NotNull SenderT agent, @NotNull SenderT type, @Nullable Object... args) {
-        sendTo(type, s -> Text.of(s).args(args).parseAgent(type, agent).color().getString());
+        sendTo(type, text -> text.args(args).parseAgent(type, agent));
     }
 
     default void sendArgsWith(@NotNull SenderT agent, @NotNull Collection<? extends SenderT> senders, @Nullable Object... args) {
-        sendTo(senders, s -> Text.of(s).args(args).parseAgent(agent).getString(), (player, s) -> Text.of(s).parse(player).color().getString());
+        sendTo(senders, text -> text.args(args).parseAgent(agent), (player, text) -> text.parse(player));
     }
 
-    void sendTo(@NotNull SenderT type, @NotNull Function<String, String> parser);
+    void sendTo(@NotNull SenderT type, @NotNull Function<Text, Text> parser);
 
-    default void sendTo(@NotNull Collection<? extends SenderT> senders, @NotNull Function<String, String> parser) {
-        sendTo(senders, parser, (player, s) -> Text.of(s).parse(player).color().getString());
+    default void sendTo(@NotNull Collection<? extends SenderT> senders, @NotNull Function<Text, Text> parser) {
+        sendTo(senders, parser, (player, text) -> text.parse(player));
     }
 
-    default void sendTo(@NotNull Collection<? extends SenderT> senders, @NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
+    default void sendTo(@NotNull Collection<? extends SenderT> senders, @NotNull Function<Text, Text> parser, @NotNull BiFunction<SenderT, Text, Text> playerParser) {
         for (SenderT sender : senders) {
             sendTo(sender, parser);
         }
@@ -51,14 +50,12 @@ public interface Display<SenderT> {
         return null;
     }
 
-    @NotNull
-    default String getText() {
-        return String.valueOf(get("text"));
+    default @NotNull Text getText() {
+        return Text.valueOf(get("text"));
     }
 
-    @Nullable
-    default String getTextOrNull() {
+    default @Nullable Text getTextOrNull() {
         final Object object = get("text");
-        return object == null ? null : String.valueOf(object);
+        return object == null ? null : Text.valueOf(object);
     }
 }

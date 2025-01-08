@@ -2,6 +2,7 @@ package com.saicone.mcode.module.lang.display;
 
 import com.saicone.mcode.module.lang.Display;
 import com.saicone.mcode.module.lang.DisplayLoader;
+import com.saicone.mcode.platform.Text;
 import com.saicone.mcode.util.DMap;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -14,9 +15,9 @@ import java.util.function.Function;
 
 public abstract class ActionBarDisplay<SenderT> implements Display<SenderT> {
 
-    private final String text;
+    private final Text text;
 
-    public ActionBarDisplay(@NotNull String text) {
+    public ActionBarDisplay(@NotNull Text text) {
         this.text = text;
     }
 
@@ -32,26 +33,25 @@ public abstract class ActionBarDisplay<SenderT> implements Display<SenderT> {
         }
     }
 
-    @NotNull
     @Override
-    public String getText() {
+    public @NotNull Text getText() {
         return text;
     }
 
     @Override
-    public void sendTo(@NotNull SenderT type, @NotNull Function<String, String> parser) {
+    public void sendTo(@NotNull SenderT type, @NotNull Function<Text, Text> parser) {
         sendActionbar(type, parser.apply(text));
     }
 
     @Override
-    public void sendTo(@NotNull Collection<? extends SenderT> senders, @NotNull Function<String, String> parser, @NotNull BiFunction<SenderT, String, String> playerParser) {
-        String actionbar = parser.apply(text);
+    public void sendTo(@NotNull Collection<? extends SenderT> senders, @NotNull Function<Text, Text> parser, @NotNull BiFunction<SenderT, Text, Text> playerParser) {
+        final Text actionbar = parser.apply(text);
         for (SenderT player : senders) {
             sendActionbar(player, playerParser.apply(player, actionbar));
         }
     }
 
-    protected abstract void sendActionbar(@NotNull SenderT type, @NotNull String actionbar);
+    protected abstract void sendActionbar(@NotNull SenderT type, @NotNull Text actionbar);
 
     public static abstract class Loader<SenderT> extends DisplayLoader<SenderT> {
 
@@ -69,9 +69,9 @@ public abstract class ActionBarDisplay<SenderT> implements Display<SenderT> {
             if (text.isEmpty()) {
                 return null;
             }
-            return new ActionBarDisplay<>(text) {
+            return new ActionBarDisplay<>(Text.valueOf(text)) {
                 @Override
-                protected void sendActionbar(@NotNull SenderT type, @NotNull String actionbar) {
+                protected void sendActionbar(@NotNull SenderT type, @NotNull Text actionbar) {
                     Loader.this.sendActionbar(type, actionbar);
                 }
             };
@@ -91,6 +91,6 @@ public abstract class ActionBarDisplay<SenderT> implements Display<SenderT> {
             return load(map.getBy(String::valueOf, m -> m.getRegex("(?i)value|text|actionbar"), ""));
         }
 
-        protected abstract void sendActionbar(@NotNull SenderT type, @NotNull String actionbar);
+        protected abstract void sendActionbar(@NotNull SenderT type, @NotNull Text actionbar);
     }
 }

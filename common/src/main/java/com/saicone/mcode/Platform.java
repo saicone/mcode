@@ -45,9 +45,7 @@ public abstract class Platform {
     }
 
     @NotNull
-    public Text getText(@NotNull String s) {
-        return new Text(s);
-    }
+    public abstract Text getText(byte type, @NotNull Object object);
 
     @NotNull
     public abstract Collection<?> getOnlinePlayers();

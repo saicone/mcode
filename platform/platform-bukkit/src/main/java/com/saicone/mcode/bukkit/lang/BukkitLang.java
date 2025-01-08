@@ -6,8 +6,8 @@ import com.cryptomorin.xseries.messages.Titles;
 import com.google.gson.Gson;
 import com.saicone.mcode.bukkit.util.ServerInstance;
 import com.saicone.mcode.module.lang.AbstractLang;
-import com.saicone.mcode.module.lang.Displays;
 import com.saicone.mcode.module.lang.display.*;
+import com.saicone.mcode.platform.Text;
 import com.saicone.mcode.util.DMap;
 import com.saicone.mcode.platform.MC;
 import net.md_5.bungee.api.chat.BaseComponent;
@@ -18,7 +18,6 @@ import net.md_5.bungee.api.chat.ItemTag;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.chat.hover.content.Entity;
 import net.md_5.bungee.api.chat.hover.content.Item;
-import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Sound;
@@ -45,27 +44,9 @@ public class BukkitLang extends AbstractLang<CommandSender> {
 
     private static final String ITEM_HOVER = "{\"id\":\"%s\",\"count\":%d,\"components\": %s}";
 
-    // Loadable display types
-    public static final ActionBarLoader ACTIONBAR = new ActionBarLoader();
-    public static final BossbarLoader BOSSBAR = new BossbarLoader();
-    public static final SoundLoader SOUND = new SoundLoader();
-    public static final TextLoader TEXT = new TextLoader();
-    public static final TitleLoader TITLE = new TitleLoader();
-
-    protected static final boolean CREATE_AUDIENCE;
     private static final boolean USE_XSERIES;
 
     static {
-        boolean createAudience = true;
-        try {
-            final Class<?> audience = Class.forName("net.kyori.adventure.audience.Audience");
-            // Check native support
-            if (audience.isAssignableFrom(CommandSender.class)) {
-                createAudience = false;
-            }
-        } catch (Throwable ignored) { }
-        CREATE_AUDIENCE = createAudience;
-
         boolean useXSeries = false;
         try {
             Class.forName("com.cryptomorin.xseries.messages.ActionBar");
@@ -74,19 +55,18 @@ public class BukkitLang extends AbstractLang<CommandSender> {
             useXSeries = true;
         } catch (Throwable ignored) { }
         USE_XSERIES = useXSeries;
-
-        if (CREATE_AUDIENCE) {
-            Displays.register("actionbar", ACTIONBAR);
-            Displays.register("bossbar", BOSSBAR);
-            Displays.register("sound", SOUND);
-            Displays.register("text", TEXT);
-            Displays.register("title", TITLE);
-        }
     }
 
     // Instance parameters
     private final Plugin plugin;
     private boolean useConfig;
+
+    // Loadable display types
+    private final ActionBarLoader actionbar = new ActionBarLoader();
+    private final BossbarLoader bossbar = new BossbarLoader();
+    private final SoundLoader sound = new SoundLoader();
+    private final TextLoader text = new TextLoader();
+    private final TitleLoader title = new TitleLoader();
 
     private transient Map<String, String> cachedAliases;
 
@@ -301,8 +281,8 @@ public class BukkitLang extends AbstractLang<CommandSender> {
         }
 
         @Override
-        protected void sendText(@NotNull CommandSender sender, @NotNull String text) {
-            sender.sendMessage(text.split("\n"));
+        protected void sendText(@NotNull CommandSender sender, @NotNull Text text) {
+            sender.sendMessage(text.getAsColored().getValue().split("\n"));
         }
 
         @Override
@@ -344,7 +324,7 @@ public class BukkitLang extends AbstractLang<CommandSender> {
                 } else if (event.getAction().isHover()) {
                     switch (event.getAction().hover()) {
                         case SHOW_TEXT:
-                            builder.event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text(event.getString())));
+                            builder.event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new net.md_5.bungee.api.chat.hover.content.Text(event.getString())));
                             break;
                         case SHOW_ITEM:
                             if (MC.version().isComponent()) {
@@ -383,37 +363,37 @@ public class BukkitLang extends AbstractLang<CommandSender> {
     public static class TitleLoader extends TitleDisplay.Loader<CommandSender> {
         @Override
         @SuppressWarnings("deprecation")
-        protected void sendTitle(@NotNull CommandSender sender, @NotNull String title, @NotNull String subtitle, int fadeIn, int stay, int fadeOut) {
+        protected void sendTitle(@NotNull CommandSender sender, @NotNull Text title, @NotNull Text subtitle, int fadeIn, int stay, int fadeOut) {
             if (sender instanceof Player) {
                 if (USE_XSERIES) {
-                    Titles.sendTitle((Player) sender, fadeIn, stay, fadeOut, title, subtitle);
+                    Titles.sendTitle((Player) sender, fadeIn, stay, fadeOut, title.getAsColored().getValue(), subtitle.getAsColored().getValue());
                 } else if (MC.version().isNewerThanOrEquals(MC.V_1_9)) {
-                    ((Player) sender).sendTitle(title, subtitle, fadeIn, stay, fadeOut);
+                    ((Player) sender).sendTitle(title.getAsColored().getValue(), subtitle.getAsColored().getValue(), fadeIn, stay, fadeOut);
                 } else {
-                    ((Player) sender).sendTitle(title, subtitle);
+                    ((Player) sender).sendTitle(title.getAsColored().getValue(), subtitle.getAsColored().getValue());
                 }
             } else {
-                sender.sendMessage(title);
-                sender.sendMessage(subtitle);
+                sender.sendMessage(title.getAsColored().getValue());
+                sender.sendMessage(subtitle.getAsColored().getValue());
             }
         }
     }
 
     public static class ActionBarLoader extends ActionBarDisplay.Loader<CommandSender> {
         @Override
-        protected void sendActionbar(@NotNull CommandSender sender, @NotNull String actionbar) {
+        protected void sendActionbar(@NotNull CommandSender sender, @NotNull Text actionbar) {
             if (sender instanceof Player) {
                 if (USE_XSERIES) {
-                    ActionBar.sendActionBar((Player) sender, actionbar);
+                    ActionBar.sendActionBar((Player) sender, actionbar.getAsColored().getValue());
                 } else if (ServerInstance.Platform.SPIGOT) {
-                    ((Player) sender).spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR, net.md_5.bungee.api.chat.TextComponent.fromLegacyText(actionbar));
+                    ((Player) sender).spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR, net.md_5.bungee.api.chat.TextComponent.fromLegacyText(actionbar.getAsColored().getValue()));
                 } else if (Bukkit.isPrimaryThread() && MC.version().isNewerThanOrEquals(MC.V_1_11)) {
-                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "minecraft:title " + sender.getName() + " actionbar {\"text\":\"" + ChatColor.stripColor(actionbar) + "\"}");
+                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "minecraft:title " + sender.getName() + " actionbar {\"text\":\"" + ChatColor.stripColor(actionbar.getAsColored().getValue()) + "\"}");
                 } else {
-                    sender.sendMessage(actionbar);
+                    sender.sendMessage(actionbar.getAsColored().getValue());
                 }
             } else {
-                sender.sendMessage(actionbar);
+                sender.sendMessage(actionbar.getAsColored().getValue());
             }
         }
     }
@@ -440,19 +420,15 @@ public class BukkitLang extends AbstractLang<CommandSender> {
     }
 
     public static class BossbarLoader extends BossBarDisplay.Loader<CommandSender> {
-        public BossbarLoader() {
-            super(false);
-        }
-
         @Override
-        protected BossBarDisplay.Holder newHolder(float progress, @NotNull String text, @NotNull BossBarDisplay.Color color, @NotNull BossBarDisplay.Division division, @NotNull Set<BossBarDisplay.Flag> flags) {
+        protected BossBarDisplay.Holder newHolder(float progress, @NotNull Text text, @NotNull BossBarDisplay.Color color, @NotNull BossBarDisplay.Division division, @NotNull Set<BossBarDisplay.Flag> flags) {
             final BarFlag[] values = new BarFlag[flags.size()];
             int i = 0;
             for (BossBarDisplay.Flag flag : flags) {
                 values[i] = BarFlag.values()[flag.ordinal()];
             }
             final BossBar bossBar = Bukkit.createBossBar(
-                    text,
+                    text.getAsColored().getValue(),
                     BarColor.values()[color.ordinal()],
                     BarStyle.values()[division.ordinal()],
                     values
