@@ -113,17 +113,16 @@ public class MStrings {
     public static int getFontLength(@NotNull String s, char colorChar) {
         int px = 0;
         boolean bold = false;
-        final char[] chars = s.toCharArray();
-        for (int i = 0; i < chars.length; i++) {
-            final char c = chars[i];
+        for (int i = 0; i < s.length(); i++) {
+            final char c = s.charAt(i);
             // Verify color char
             final boolean mcChar;
-            if (i + 1 < chars.length && ((mcChar = (c == COLOR_CHAR)) || c == colorChar)) {
-                final char c1 = chars[i + 1];
+            if (i + 1 < s.length() && ((mcChar = (c == COLOR_CHAR)) || c == colorChar)) {
+                final char c1 = s.charAt(i + 1);
                 // Skip RGB color
-                if (BUNGEE_HEX && c1 == 'x' && isHexFormat(chars, i + 2, 2, mcChar ? COLOR_CHAR : colorChar)) {
+                if (BUNGEE_HEX && c1 == 'x' && isHexFormat(s, i + 2, 2, mcChar ? COLOR_CHAR : colorChar)) {
                     i = i + 12;
-                } else if (c1 == '#' && isHexFormat(chars, i + 2, 1, mcChar ? COLOR_CHAR : colorChar)) {
+                } else if (c1 == '#' && isHexFormat(s, i + 2, 1, mcChar ? COLOR_CHAR : colorChar)) {
                     i = i + 6;
                 } else if (isColorCode(c1)) { // Skip legacy color code, so (un)mark text as bold depending on color char
                     switch (c1) {
@@ -198,28 +197,31 @@ public class MStrings {
      */
     @NotNull
     public static String getSmallFont(@NotNull String s, char colorChar) {
-        final char[] chars = s.toCharArray();
-        for (int i = 0; i < chars.length; i++) {
-            final char c = chars[i];
+        final StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < s.length(); i++) {
+            final char c = s.charAt(i);
             // Verify color char
             final boolean mcChar;
-            if (i + 1 < chars.length && ((mcChar = (c == COLOR_CHAR)) || c == colorChar)) {
-                final char c1 = chars[i + 1];
+            if (i + 1 < s.length() && ((mcChar = (c == COLOR_CHAR)) || c == colorChar)) {
+                final char c1 = s.charAt(i + 1);
                 // Skip RGB color
-                if (BUNGEE_HEX && c1 == 'x' && isHexFormat(chars, i + 2, 2, mcChar ? COLOR_CHAR : colorChar)) {
+                if (BUNGEE_HEX && c1 == 'x' && isHexFormat(s, i + 2, 2, mcChar ? COLOR_CHAR : colorChar)) {
                     i = i + 12;
-                } else if (c1 == '#' && isHexFormat(chars, i + 2, 1, mcChar ? COLOR_CHAR : colorChar)) {
+                    builder.append(s, i, i + 12 + 1);
+                } else if (c1 == '#' && isHexFormat(s, i + 2, 1, mcChar ? COLOR_CHAR : colorChar)) {
                     i = i + 6;
+                    builder.append(s, i, i + 6 + 1);
                 } else if (!isColorCode(c1)) { // Skip legacy color code
-                    chars[i] = getSmallFont(c);
-                    chars[i + 1] = getSmallFont(c1);
+                    builder.append(getSmallFont(c)).append(getSmallFont(c1));
+                } else {
+                    builder.append(c);
                 }
                 i++;
             } else {
-                chars[i] = getSmallFont(c);
+                builder.append(getSmallFont(c));
             }
         }
-        return new String(chars);
+        return builder.toString();
     }
 
     /**
@@ -274,23 +276,23 @@ public class MStrings {
      * Check if the provided char array is a valid HEX format
      * starting from given position and providing color char to ignore.
      *
-     * @param chars     the char array to check.
+     * @param s         the string to check.
      * @param start     the start position to iterate array.
      * @param sum       the amount to sum on for-loop.
      * @param colorChar the color character to ignore.
      * @return          true if the first 6 read are a valid HEX, false otherwise.
      */
-    public static boolean isHexFormat(char[] chars, int start, int sum, char colorChar) {
+    public static boolean isHexFormat(@NotNull String s, int start, int sum, char colorChar) {
         final int max = start + 12;
-        if (max > chars.length) {
+        if (max > s.length()) {
             return false;
         }
         final StringBuilder builder = new StringBuilder();
         for (int i = start; i < max; i = i + sum) {
-            if (chars[i] != colorChar) {
+            if (s.charAt(i) != colorChar) {
                 return false;
             }
-            builder.append(chars[i + 1]);
+            builder.append(s.charAt(i + 1));
         }
         return isValidHex(builder.toString());
     }
@@ -524,10 +526,10 @@ public class MStrings {
             return s;
         }
         final StringBuilder builder = new StringBuilder();
-        char[] chars = s.toCharArray();
-        for (int i = 0; i < chars.length; i++) {
-            if (chars[i] == colorChar && i + 1 < chars.length) {
-                final char colorType = chars[i + 1];
+        for (int i = 0; i < s.length(); i++) {
+            final char c = s.charAt(i);
+            if (c == colorChar && i + 1 < s.length()) {
+                final char colorType = s.charAt(i + 1);
 
                 if (isColorCode(colorType)) { // Legacy color
                     builder.append(COLOR_CHAR).append(colorType);
@@ -537,17 +539,17 @@ public class MStrings {
 
                 final int total;
                 if (colorType == '#') { // Hex / RGB
-                    total = colorHex(colorChar, builder, chars, i);
+                    total = colorHex(colorChar, builder, s, i);
                 } else if (colorType == '$') { // Special type
-                    total = colorSpecial(colorChar, s, builder, chars, i);
-                } else if (BUNGEE_HEX && colorType == 'x' && isHexFormat(chars, i + 2, 2, colorChar)) {
+                    total = colorSpecial(colorChar, builder, s, i);
+                } else if (BUNGEE_HEX && colorType == 'x' && isHexFormat(s, i + 2, 2, colorChar)) {
                     total = i + 14;
                     for (int i1 = i; i1 < total; i1 += 2) {
                         builder.append(COLOR_CHAR);
-                        builder.append(chars[i1 + 1]);
+                        builder.append(s.charAt(i1 + 1));
                     }
                 } else {
-                    builder.append(chars[i]);
+                    builder.append(c);
                     continue;
                 }
 
@@ -556,18 +558,18 @@ public class MStrings {
                     continue;
                 }
             }
-            builder.append(chars[i]);
+            builder.append(c);
         }
         return builder.toString();
     }
 
-    private static int colorHex(char colorChar, @NotNull StringBuilder builder, char[] chars, int i) {
-        if (i + 7 >= chars.length) {
+    private static int colorHex(char colorChar, @NotNull StringBuilder builder, @NotNull String s, int i) {
+        if (i + 7 >= s.length()) {
             return 0;
         }
         StringBuilder color = new StringBuilder();
-        for (int c = i + 2; c < chars.length && color.length() < 6; c++) {
-            color.append(chars[c]);
+        for (int j = i + 2; j < s.length() && color.length() < 6; j++) {
+            color.append(s.charAt(j));
         }
         if (color.length() == 6) {
             // Format: <char>#RRGGBB
@@ -578,15 +580,15 @@ public class MStrings {
         }
     }
 
-    private static int colorSpecial(char colorChar, @NotNull String s, @NotNull StringBuilder builder, char[] chars, int i) {
-        if (i + 3 >= chars.length) {
+    private static int colorSpecial(char colorChar, @NotNull StringBuilder builder, @NotNull String s, int i) {
+        if (i + 3 >= s.length()) {
             return 0;
         }
 
         // Find inside: <char>$<block>$
         int blockIndex = -1;
-        for (int i1 = i + 3; i1 < chars.length; i1++) {
-            if (chars[i1] == '$') {
+        for (int i1 = i + 3; i1 < s.length(); i1++) {
+            if (s.charAt(i1) == '$') {
                 blockIndex = i1;
                 break;
             }
@@ -743,9 +745,8 @@ public class MStrings {
 
         // Text base objects
         int length = text.length();
-        final char[] chars = text.toCharArray();
-        for (int i = 0; i < chars.length - 1; i++) {
-            if (chars[i] == COLOR_CHAR && isAnyColorCode(chars[i + 1])) {
+        for (int i = 0; i < text.length() - 1; i++) {
+            if (text.charAt(i) == COLOR_CHAR && isAnyColorCode(text.charAt(i + 1))) {
                 length -= 2;
             }
         }
@@ -755,10 +756,10 @@ public class MStrings {
         float hue = speed != 0 ? (float) ((((Math.floor(System.currentTimeMillis() / 50.0)) / 360) * speed) % 1) : 0;
 
         final StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < chars.length; i++) {
-            final char c = chars[i];
-            if (c == COLOR_CHAR && i + 1 < chars.length) {
-                final char c1 = chars[i + 1];
+        for (int i = 0; i < text.length(); i++) {
+            final char c = text.charAt(i);
+            if (c == COLOR_CHAR && i + 1 < text.length()) {
+                final char c1 = text.charAt(i + 1);
                 if (isAnyColorCode(c1)) {
                     i++;
                     builder.append(c).append(c1);
@@ -794,9 +795,8 @@ public class MStrings {
 
         // Text base objects
         int length = text.length();
-        final char[] chars = text.toCharArray();
-        for (int i = 0; i < chars.length - 1; i++) {
-            if (chars[i] == COLOR_CHAR && isAnyColorCode(chars[i + 1])) {
+        for (int i = 0; i < text.length() - 1; i++) {
+            if (text.charAt(i) == COLOR_CHAR && isAnyColorCode(text.charAt(i + 1))) {
                 length -= 2;
             }
         }
@@ -808,10 +808,10 @@ public class MStrings {
         final float increment = (float) totalSteps / (colors.size() - 1);
 
         final StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < chars.length; i++) {
-            final char c = chars[i];
-            if (c == COLOR_CHAR && i + 1 < chars.length) {
-                final char c1 = chars[i + 1];
+        for (int i = 0; i < text.length(); i++) {
+            final char c = text.charAt(i);
+            if (c == COLOR_CHAR && i + 1 < text.length()) {
+                final char c1 = text.charAt(i + 1);
                 if (isAnyColorCode(c1)) {
                     i++;
                     builder.append(c).append(c1);
