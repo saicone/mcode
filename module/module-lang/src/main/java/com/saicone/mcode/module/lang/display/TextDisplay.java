@@ -95,7 +95,7 @@ public abstract class TextDisplay<SenderT> implements Display<SenderT> {
 
     private void sendParsed(@NotNull SenderT type, @NotNull Text text) {
         if (centerWidth > 0) {
-            sendText(type, MStrings.centerText(text, centerWidth));
+            sendText(type, text.center(centerWidth));
         } else {
             sendText(type, text);
         }
@@ -103,7 +103,7 @@ public abstract class TextDisplay<SenderT> implements Display<SenderT> {
 
     private void sendParsed(@NotNull SenderT type, @NotNull Text text, @NotNull Map<String, Set<Event>> events) {
         final Builder<SenderT> builder = newBuilder();
-        Strings.findInside(text, "<event.", "</event>", (s, found) -> {
+        Strings.findInside(text.getAsString().getValue(), "<event.", "</event>", (s, found) -> {
             if (found) {
                 final int index = s.indexOf('>');
                 if (index > 0 && index + 1 < s.length()) {

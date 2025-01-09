@@ -220,6 +220,21 @@ public abstract class Text {
     }
 
     @NotNull
+    public Text center() {
+        return center(MStrings.CHAT_WIDTH);
+    }
+
+    @NotNull
+    public Text center(int width) {
+        return center(width, '&');
+    }
+
+    @NotNull
+    public Text center(int width, char colorChar) {
+        throw new IllegalStateException("The current text implementation doesn't support centering");
+    }
+
+    @NotNull
     public Text placeholders(@Nullable Object subject, char start, char end) {
         return placeholders(subject, null, start, end);
     }
@@ -281,6 +296,11 @@ public abstract class Text {
         @Override
         public @NotNull Text color(char colorChar, @NotNull List<String> colors) {
             return Text.colored(Strings.color(colorChar, getValue(), colors));
+        }
+
+        @Override
+        public @NotNull Text center(int width, char colorChar) {
+            return Text.valueOf(getType(), MStrings.centerText(getValue(), width, colorChar));
         }
 
         @Override
