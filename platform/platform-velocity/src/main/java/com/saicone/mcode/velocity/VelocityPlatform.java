@@ -3,6 +3,7 @@ package com.saicone.mcode.velocity;
 import com.saicone.mcode.Platform;
 import com.saicone.mcode.platform.MC;
 import com.saicone.mcode.platform.PlatformType;
+import com.saicone.mcode.platform.Text;
 import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
@@ -34,6 +35,11 @@ public class VelocityPlatform extends Platform {
             return ((Player) user).getUniqueId();
         }
         return super.getUserId(user);
+    }
+
+    @Override
+    public @NotNull Text getText(byte type, @NotNull Object object) {
+        return VelocityText.valueOf(type, object);
     }
 
     @Override

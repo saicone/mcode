@@ -2,6 +2,7 @@ package com.saicone.mcode.bungee;
 
 import com.saicone.mcode.Platform;
 import com.saicone.mcode.platform.PlatformType;
+import com.saicone.mcode.platform.Text;
 import com.saicone.mcode.util.text.MStrings;
 import com.saicone.mcode.platform.MC;
 import net.md_5.bungee.api.ProxyServer;
@@ -43,6 +44,11 @@ public class BungeePlatform extends Platform {
             return ((ProxiedPlayer) user).getUniqueId();
         }
         return super.getUserId(user);
+    }
+
+    @Override
+    public @NotNull Text getText(byte type, @NotNull Object object) {
+        return BungeeText.valueOf(type, object);
     }
 
     @Override
