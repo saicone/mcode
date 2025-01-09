@@ -105,6 +105,26 @@ public class EvalUser {
         return s == null ? "null" : function.apply(Text.plain(s)).getAsString().getValue();
     }
 
+    @NotNull
+    public Text parse(@NotNull Text text) {
+        return parse(text, false);
+    }
+
+    @NotNull
+    public Text parse(@NotNull Text text, boolean color) {
+        text = text.parseAgent(subject, agent);
+        if (indexedArgs != null) {
+            text = text.args(indexedArgs);
+        }
+        if (mappedArgs != null) {
+            text = text.args(mappedArgs);
+        }
+        if (color) {
+            text = text.color();
+        }
+        return text;
+    }
+
     @Nullable
     @Contract("_, !null -> !null")
     public Boolean parseBoolean(@Nullable String s, @Nullable Boolean def) {

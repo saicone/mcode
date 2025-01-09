@@ -5,7 +5,7 @@ repositories {
 
 dependencies {
     compileOnly libs.paper.api
-    compileOnly 'org.spigotmc:spigot:1.21.4-R0.1-SNAPSHOT:remapped-mojang'
+    compileOnly('org.spigotmc:spigot:1.21.4-R0.1-SNAPSHOT:remapped-mojang') { transitive = false }
     api project(':platform:platform-bukkit')
 
     // Task module

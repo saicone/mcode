@@ -34,6 +34,6 @@ public class BroadcastDisplay extends Action {
 
     @Override
     public void accept(@NotNull EvalUser user) {
-        display.sendTo(Platform.getInstance().getOnlinePlayers(), s -> user.parse(s, true));
+        display.sendTo(Platform.getInstance().getOnlinePlayers(), text -> user.parse(text, true));
     }
 }

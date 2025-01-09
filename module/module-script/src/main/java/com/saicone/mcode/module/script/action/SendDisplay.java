@@ -35,7 +35,7 @@ public class SendDisplay extends Action {
     public void accept(@NotNull EvalUser user) {
         try {
             if (user.getSubject() != null) {
-                display.sendTo(user.getSubject(), s -> user.parse(s, true));
+                display.sendTo(user.getSubject(), text -> user.parse(text, true));
             }
         } catch (ClassCastException ignored) { }
     }
