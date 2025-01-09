@@ -1,6 +1,7 @@
 package com.saicone.mcode.util.text;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.util.*;
@@ -120,9 +121,9 @@ public class MStrings {
             if (i + 1 < s.length() && ((mcChar = (c == COLOR_CHAR)) || c == colorChar)) {
                 final char c1 = s.charAt(i + 1);
                 // Skip RGB color
-                if (BUNGEE_HEX && c1 == 'x' && isHexFormat(s, i + 2, 2, mcChar ? COLOR_CHAR : colorChar)) {
+                if (BUNGEE_HEX && c1 == 'x' && isHexFormat(s, i + 2, 2, mcChar ? COLOR_CHAR : colorChar) != null) {
                     i = i + 12;
-                } else if (c1 == '#' && isHexFormat(s, i + 2, 1, mcChar ? COLOR_CHAR : colorChar)) {
+                } else if (c1 == '#' && isHexFormat(s, i + 2, 1, mcChar ? COLOR_CHAR : colorChar) != null) {
                     i = i + 6;
                 } else if (isColorCode(c1)) { // Skip legacy color code, so (un)mark text as bold depending on color char
                     switch (c1) {
@@ -205,10 +206,10 @@ public class MStrings {
             if (i + 1 < s.length() && ((mcChar = (c == COLOR_CHAR)) || c == colorChar)) {
                 final char c1 = s.charAt(i + 1);
                 // Skip RGB color
-                if (BUNGEE_HEX && c1 == 'x' && isHexFormat(s, i + 2, 2, mcChar ? COLOR_CHAR : colorChar)) {
+                if (BUNGEE_HEX && c1 == 'x' && isHexFormat(s, i + 2, 2, mcChar ? COLOR_CHAR : colorChar) != null) {
                     i = i + 12;
                     builder.append(s, i, i + 12 + 1);
-                } else if (c1 == '#' && isHexFormat(s, i + 2, 1, mcChar ? COLOR_CHAR : colorChar)) {
+                } else if (c1 == '#' && isHexFormat(s, i + 2, 1, mcChar ? COLOR_CHAR : colorChar) != null) {
                     i = i + 6;
                     builder.append(s, i, i + 6 + 1);
                 } else if (!isColorCode(c1)) { // Skip legacy color code
@@ -282,19 +283,21 @@ public class MStrings {
      * @param colorChar the color character to ignore.
      * @return          true if the first 6 read are a valid HEX, false otherwise.
      */
-    public static boolean isHexFormat(@NotNull String s, int start, int sum, char colorChar) {
-        final int max = start + 12;
+    @Nullable
+    public static String isHexFormat(@NotNull String s, int start, int sum, char colorChar) {
+        final int max = start + (sum * 6);
         if (max > s.length()) {
-            return false;
+            return null;
         }
         final StringBuilder builder = new StringBuilder();
         for (int i = start; i < max; i = i + sum) {
             if (s.charAt(i) != colorChar) {
-                return false;
+                return null;
             }
             builder.append(s.charAt(i + 1));
         }
-        return isValidHex(builder.toString());
+        final String hex = builder.toString();
+        return isValidHex(hex) ? hex : null;
     }
 
     /**
@@ -542,7 +545,7 @@ public class MStrings {
                     total = colorHex(colorChar, builder, s, i);
                 } else if (colorType == '$') { // Special type
                     total = colorSpecial(colorChar, builder, s, i);
-                } else if (BUNGEE_HEX && colorType == 'x' && isHexFormat(s, i + 2, 2, colorChar)) {
+                } else if (BUNGEE_HEX && colorType == 'x' && isHexFormat(s, i + 2, 2, colorChar) != null) {
                     total = i + 14;
                     for (int i1 = i; i1 < total; i1 += 2) {
                         builder.append(COLOR_CHAR);

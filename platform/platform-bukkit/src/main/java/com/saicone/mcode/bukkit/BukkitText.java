@@ -8,6 +8,7 @@ import com.saicone.mcode.bukkit.nbt.BukkitTagMapper;
 import com.saicone.mcode.platform.Text;
 import com.saicone.mcode.util.text.Replacer;
 import com.saicone.nbt.io.TagReader;
+import com.saicone.nbt.io.TagWriter;
 import com.saicone.nbt.util.TagJson;
 import me.clip.placeholderapi.PlaceholderAPIPlugin;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
@@ -120,29 +121,11 @@ public class BukkitText {
         public @NotNull Text placeholders(@Nullable Object subject, @Nullable Object relative, char start, char end) {
             return placeholders(subject, relative, start, end, PLACEHOLDER_LOOKUP);
         }
-
-        @Override
-        public @NotNull RawJson getAsRawJson() {
-            // Colored -> Chat  Component -> Json String -> Json Element
-            return super.getAsRawJson();
-        }
-
-        @Override
-        public @NotNull Nbt<?> getAsNbt() {
-            // Colored -> Chat Component -> Json String -> Json Element -> NBT
-            return super.getAsNbt();
-        }
     }
 
     public static class RawJson extends Text.RawJson {
         public RawJson(@NotNull JsonElement value) {
             super(value);
-        }
-
-        @Override
-        public @NotNull Colored getAsColored() {
-            // Json Element -> Json String -> Chat Component -> Colored
-            return super.getAsColored();
         }
 
         @Override
@@ -157,9 +140,13 @@ public class BukkitText {
         }
 
         @Override
-        public @NotNull Colored getAsColored() {
-            // NBT -> Json Element -> Json String -> Chat Component -> Colored
-            return super.getAsColored();
+        public @NotNull StringText getAsString() {
+            return Text.valueOf(Text.PLAIN_TEXT, TagWriter.toString(getValue(), BukkitTagMapper.INSTANCE)).getAsString();
+        }
+
+        @Override
+        public @NotNull PlainText getAsPlainText() {
+            return Text.valueOf(Text.PLAIN_TEXT, TagWriter.toString(getValue(), BukkitTagMapper.INSTANCE)).getAsPlainText();
         }
 
         @Override

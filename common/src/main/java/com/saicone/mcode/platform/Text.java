@@ -38,6 +38,8 @@ public abstract class Text {
             throw new IllegalStateException("An empty text doesn't have value");
         }
     };
+    @SuppressWarnings("deprecation")
+    private static final JsonParser JSON_PARSER = new JsonParser();
 
     @NotNull
     public static Text empty() {
@@ -55,8 +57,9 @@ public abstract class Text {
     }
 
     @NotNull
+    @SuppressWarnings("deprecation")
     public static Text rawJson(@NotNull String json) {
-        return rawJson(JsonParser.parseString(json));
+        return rawJson(JSON_PARSER.parse(json));
     }
 
     @NotNull
@@ -75,6 +78,7 @@ public abstract class Text {
     }
 
     @NotNull
+    @SuppressWarnings("deprecation")
     public static Text valueOf(@Nullable Object object) {
         if (object == null) {
             return empty();
@@ -82,7 +86,7 @@ public abstract class Text {
             final String s = (String) object;
 
             try {
-                return valueOf(RAW_JSON, JsonParser.parseString(s));
+                return valueOf(RAW_JSON, JSON_PARSER.parse(s));
             } catch (JsonParseException ignored) { }
 
             if (s.indexOf(MStrings.COLOR_CHAR) >= 0) {
@@ -307,8 +311,14 @@ public abstract class Text {
         }
 
         @Override
+        public @NotNull Colored getAsColored() {
+            return Text.valueOf(Text.COLORED, MStrings.color(getValue())).getAsColored();
+        }
+
+        @Override
+        @SuppressWarnings("deprecation")
         public @NotNull RawJson getAsRawJson() {
-            return Text.valueOf(Text.RAW_JSON, JsonParser.parseString(getValue())).getAsRawJson();
+            return Text.valueOf(Text.RAW_JSON, JSON_PARSER.parse(getValue())).getAsRawJson();
         }
     }
 
@@ -331,6 +341,16 @@ public abstract class Text {
         @Override
         public @NotNull Colored getAsColored() {
             return this;
+        }
+
+        @Override
+        public @NotNull RawJson getAsRawJson() {
+            return Text.valueOf(Text.RAW_JSON, com.saicone.mcode.util.text.RawJson.toJson(getValue())).getAsRawJson();
+        }
+
+        @Override
+        public @NotNull Nbt<?> getAsNbt() {
+            return getAsRawJson().getAsNbt();
         }
     }
 
@@ -360,12 +380,17 @@ public abstract class Text {
 
         @Override
         public @NotNull StringText getAsString() {
-            return Text.valueOf(Text.PLAIN_TEXT, getValue().toString()).getAsPlainText();
+            return Text.valueOf(Text.PLAIN_TEXT, getValue().toString()).getAsString();
         }
 
         @Override
         public @NotNull PlainText getAsPlainText() {
             return Text.valueOf(Text.PLAIN_TEXT, getValue().toString()).getAsPlainText();
+        }
+
+        @Override
+        public @NotNull Colored getAsColored() {
+            return Text.valueOf(Text.COLORED, com.saicone.mcode.util.text.RawJson.fromJson(getValue())).getAsColored();
         }
 
         @Override
@@ -396,6 +421,11 @@ public abstract class Text {
         @NotNull
         public T getValue() {
             return value;
+        }
+
+        @Override
+        public @NotNull Colored getAsColored() {
+            return getAsRawJson().getAsColored();
         }
 
         @Override
