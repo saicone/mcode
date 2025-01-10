@@ -1,5 +1,6 @@
 package com.saicone.mcode.bootstrap.paper;
 
+import com.saicone.ezlib.EzlibLoader;
 import com.saicone.mcode.Plugin;
 import com.saicone.mcode.bootstrap.Addon;
 import com.saicone.mcode.bootstrap.Bootstrap;
@@ -27,6 +28,14 @@ public class PaperBootstrap extends JavaPlugin implements Bootstrap {
         // Load platform addons
         LIBRARY_LOADER.applyDependency(Addon.PLATFORM_BUKKIT.dependency());
         LIBRARY_LOADER.applyDependency(Addon.PLATFORM_PAPER.dependency());
+
+        // Load platform conditions
+        LIBRARY_LOADER.condition("server.platform", EzlibLoader.Condition.valueOf(name -> {
+            return switch (name.toLowerCase()) {
+                case "bukkit", "spigot", "paper" -> true;
+                default -> false;
+            };
+        }));
 
         // Class load
         Env.init(PaperBootstrap.class);
@@ -90,17 +99,19 @@ public class PaperBootstrap extends JavaPlugin implements Bootstrap {
             getLibraryLoader().replace("{package}", pluginClass.substring(0, pluginClass.lastIndexOf('.')));
         }
 
-        // Load addon libraries
+        // Initialize platform
+        build("com.saicone.mcode.bukkit.BukkitPlatform");
+
+        // Load libraries
         for (Addon addon : this.addons) {
             getLibraryLoader().loadDependency(addon.dependency());
         }
-        getLibraryLoader().load();
+        loadDependencies();
 
         // Initialize addons
-        build("com.saicone.mcode.bukkit.BukkitPlatform");
         initAddons();
 
-        // Reload runtime some classes should load correctly with its dependencies loaded
+        // Reload runtime, some classes should load correctly with its dependencies loaded
         Env.runtime().reload();
 
         // Load plugin

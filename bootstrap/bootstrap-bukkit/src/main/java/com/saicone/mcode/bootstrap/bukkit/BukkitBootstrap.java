@@ -1,5 +1,6 @@
 package com.saicone.mcode.bootstrap.bukkit;
 
+import com.saicone.ezlib.EzlibLoader;
 import com.saicone.mcode.Plugin;
 import com.saicone.mcode.bootstrap.Addon;
 import com.saicone.mcode.bootstrap.Bootstrap;
@@ -18,20 +19,45 @@ import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 
 public class BukkitBootstrap extends JavaPlugin implements Bootstrap {
 
+    private static boolean PAPER_EXECUTOR = false;
+
     static {
         // Load platform addons
         LIBRARY_LOADER.applyDependency(Addon.PLATFORM_BUKKIT.dependency());
+        final AtomicBoolean spigot = new AtomicBoolean(false);
+        final AtomicBoolean paper = new AtomicBoolean(false);
+        try {
+            Class.forName("org.spigotmc.SpigotConfig");
+            spigot.set(true);
+        } catch (ClassNotFoundException ignored) { }
         try {
             Class.forName("com.destroystokyo.paper.Title");
             if (Runtime.version().feature() >= 21) {
                 LIBRARY_LOADER.applyDependency(Addon.PLATFORM_PAPER.dependency());
+                PAPER_EXECUTOR = true;
             }
+            paper.set(true);
         } catch (ClassNotFoundException ignored) { }
+
+        // Load platform conditions
+        LIBRARY_LOADER.condition("server.platform", EzlibLoader.Condition.valueOf(name -> {
+            switch (name.toLowerCase()) {
+                case "bukkit":
+                    return true;
+                case "spigot":
+                    return spigot.get();
+                case "paper":
+                    return paper.get();
+                default:
+                    return false;
+            }
+        }));
 
         // Class load
         Env.init(BukkitBootstrap.class);
@@ -48,7 +74,11 @@ public class BukkitBootstrap extends JavaPlugin implements Bootstrap {
 
     public BukkitBootstrap() {
         // Initialization
-        Env.executor(build("com.saicone.mcode.bukkit.env.BukkitExecutor", this));
+        if (PAPER_EXECUTOR) {
+            Env.executor(build("com.saicone.mcode.paper.env.PaperExecutor", this));
+        } else {
+            Env.executor(build("com.saicone.mcode.bukkit.env.BukkitExecutor", this));
+        }
         Env.registrar(build("com.saicone.mcode.bukkit.env.BukkitRegistrar", this));
         Env.execute(Executes.BOOT, false);
 
@@ -95,17 +125,19 @@ public class BukkitBootstrap extends JavaPlugin implements Bootstrap {
             getLibraryLoader().replace("{package}", pluginClass.substring(0, pluginClass.lastIndexOf('.')));
         }
 
-        // Load addon libraries
+        // Initialize platform
+        build("com.saicone.mcode.bukkit.BukkitPlatform");
+
+        // Load libraries
         for (Addon addon : this.addons) {
             getLibraryLoader().loadDependency(addon.dependency());
         }
-        getLibraryLoader().load();
+        loadDependencies();
 
         // Initialize addons
-        build("com.saicone.mcode.bukkit.BukkitPlatform");
         initAddons();
 
-        // Reload runtime some classes should load correctly with its dependencies loaded
+        // Reload runtime, some classes should load correctly with its dependencies loaded
         Env.runtime().reload();
 
         // Load plugin

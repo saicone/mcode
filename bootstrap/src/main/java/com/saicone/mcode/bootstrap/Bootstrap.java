@@ -1,7 +1,13 @@
 package com.saicone.mcode.bootstrap;
 
+import com.saicone.ezlib.Dependencies;
+import com.saicone.ezlib.Dependency;
+import com.saicone.ezlib.EzlibLoader;
+import com.saicone.ezlib.Repository;
 import com.saicone.mcode.Plugin;
+import com.saicone.mcode.env.Env;
 import com.saicone.mcode.loader.Loader;
+import com.saicone.mcode.platform.MC;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Field;
@@ -20,6 +26,20 @@ public interface Bootstrap extends Loader {
     void logException(int level, @NotNull Throwable throwable);
 
     void logException(int level, @NotNull Throwable throwable, @NotNull Supplier<String> msg);
+
+    default void loadDependencies() {
+        // Conditions
+        getLibraryLoader().condition("server.plugin", EzlibLoader.Condition.valueOf(name -> Env.registrar().isPresent(name)));
+        getLibraryLoader().condition("server.version", new EzlibLoader.Condition<>(MC::fromString, version -> MC.compare(version, MC.version())));
+
+        // Annotated
+        Env.annotated(Repository.class, (name, repository) -> getLibraryLoader().loadRepository(EzlibLoader.Repository.valueOf(repository)));
+        Env.annotated(Dependency.class, (name, dependency) -> getLibraryLoader().loadDependency(EzlibLoader.Dependency.valueOf(dependency)));
+        Env.annotated(Dependencies.class, (name, dependencies) -> EzlibLoader.Dependencies.valueOf(dependencies).load(getLibraryLoader()));
+
+        // Loader
+        getLibraryLoader().load();
+    }
 
     @NotNull
     @SuppressWarnings("unchecked")

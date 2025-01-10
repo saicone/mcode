@@ -1,5 +1,6 @@
 package com.saicone.mcode.bootstrap.bungee;
 
+import com.saicone.ezlib.EzlibLoader;
 import com.saicone.mcode.Plugin;
 import com.saicone.mcode.bootstrap.Addon;
 import com.saicone.mcode.bootstrap.Bootstrap;
@@ -17,6 +18,7 @@ import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 
@@ -25,6 +27,20 @@ public class BungeeBootstrap extends net.md_5.bungee.api.plugin.Plugin implement
     static {
         // Load platform addons
         LIBRARY_LOADER.applyDependency(Addon.PLATFORM_BUNGEE.dependency());
+
+        // Load platform conditions
+        final AtomicBoolean waterfall = new AtomicBoolean(false);
+        try {
+            Class.forName("io.github.waterfallmc.waterfall.utils.Hex");
+            waterfall.set(true);
+        } catch (ClassNotFoundException ignored) { }
+        LIBRARY_LOADER.condition("server.platform", EzlibLoader.Condition.valueOf(name -> {
+            return switch (name.toLowerCase()) {
+                case "bungee", "bungeecord" -> true;
+                case "waterfall" -> waterfall.get();
+                default -> false;
+            };
+        }));
 
         // Class load
         Env.init(BungeeBootstrap.class);
@@ -83,17 +99,19 @@ public class BungeeBootstrap extends net.md_5.bungee.api.plugin.Plugin implement
             getLibraryLoader().replace("{package}", pluginClass.substring(0, pluginClass.lastIndexOf('.')));
         }
 
-        // Load addon libraries
+        // Initialize platform
+        build("com.saicone.mcode.bungee.BungeePlatform");
+
+        // Load libraries
         for (Addon addon : this.addons) {
             getLibraryLoader().loadDependency(addon.dependency());
         }
-        getLibraryLoader().load();
+        loadDependencies();
 
         // Initialize addons
-        build("com.saicone.mcode.bungee.BungeePlatform");
         initAddons();
 
-        // Reload runtime some classes should load correctly with its dependencies loaded
+        // Reload runtime, some classes should load correctly with its dependencies loaded
         Env.runtime().reload();
 
         // Load plugin

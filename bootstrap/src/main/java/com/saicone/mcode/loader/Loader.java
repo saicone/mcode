@@ -67,6 +67,13 @@ public interface Loader {
         libraryLoader.loadRelocations(Addon.RELOCATIONS);
         libraryLoader.applyDependency(Addon.COMMON.dependency());
         libraryLoader.applyDependency(Addon.MODULE_ENV.dependency());
+
+        libraryLoader.condition("java", version -> version.equals(String.valueOf(Runtime.version().feature())));
+        libraryLoader.condition("java=", version -> version.equals(String.valueOf(Runtime.version().feature())));
+        libraryLoader.condition("java!", version -> !version.equals(String.valueOf(Runtime.version().feature())));
+        libraryLoader.condition("java>", version -> Integer.parseInt(version) >= Runtime.version().feature());
+        libraryLoader.condition("java<", version -> Integer.parseInt(version) <= Runtime.version().feature());
+
         return libraryLoader;
     }
 

@@ -236,6 +236,11 @@ public enum MC {
         return bukkitPackage;
     }
 
+    @Override
+    public String toString() {
+        return name().substring(2).replace('_', '.');
+    }
+
     @Nullable
     public static MC fromString(@NotNull String s) {
         final String[] split = s.replace("MC:", "").trim().split("\\.");
@@ -275,6 +280,10 @@ public enum MC {
             }
         }
         return null;
+    }
+
+    public static int compare(@NotNull MC version1, @NotNull MC version2) {
+        return Integer.compare(version1.ordinal(), version2.ordinal());
     }
 
     @NotNull

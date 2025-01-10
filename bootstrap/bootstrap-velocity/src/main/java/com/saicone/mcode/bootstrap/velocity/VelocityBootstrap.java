@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.inject.Inject;
+import com.saicone.ezlib.EzlibLoader;
 import com.saicone.mcode.Plugin;
 import com.saicone.mcode.bootstrap.Addon;
 import com.saicone.mcode.bootstrap.Bootstrap;
@@ -30,6 +31,9 @@ public class VelocityBootstrap implements Bootstrap {
     static {
         // Put platform addons
         LIBRARY_LOADER.applyDependency(Addon.PLATFORM_VELOCITY.dependency());
+
+        // Load platform conditions
+        LIBRARY_LOADER.condition("server.platform", EzlibLoader.Condition.valueOf(name -> name.equalsIgnoreCase("velocity")));
 
         // Class load
         Env.init(VelocityBootstrap.class);
@@ -96,17 +100,19 @@ public class VelocityBootstrap implements Bootstrap {
             getLibraryLoader().replace("{package}", pluginClass.substring(0, pluginClass.lastIndexOf('.')));
         }
 
-        // Load addon libraries
+        // Initialize platform
+        build("com.saicone.mcode.velocity.VelocityPlatform", proxy);
+
+        // Load libraries
         for (Addon addon : this.addons) {
             getLibraryLoader().loadDependency(addon.dependency());
         }
-        getLibraryLoader().load();
+        loadDependencies();
 
         // Initialize addons
-        build("com.saicone.mcode.velocity.VelocityPlatform", proxy);
         initAddons();
 
-        // Reload runtime some classes should load correctly with its dependencies loaded
+        // Reload runtime, some classes should load correctly with its dependencies loaded
         Env.runtime().reload();
 
         // Load plugin
