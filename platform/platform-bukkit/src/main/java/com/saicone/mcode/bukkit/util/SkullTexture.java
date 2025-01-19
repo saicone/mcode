@@ -489,7 +489,20 @@ public class SkullTexture {
         // Since 1.20.2: The Mojang AuthLib require non-null name for game profile, so "null" will be used instead
         final GameProfile profile = new GameProfile(UUID.randomUUID(), "null");
         profile.getProperties().put("textures", new Property("textures", texture));
+        return setProfile(head, profile);
+    }
 
+    /**
+     * Set game profile value into skull meta.
+     *
+     * @param head    skull item to set the profile.
+     * @param profile game profile value.
+     * @return        the provided item.
+     * @throws IllegalArgumentException if the provided item isn't a player head.
+     */
+    @NotNull
+    @Contract("_, _ -> param1")
+    public static ItemStack setProfile(@NotNull ItemStack head, @NotNull GameProfile profile) throws IllegalArgumentException {
         final ItemMeta meta = head.getItemMeta();
         if (!(meta instanceof SkullMeta)) {
             throw new IllegalArgumentException("The provided item isn't a player head");
@@ -501,7 +514,7 @@ public class SkullTexture {
                 SET_PROFILE.invoke(meta, profile);
             }
         } catch (Throwable t) {
-            throw new RuntimeException("Cannot set texture value to ItemStack", t);
+            throw new RuntimeException("Cannot set profile value to ItemStack", t);
         }
         head.setItemMeta(meta);
         return head;
@@ -511,21 +524,23 @@ public class SkullTexture {
      * Get encoded texture value from online player profile.
      *
      * @param player the player to get the texture from.
-     * @return       a encoded texture value if was found, null otherwise.
+     * @return       an encoded texture value if was found, null otherwise.
      */
     @Nullable
     @Contract("null -> null")
     public static String getTexture(@Nullable Player player) {
-        if (player == null) {
-            return null;
-        }
-        final GameProfile profile;
-        try {
-            profile = ((GameProfile) GET_PROFILE.invoke(player));
-        } catch (Throwable t) {
-            throw new RuntimeException("Cannot get online player texture from '" + player.getName() + "'", t);
-        }
+        final GameProfile profile = getProfile(player);
+        return profile == null ? null : getTexture(profile);
+    }
 
+    /**
+     * Get encoded texture value from game profile.
+     *
+     * @param profile the profile to extract texture.
+     * @return        an encoded texture value if was found, null otherwise.
+     */
+    @Nullable
+    public static String getTexture(@NotNull GameProfile profile) {
         for (Property texture : profile.getProperties().get("textures")) {
             if (texture != null) {
                 try {
@@ -536,6 +551,25 @@ public class SkullTexture {
             }
         }
         return null;
+    }
+
+    /**
+     * Get game profile value from online player.
+     *
+     * @param player the player to get the profile from.
+     * @return       a game profile value.
+     */
+    @Nullable
+    @Contract("null -> null")
+    public static GameProfile getProfile(@Nullable Player player) {
+        if (player == null) {
+            return null;
+        }
+        try {
+            return ((GameProfile) GET_PROFILE.invoke(player));
+        } catch (Throwable t) {
+            throw new RuntimeException("Cannot get online player texture from '" + player.getName() + "'", t);
+        }
     }
 
     // Deprecated/old methods
