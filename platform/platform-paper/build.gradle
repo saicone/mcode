@@ -7,6 +7,7 @@ dependencies {
     compileOnly libs.paper.api
     compileOnly('org.spigotmc:spigot:1.21.4-R0.1-SNAPSHOT:remapped-mojang') { transitive = false }
     api project(':platform:platform-bukkit')
+    compileOnlyApi libs.nbt.mapper.minecraft
 
     // Task module
     compileOnly project(':module:module-task')

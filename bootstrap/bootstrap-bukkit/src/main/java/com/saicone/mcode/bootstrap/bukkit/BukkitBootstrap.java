@@ -152,7 +152,7 @@ public class BukkitBootstrap extends JavaPlugin implements Bootstrap {
         }
         if (this.addons.contains(Addon.MODULE_TASK)) {
             final String schedulerName;
-            if (ServerInstance.Type.MULTITHREADING) {
+            if (PAPER_EXECUTOR && ServerInstance.Type.MULTITHREADING) {
                 schedulerName = "com.saicone.mcode.paper.scheduler.PaperScheduler";
             } else {
                 schedulerName = "com.saicone.mcode.bukkit.scheduler.BukkitScheduler";

@@ -2,9 +2,9 @@ package com.saicone.mcode.velocity;
 
 import com.google.gson.JsonElement;
 import com.saicone.mcode.platform.Text;
-import com.saicone.mcode.velocity.nbt.VelocityTagMapper;
 import com.saicone.nbt.io.TagReader;
 import com.saicone.nbt.io.TagWriter;
+import com.saicone.nbt.mapper.AdventureTagMapper;
 import com.saicone.nbt.util.TagJson;
 import net.kyori.adventure.nbt.BinaryTag;
 import org.jetbrains.annotations.NotNull;
@@ -20,7 +20,7 @@ public class VelocityText {
             case Text.RAW_JSON -> new RawJson((JsonElement) value);
             case Text.NBT -> {
                 if (value instanceof String) {
-                    yield new Nbt(TagReader.fromString((String) value, VelocityTagMapper.INSTANCE));
+                    yield new Nbt(TagReader.fromString((String) value, AdventureTagMapper.INSTANCE));
                 }
                 yield new Nbt((BinaryTag) value);
             }
@@ -35,7 +35,7 @@ public class VelocityText {
 
         @Override
         public @NotNull Nbt<?> getAsNbt() {
-            return Text.valueOf(Text.NBT, TagReader.fromString(getValue(), VelocityTagMapper.INSTANCE)).getAsNbt();
+            return Text.valueOf(Text.NBT, TagReader.fromString(getValue(), AdventureTagMapper.INSTANCE)).getAsNbt();
         }
     }
 
@@ -46,7 +46,7 @@ public class VelocityText {
 
         @Override
         public @NotNull Nbt<?> getAsNbt() {
-            return Text.valueOf(Text.NBT, TagJson.fromJson(getValue(), VelocityTagMapper.INSTANCE)).getAsNbt();
+            return Text.valueOf(Text.NBT, TagJson.fromJson(getValue(), AdventureTagMapper.INSTANCE)).getAsNbt();
         }
     }
 
@@ -57,17 +57,17 @@ public class VelocityText {
 
         @Override
         public @NotNull StringText getAsString() {
-            return Text.valueOf(Text.PLAIN_TEXT, TagWriter.toString(getValue(), VelocityTagMapper.INSTANCE)).getAsString();
+            return Text.valueOf(Text.PLAIN_TEXT, TagWriter.toString(getValue(), AdventureTagMapper.INSTANCE)).getAsString();
         }
 
         @Override
         public @NotNull PlainText getAsPlainText() {
-            return Text.valueOf(Text.PLAIN_TEXT, TagWriter.toString(getValue(), VelocityTagMapper.INSTANCE)).getAsPlainText();
+            return Text.valueOf(Text.PLAIN_TEXT, TagWriter.toString(getValue(), AdventureTagMapper.INSTANCE)).getAsPlainText();
         }
 
         @Override
         public @NotNull RawJson getAsRawJson() {
-            return Text.valueOf(Text.RAW_JSON, TagJson.toJson(getValue(), VelocityTagMapper.INSTANCE)).getAsRawJson();
+            return Text.valueOf(Text.RAW_JSON, TagJson.toJson(getValue(), AdventureTagMapper.INSTANCE)).getAsRawJson();
         }
     }
 }

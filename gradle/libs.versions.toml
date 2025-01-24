@@ -18,7 +18,7 @@ ezlib = "1.3.1"
 delivery4j = "1.1"
 settings = "1.0.1"
 types = "1.2"
-nbt = "002c433217"
+nbt = "3110e7ac3f"
 
 # Platforms
 spigot = "1.21.4-R0.1-SNAPSHOT"
@@ -51,7 +51,11 @@ ezlib = { module = "com.saicone.ezlib:loader", version.ref = "ezlib" }
 delivery4j = { module = "com.saicone.delivery4j:delivery4j", version.ref = "delivery4j" }
 settings = { module = "com.saicone.settings:settings", version.ref = "settings" }
 types = { module = "com.saicone:types", version.ref = "types" }
-nbt = { module = "com.saicone:nbt", version.ref = "nbt" }
+nbt = { module = "com.saicone.nbt:nbt", version.ref = "nbt" }
+nbt-mapper-adventure = { module = "com.saicone.nbt:mapper-adventure", version.ref = "nbt" }
+nbt-mapper-bukkit = { module = "com.saicone.nbt:mapper-bukkit", version.ref = "nbt" }
+nbt-mapper-jo-nbt = { module = "com.saicone.nbt:mapper-jo-nbt", version.ref = "nbt" }
+nbt-mapper-minecraft = { module = "com.saicone.nbt:mapper-minecraft", version.ref = "nbt" }
 
 spigot-api = { module = "org.spigotmc:spigot-api", version.ref = "spigot" }
 bungeecord-api = { module = "net.md-5:bungeecord-api", version.ref = "bungeecord" }

@@ -1,10 +1,10 @@
 package com.saicone.mcode.bungee;
 
 import com.google.gson.JsonElement;
-import com.saicone.mcode.bungee.nbt.BungeeTagMapper;
 import com.saicone.mcode.platform.Text;
 import com.saicone.nbt.io.TagReader;
 import com.saicone.nbt.io.TagWriter;
+import com.saicone.nbt.mapper.JoNbtTagMapper;
 import com.saicone.nbt.util.TagJson;
 import org.jetbrains.annotations.NotNull;
 import se.llbit.nbt.Tag;
@@ -20,7 +20,7 @@ public class BungeeText {
             case Text.RAW_JSON -> new RawJson((JsonElement) value);
             case Text.NBT -> {
                 if (value instanceof String) {
-                    yield new Nbt(TagReader.fromString((String) value, BungeeTagMapper.INSTANCE));
+                    yield new Nbt(TagReader.fromString((String) value, JoNbtTagMapper.INSTANCE));
                 }
                 yield new Nbt((Tag) value);
             }
@@ -35,7 +35,7 @@ public class BungeeText {
 
         @Override
         public @NotNull Nbt<?> getAsNbt() {
-            return Text.valueOf(Text.NBT, TagReader.fromString(getValue(), BungeeTagMapper.INSTANCE)).getAsNbt();
+            return Text.valueOf(Text.NBT, TagReader.fromString(getValue(), JoNbtTagMapper.INSTANCE)).getAsNbt();
         }
     }
 
@@ -46,7 +46,7 @@ public class BungeeText {
 
         @Override
         public @NotNull Nbt<?> getAsNbt() {
-            return Text.valueOf(Text.NBT, TagJson.fromJson(getValue(), BungeeTagMapper.INSTANCE)).getAsNbt();
+            return Text.valueOf(Text.NBT, TagJson.fromJson(getValue(), JoNbtTagMapper.INSTANCE)).getAsNbt();
         }
     }
 
@@ -57,17 +57,17 @@ public class BungeeText {
 
         @Override
         public @NotNull StringText getAsString() {
-            return Text.valueOf(Text.PLAIN_TEXT, TagWriter.toString(getValue(), BungeeTagMapper.INSTANCE)).getAsString();
+            return Text.valueOf(Text.PLAIN_TEXT, TagWriter.toString(getValue(), JoNbtTagMapper.INSTANCE)).getAsString();
         }
 
         @Override
         public @NotNull PlainText getAsPlainText() {
-            return Text.valueOf(Text.PLAIN_TEXT, TagWriter.toString(getValue(), BungeeTagMapper.INSTANCE)).getAsPlainText();
+            return Text.valueOf(Text.PLAIN_TEXT, TagWriter.toString(getValue(), JoNbtTagMapper.INSTANCE)).getAsPlainText();
         }
 
         @Override
         public @NotNull RawJson getAsRawJson() {
-            return Text.valueOf(Text.RAW_JSON, TagJson.toJson(getValue(), BungeeTagMapper.INSTANCE)).getAsRawJson();
+            return Text.valueOf(Text.RAW_JSON, TagJson.toJson(getValue(), JoNbtTagMapper.INSTANCE)).getAsRawJson();
         }
     }
 }

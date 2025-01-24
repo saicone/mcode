@@ -5,6 +5,7 @@ repositories {
 dependencies {
     compileOnly libs.velocity.api
     compileOnly libs.adventure.nbt
+    compileOnlyApi libs.nbt.mapper.adventure
 
     // Task module
     compileOnly project(':module:module-task')
