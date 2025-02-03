@@ -2,9 +2,11 @@ package com.saicone.mcode.bukkit.util;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import com.saicone.mcode.platform.MC;
@@ -19,11 +21,14 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Method;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Base64;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -101,6 +106,15 @@ public class SkullTexture {
         }
         return "public String value()";
     });
+    private static final MethodHandle GET_SIGNATURE = BukkitLookup.find(Property.class, () -> {
+        for (Method method : Property.class.getDeclaredMethods()) {
+            if (method.getName().equals("getSignature")) {
+                // Old name found
+                return "public String getSignature()";
+            }
+        }
+        return "public String signature()";
+    });
 
     // Providers
 
@@ -148,9 +162,9 @@ public class SkullTexture {
     // The class itself
 
     /**
-     * Cache object to save encoded textures.
+     * Cache object to save profiles.
      */
-    protected final Cache<String, String> cache;
+    protected final Cache<String, Profile> cache;
     /**
      * Default executor to use on async operations.
      */
@@ -166,9 +180,9 @@ public class SkullTexture {
     /**
      * Constructs a SkullTexture instance with provided cache object.
      *
-     * @param cache the cache to save encoded textures.
+     * @param cache the cache to save profiles.
      */
-    public SkullTexture(@NotNull Cache<String, String> cache) {
+    public SkullTexture(@NotNull Cache<String, Profile> cache) {
         this(cache, CompletableFuture.completedFuture(null).defaultExecutor());
     }
 
@@ -184,34 +198,36 @@ public class SkullTexture {
     /**
      * Constructs a SkullTexture instance with provided cache object and executor.
      *
-     * @param cache    the cache to save encoded textures.
+     * @param cache    the cache to save profiles.
      * @param executor the default executor to use in async operations.
      */
-    public SkullTexture(@NotNull Cache<String, String> cache, @NotNull Executor executor) {
+    public SkullTexture(@Nullable Cache<String, Profile> cache, @NotNull Executor executor) {
         this.cache = cache;
         this.executor = executor;
     }
 
     /**
-     * Return encoded texture value from cache or save it by supplier.<br>
-     * This method also "caches" null values using empty strings.
+     * Return profiles value from cache or save it by supplier.<br>
+     * If supplied value is null, this method will cache the {@link Profile#empty()} object.
      *
      * @param key      the key to get texture from cache.
      * @param supplier the supplier that provide a non-cached value.
-     * @return         a cached encoded texture value, null if supplier return a null object.
+     * @return         a cached profiles value, {@link Profile#empty()} if supplier return a null object.
      */
-    @Nullable
-    protected String caching(@NotNull Object key, @NotNull Supplier<String> supplier) {
-        String value = cache.getIfPresent(String.valueOf(key));
-        if (value == null) {
-            value = supplier.get();
-            if (value == null) {
-                value = "";
-            }
-            cache.put(String.valueOf(key), value);
+    @NotNull
+    protected Profile caching(@NotNull Object key, @NotNull Supplier<Profile> supplier) {
+        if (this.cache == null) {
+            return supplier.get();
         }
-        if (value.isBlank()) {
-            return null;
+        Profile value = this.cache.getIfPresent(String.valueOf(key));
+        if (value == null) {
+            try {
+                value = supplier.get();
+            } catch (Throwable ignored) { } // Safe profile getter
+            if (value == null) {
+                value = Profile.empty();
+            }
+            this.cache.put(String.valueOf(key), value);
         }
         return value;
     }
@@ -226,7 +242,7 @@ public class SkullTexture {
      */
     @NotNull
     public ItemStack item(@NotNull Object object) {
-        return setTexture(PLAYER_HEAD.get(), textureFrom(object));
+        return setProfile(PLAYER_HEAD.get(), profileFrom(object));
     }
 
     /**
@@ -257,163 +273,98 @@ public class SkullTexture {
         } else {
             key = object;
         }
-        final String texture = this.cache.getIfPresent(String.valueOf(key));
-        if (texture != null) {
-            if (texture.isBlank()) {
-                return CompletableFuture.completedFuture(PLAYER_HEAD.get());
-            }
-            return CompletableFuture.completedFuture(setTexture(PLAYER_HEAD.get(), texture));
+        final Profile profile = this.cache.getIfPresent(String.valueOf(key));
+        if (profile != null) {
+            return CompletableFuture.completedFuture(setProfile(PLAYER_HEAD.get(), profile));
         }
-        return CompletableFuture.supplyAsync(() -> item(object), executor);
+        return CompletableFuture.supplyAsync(() -> setProfile(PLAYER_HEAD.get(), profileFrom(object)), executor);
     }
 
     /**
-     * Get encoded texture value from any supported object.<br>
-     * This method automatically caches the result to reduce request times.
+     * Get profile value from any supported object.<br>
+     * This method automatically caches the result to reduce request times.<br>
+     * Instead of other profile-getting methods, this method ignores any exception.
      *
-     * @param object the object to convert into encoded texture, or the encoded texture itself.
-     * @return       an encoded texture value, null if any error occurs.
+     * @param object the object to convert into profile value, or the profile value itself.
+     * @return       a profile value if found and any error occurs, {@link Profile#empty()} otherwise.
      */
-    @Nullable
-    public String textureFrom(@NotNull Object object) {
-        if (object instanceof Player) {
-            return caching(((Player) object).getUniqueId(), () -> textureFromPlayer((Player) object));
+    @NotNull
+    public Profile profileFrom(@NotNull Object object) {
+        if (object instanceof Profile) {
+            return caching(((Profile) object).getUniqueId(), () -> (Profile) object);
+        } else if (object instanceof Player) {
+            return caching(((Player) object).getUniqueId(), () -> profileFromPlayer((Player) object));
         } else if (object instanceof UUID) {
-            return caching(object, () -> textureFromId((UUID) object));
+            return caching(object, () -> profileFromId((UUID) object));
         } else {
             final String value = String.valueOf(object);
             return caching(value, () -> {
-                if (value.length() <= 20) {
-                    return textureFromName(value);
+                if (value.length() < 32) {
+                    return profileFromName(value);
                 } else if (value.length() == 32 || value.length() == 36) {
-                    return textureFromId(value);
+                    return profileFromId(value);
                 } else if (value.length() == 64) {
-                    return textureFromUrlId(value);
+                    return Profile.valueOf(encodeUrlId(value));
                 } else if (value.startsWith("http")) {
-                    return textureFromUrl(value);
+                    return Profile.valueOf(encodeUrl(value));
                 } else {
-                    return value;
+                    return Profile.valueOf(value);
                 }
             });
         }
     }
 
     /**
-     * Get encoded texture value from online player.
+     * Get profile value from online player.
      *
      * @param player the online player.
-     * @return       an encoded texture value, null if player texture cannot be found.
+     * @return       a profile value, {@link Profile#empty()} if player texture cannot be found.
      */
-    @Nullable
-    public String textureFromPlayer(@Nullable Player player) {
-        return getTexture(player);
+    @NotNull
+    public Profile profileFromPlayer(@Nullable Player player) {
+        return getProfile(player);
     }
 
     /**
-     * Get encoded texture value from player name.
+     * Get profile value from player name.
      *
      * @param name the player name.
-     * @return     an encoded texture value, null if player texture cannot be found.
+     * @return     a profile value, {@link Profile#empty()} if player texture cannot be found.
      */
-    @Nullable
-    public String textureFromName(@NotNull String name) {
-        final String texture = textureFromPlayer(Bukkit.getPlayer(name));
-        return texture != null ? texture : fetchTexture(name);
+    @NotNull
+    public Profile profileFromName(@NotNull String name) {
+        final Profile profile = profileFromPlayer(Bukkit.getPlayer(name));
+        return profile.isEmpty() ? profile : fetchProfile(name);
     }
 
     /**
-     * Get encoded texture value from player unique id.<br>
+     * Get profile value from player unique id.<br>
      * This method accept raw ids without dashes.
      *
      * @param uniqueId the player unique id.
-     * @return         an encoded texture value, null if player texture cannot be found.
+     * @return         a profile value, {@link Profile#empty()} if player texture cannot be found.
      */
-    @Nullable
-    public String textureFromId(@NotNull String uniqueId) {
+    @NotNull
+    public Profile profileFromId(@NotNull String uniqueId) {
         if (uniqueId.length() == 32) {
-            return textureFromId(UUID.fromString(new StringBuilder(uniqueId)
+            return profileFromId(UUID.fromString(new StringBuilder(uniqueId)
                     .insert(20, '-').insert(16, '-').insert(12, '-').insert(8, '-')
                     .toString()));
         } else {
-            return textureFromId(UUID.fromString(uniqueId));
+            return profileFromId(UUID.fromString(uniqueId));
         }
     }
 
     /**
-     * Get encoded texture value from player unique id.
+     * Get profile value from player unique id.
      *
      * @param uniqueId the player unique id.
-     * @return         an encoded texture value, null if player texture cannot be found.
+     * @return         a profile value, {@link Profile#empty()} if player texture cannot be found.
      */
-    @Nullable
-    public String textureFromId(@NotNull UUID uniqueId) {
-        final String texture = textureFromPlayer(Bukkit.getPlayer(uniqueId));
-        return texture != null ? texture : fetchTexture(uniqueId);
-    }
-
-    /**
-     * Get encoded texture value from texture url.
-     *
-     * @param url the texture url.
-     * @return    an encoded texture value, null if any error occurs.
-     */
-    @Nullable
-    public String textureFromUrl(@NotNull String url) {
-        return encodeUrl(url);
-    }
-
-    /**
-     * Get encoded texture value from minecraft texture ID.
-     *
-     * @param id the minecraft texture ID.
-     * @return   an encoded texture value, null if any error occurs.
-     */
-    @Nullable
-    public String textureFromUrlId(@NotNull String id) {
-        return textureFromUrl(TEXTURE_URL + id);
-    }
-
-    /**
-     * Search into provided json object that represent a minecraft session and
-     * extract minecraft url from texture value defined on session.
-     *
-     * @param session the json session object to search into.
-     * @return        a minecraft texture url if found, null otherwise.
-     */
-    @Nullable
-    protected String decodeUrl(@NotNull JsonObject session) {
-        if (session.has("properties")) {
-            for (JsonElement element : session.getAsJsonArray("properties")) {
-                final JsonObject property = element.getAsJsonObject();
-                if (property.get("name").getAsString().equals("textures")) {
-                    final String value = property.get("value").getAsString();
-                    return decodeUrl(value);
-                }
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Decode provided texture value and extract minecraft url from it.
-     *
-     * @param base64 the base64 encoded value to decode.
-     * @return       a minecraft texture url if found, null otherwise.
-     */
-    @Nullable
-    protected String decodeUrl(@NotNull String base64) {
-        String value;
-        try {
-            value = new String(Base64.getDecoder().decode(base64));
-        } catch (IllegalArgumentException e) {
-            // Already decoded
-            value = base64;
-        }
-        final JsonObject texture = JSON_PARSER.parse(value).getAsJsonObject();
-        if (texture != null) {
-            return texture.get("textures").getAsJsonObject().get("SKIN").getAsJsonObject().get("url").getAsString();
-        }
-        return null;
+    @NotNull
+    public Profile profileFromId(@NotNull UUID uniqueId) {
+        final Profile profile = profileFromPlayer(Bukkit.getPlayer(uniqueId));
+        return profile.isEmpty() ? profile : fetchProfile(uniqueId);
     }
 
     /**
@@ -423,51 +374,108 @@ public class SkullTexture {
      * @return    an encoded texture value.
      */
     @NotNull
-    protected String encodeUrl(@NotNull String url) {
+    public String encodeUrl(@NotNull String url) {
         return new String(Base64.getEncoder().encode(("{\"textures\":{\"SKIN\":{\"url\":\"" + url + "\"}}}").getBytes()));
+    }
+
+    /**
+     * Get encoded texture value from minecraft texture ID.
+     *
+     * @param id the minecraft texture ID.
+     * @return   an encoded texture value.
+     */
+    @NotNull
+    public String encodeUrlId(@NotNull String id) {
+        return encodeUrl(TEXTURE_URL + id);
     }
 
     /**
      * Get url data as json object.
      *
      * @param url the url to connect.
-     * @return    a json object that represent the url data.
+     * @return    an optional json object that represent the url data.
      */
     @NotNull
-    protected JsonObject fetchJson(@NotNull String url) {
+    protected Optional<JsonObject> fetchJson(@NotNull String url) {
         // Only compatible with Java +9
-        // Older Java versions require a more complex implementation using URL connection and input stream reader
+        // Older Java versions require a more complex implementation using URL connection with header, and input stream reader
         try (InputStream stream = new URL(url).openStream()) {
-            final String json = new String(stream.readAllBytes());
-            if (json.isBlank()) {
-                return new JsonObject();
+            final String content = new String(stream.readAllBytes());
+            if (content.isBlank()) {
+                return Optional.empty();
             }
-            return JSON_PARSER.parse(json).getAsJsonObject();
-        } catch (Exception e) {
-            return new JsonObject();
+            final JsonObject json = JSON_PARSER.parse(content).getAsJsonObject();
+            return Optional.of(json);
+        } catch (IOException e) {
+            throw new RuntimeException("Cannot read json from url", e);
         }
     }
 
     /**
-     * Fetch player texture using player name.
+     * Fetch profile value using player name.
      *
-     * @param name the name to find.
-     * @return     an encoded texture value if found, null otherwise.
+     * @param name the player name to find.
+     * @return     a profile value if found, {@link Profile#empty()} otherwise.
      */
-    @Nullable
-    protected String fetchTexture(@NotNull String name) {
-        throw new IllegalStateException("Current SkullTexture instance doesn't provide texture fetching");
+    @NotNull
+    protected Profile fetchProfile(@NotNull String name) {
+        throw new IllegalStateException("Current SkullTexture instance doesn't provide texture lookup using player name");
     }
 
     /**
-     * Fetch player texture using player unique id.
+     * Fetch profile value using player unique id.
      *
      * @param uniqueId the unique id to find.
-     * @return         an encoded texture value if found, null otherwise.
+     * @return         a profile value if found, {@link Profile#empty()} otherwise.
      */
-    @Nullable
-    protected String fetchTexture(@NotNull UUID uniqueId) {
-        throw new IllegalStateException("Current SkullTexture instance doesn't provide texture fetching");
+    @NotNull
+    protected Profile fetchProfile(@NotNull UUID uniqueId) {
+        throw new IllegalStateException("Current SkullTexture instance doesn't provide texture lookup using player id");
+    }
+
+    /**
+     * Parse profile session object as profile value.
+     *
+     * @param session the json object representation of player session.
+     * @param idKey   the key containing raw unique id.
+     * @param nameKey the key containing player name.
+     * @return        a newly generated profile value.
+     */
+    @NotNull
+    protected Profile profileSession(@NotNull JsonObject session, @NotNull String idKey, @NotNull String nameKey) {
+        final JsonPrimitive id = session.getAsJsonPrimitive(idKey);
+        final JsonPrimitive name = session.getAsJsonPrimitive(nameKey);
+
+        final UUID uniqueId;
+        if (id == null) {
+            uniqueId = Profile.EMPTY_ID;
+        } else {
+            uniqueId = UUID.fromString(new StringBuilder(id.getAsString())
+                    .insert(20, '-')
+                    .insert(16, '-')
+                    .insert(12, '-')
+                    .insert(8, '-')
+                    .toString());
+        }
+
+        final JsonArray properties = session.getAsJsonArray("properties");
+        if (properties != null) {
+            for (JsonElement element : properties) {
+                final JsonObject property = element.getAsJsonObject();
+                if (property.getAsJsonPrimitive("name").getAsString().equalsIgnoreCase("textures")) {
+                    final JsonPrimitive value = property.getAsJsonPrimitive("value");
+                    final JsonPrimitive signature = property.getAsJsonPrimitive("signature");
+                    return Profile.valueOf(
+                            uniqueId,
+                            name != null ? name.getAsString() : "null",
+                            value != null ? value.getAsString() : null,
+                            signature != null ? signature.getAsString() : null
+                    );
+                }
+            }
+        }
+
+        return Profile.valueOf(uniqueId, name != null ? name.getAsString() : "null");
     }
 
     // Static methods
@@ -486,32 +494,32 @@ public class SkullTexture {
         if (texture == null) {
             return head;
         }
-        // Since 1.20.2: The Mojang AuthLib require non-null name for game profile, so "null" will be used instead
-        final GameProfile profile = new GameProfile(UUID.randomUUID(), "null");
-        profile.getProperties().put("textures", new Property("textures", texture));
-        return setProfile(head, profile);
+        return setProfile(head, Profile.valueOf(texture));
     }
 
     /**
      * Set game profile value into skull meta.
      *
      * @param head    skull item to set the profile.
-     * @param profile game profile value.
+     * @param profile profile value.
      * @return        the provided item.
      * @throws IllegalArgumentException if the provided item isn't a player head.
      */
     @NotNull
     @Contract("_, _ -> param1")
-    public static ItemStack setProfile(@NotNull ItemStack head, @NotNull GameProfile profile) throws IllegalArgumentException {
+    public static ItemStack setProfile(@NotNull ItemStack head, @NotNull Profile profile) throws IllegalArgumentException {
+        if (profile.isEmpty()) {
+            return head;
+        }
         final ItemMeta meta = head.getItemMeta();
         if (!(meta instanceof SkullMeta)) {
             throw new IllegalArgumentException("The provided item isn't a player head");
         }
         try {
             if (NEW_PROFILE != null) {
-                SET_PROFILE.invoke(meta, NEW_PROFILE.invoke(profile));
+                SET_PROFILE.invoke(meta, NEW_PROFILE.invoke(profile.getProfile()));
             } else {
-                SET_PROFILE.invoke(meta, profile);
+                SET_PROFILE.invoke(meta, profile.getProfile());
             }
         } catch (Throwable t) {
             throw new RuntimeException("Cannot set profile value to ItemStack", t);
@@ -521,52 +529,18 @@ public class SkullTexture {
     }
 
     /**
-     * Get encoded texture value from online player profile.
-     *
-     * @param player the player to get the texture from.
-     * @return       an encoded texture value if was found, null otherwise.
-     */
-    @Nullable
-    @Contract("null -> null")
-    public static String getTexture(@Nullable Player player) {
-        final GameProfile profile = getProfile(player);
-        return profile == null ? null : getTexture(profile);
-    }
-
-    /**
-     * Get encoded texture value from game profile.
-     *
-     * @param profile the profile to extract texture.
-     * @return        an encoded texture value if was found, null otherwise.
-     */
-    @Nullable
-    public static String getTexture(@NotNull GameProfile profile) {
-        for (Property texture : profile.getProperties().get("textures")) {
-            if (texture != null) {
-                try {
-                    return (String) GET_VALUE.invoke(texture);
-                } catch (Throwable t) {
-                    throw new RuntimeException("Cannot get texture value from Property object");
-                }
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Get game profile value from online player.
+     * Get profile value from online player.
      *
      * @param player the player to get the profile from.
-     * @return       a game profile value.
+     * @return       a profile value, {@link Profile#empty()} if player is null.
      */
-    @Nullable
-    @Contract("null -> null")
-    public static GameProfile getProfile(@Nullable Player player) {
+    @NotNull
+    public static Profile getProfile(@Nullable Player player) {
         if (player == null) {
-            return null;
+            return Profile.empty();
         }
         try {
-            return ((GameProfile) GET_PROFILE.invoke(player));
+            return new Profile((GameProfile) GET_PROFILE.invoke(player));
         } catch (Throwable t) {
             throw new RuntimeException("Cannot get online player texture from '" + player.getName() + "'", t);
         }
@@ -608,7 +582,7 @@ public class SkullTexture {
      * Get Base64 encoded texture from the given texture parameter,
      * can be player name, player uuid, texture id, url or base64.
      *
-     * @deprecated use {@link SkullTexture#mojang()}{@code .}{@link SkullTexture#textureFrom(Object)} instead.
+     * @deprecated use {@link SkullTexture#mojang()}{@code .}{@link SkullTexture#profileFrom(Object)} instead.
      *
      * @param texture texture type.
      * @return        a Base64 encoded text.
@@ -622,7 +596,7 @@ public class SkullTexture {
      * Get Base64 encoded texture from the given texture parameter,
      * can be player name, player uuid, texture id, url or base64.
      *
-     * @deprecated use {@link SkullTexture#mojang()}{@code .}{@link SkullTexture#textureFrom(Object)} instead.
+     * @deprecated use {@link SkullTexture#mojang()}{@code .}{@link SkullTexture#profileFrom(Object)} instead.
      *
      * @param texture  texture type.
      * @param callback function to execute if texture value is retrieved in async operation.
@@ -631,34 +605,34 @@ public class SkullTexture {
     @Deprecated
     public static String getTextureValue(String texture, Consumer<String> callback) {
         if (texture.length() <= 20 || texture.length() == 36) {
-            final String value = mojang().cache.getIfPresent(texture);
-            if (value == null) {
-                mojang().cache.put(texture, LOADING_TEXTURE);
+            final Profile profile = mojang().cache.getIfPresent(texture);
+            if (profile == null) {
+                mojang().cache.put(texture, Profile.valueOf(LOADING_TEXTURE));
                 CompletableFuture.supplyAsync(() -> {
                     if (texture.length() == 36) {
-                        return mojang().textureFromId(texture);
+                        return mojang().profileFromId(texture);
                     } else {
-                        return mojang().textureFromName(texture);
+                        return mojang().profileFromName(texture);
                     }
                 }).thenAccept(result -> {
-                    if (result != null) {
+                    if (!result.isEmpty()) {
                         mojang().cache.put(texture, result);
                         if (callback != null) {
-                            callback.accept(result);
+                            result.getTexture().ifPresent(callback);
                         }
                     }
                 });
             }
             return LOADING_TEXTURE;
         }
-        return mojang().textureFrom(texture);
+        return mojang().profileFrom(texture).getTexture().orElse(null);
     }
 
     /**
      * Compute textured head via making a request to Mojang API,
      * it's suggested to call this method in async environment.
      *
-     * @deprecated use {@link SkullTexture#mojang()}{@code .}{@link SkullTexture#fetchTexture(String)} instead.
+     * @deprecated use {@link SkullTexture#mojang()}{@code .}{@link SkullTexture#fetchProfile(String)} instead.
      *
      * @param name the player name.
      * @return     a Base64 encoded text.
@@ -672,7 +646,7 @@ public class SkullTexture {
      * Compute textured head via making a request to Mojang API,
      * it's suggested to call this method in async environment.
      *
-     * @deprecated use {@link SkullTexture#mojang()}{@code .}{@link SkullTexture#fetchTexture(String)} instead.
+     * @deprecated use {@link SkullTexture#mojang()}{@code .}{@link SkullTexture#fetchProfile(String)} instead.
      *
      * @param key  map key to put.
      * @param name the player name.
@@ -683,10 +657,10 @@ public class SkullTexture {
         String texture = requestTextureUrl(name);
         if (texture != null) {
             texture = mojang().encodeUrl(texture);
-            mojang().cache.put(key, texture);
+            mojang().cache.put(key, Profile.valueOf(texture));
             return texture;
         } else {
-            mojang().cache.put(key, INVALID_TEXTURE);
+            mojang().cache.put(key, Profile.valueOf(INVALID_TEXTURE));
             return INVALID_TEXTURE;
         }
     }
@@ -694,18 +668,285 @@ public class SkullTexture {
     /**
      * Request player texture url using Mojang API.
      *
-     * @deprecated use {@link SkullTexture#mojang()}{@code .}{@link SkullTexture#fetchTexture(String)} instead.
+     * @deprecated use {@link SkullTexture#mojang()}{@code .}{@link SkullTexture#fetchProfile(String)} instead.
      *
      * @param name the player name.
      * @return     a Mojang texture url if the player profile exists, null otherwise.
      */
     @Deprecated
     public static String requestTextureUrl(@NotNull String name) {
-        return mojang().fetchTexture(name);
+        final Profile profile = mojang().fetchProfile(name);
+        if (profile == null) {
+            return null;
+        }
+        return profile.getTexture().orElse(null);
     }
 
     /**
-     * Mojang SkullTexture implementation that retrieves textures using Mojang API.
+     * Abstract implementation of game profile, mainly focused on immutable texture-related data.
+     */
+    public static class Profile {
+
+        private static final UUID EMPTY_ID = new UUID(0, 0);
+        private static final Profile EMPTY = valueOf(EMPTY_ID, "null");
+
+        private final GameProfile profile;
+
+        /**
+         * Get empty profile representation value.<br>
+         * This profile will always return {@code false} on {@link Profile#isValid()}.
+         *
+         * @return an empty profile.
+         */
+        @NotNull
+        public static Profile empty() {
+            return EMPTY;
+        }
+
+        /**
+         * Create a profile value with provided parameters.<br>
+         * This profile will always return {@code false} on {@link Profile#isValid()}.
+         *
+         * @param texture a base64-encoded texture value.
+         * @return        a newly generated profile value.
+         */
+        @NotNull
+        public static Profile valueOf(@Nullable String texture) {
+            return valueOf(EMPTY_ID, "null", texture);
+        }
+
+        /**
+         * Create a profile value with provided parameters.
+         *
+         * @param uniqueId the player id.
+         * @param name     the player name.
+         * @return         a newly generated profile value.
+         */
+        @NotNull
+        public static Profile valueOf(@NotNull UUID uniqueId, @NotNull String name) {
+            return valueOf(uniqueId, name, null, null);
+        }
+
+        /**
+         * Create a profile value with provided parameters.
+         *
+         * @param uniqueId the player id.
+         * @param name     the player name.
+         * @param texture  a base64-encoded texture value.
+         * @return         a newly generated profile value.
+         */
+        @NotNull
+        public static Profile valueOf(@NotNull UUID uniqueId, @NotNull String name, @Nullable String texture) {
+            return valueOf(uniqueId, name, texture, null);
+        }
+
+        /**
+         * Create a profile value with provided parameters.
+         *
+         * @param uniqueId  the player id.
+         * @param name      the player name.
+         * @param texture   a base64-encoded texture value.
+         * @param signature a signature for texture value.
+         * @return          a newly generated profile value.
+         */
+        @NotNull
+        public static Profile valueOf(@NotNull UUID uniqueId, @NotNull String name, @Nullable String texture, @Nullable String signature) {
+            if (uniqueId.equals(EMPTY_ID) && name.equals("null") && texture == null) {
+                return empty();
+            }
+            final GameProfile profile = new GameProfile(uniqueId, name);
+            if (texture != null) {
+                profile.getProperties().put("textures", new Property("textures", texture, signature));
+            }
+            return new Profile(profile);
+        }
+
+        private Profile(@NotNull GameProfile profile) {
+            this.profile = profile;
+        }
+
+        /**
+         * Check if this profile correspond to a randomly-generate unique id, normally used on MC Java accounts.
+         *
+         * @return true if the current profile id is version 4.
+         */
+        public boolean isJava() {
+            return getUniqueId().version() == 4;
+        }
+
+        /**
+         * Check if this profile correspond to a name-generated unique id, normally used on offline Java accounts.
+         *
+         * @return true if the current profile id is version 3.
+         */
+        public boolean isOffline() {
+            return getUniqueId().version() == 3;
+        }
+
+        /**
+         * Check if this profile correspond to a Bedrock account.
+         *
+         * @return true if the current profile id is an xbox id.
+         */
+        public boolean isBedrock() {
+            return getUniqueId().toString().startsWith("00000000-0000-0000-0009");
+        }
+
+        /**
+         * Check if this profile is provided by a real id.
+         *
+         * @return true if this profile is valid.
+         */
+        public boolean isValid() {
+            return !getUniqueId().equals(EMPTY_ID);
+        }
+
+        /**
+         * Check if this profile doesn't contain a texture value.
+         *
+         * @return true if this profiles is empty.
+         */
+        public boolean isEmpty() {
+            return profile.getProperties().isEmpty();
+        }
+
+        @NotNull
+        private GameProfile getProfile() {
+            return profile;
+        }
+
+        /**
+         * Gets the unique ID of this profile.
+         *
+         * @return an unique id.
+         */
+        @NotNull
+        public UUID getUniqueId() {
+            return profile.getId();
+        }
+
+        /**
+         * Gets the display name of this profile.
+         *
+         * @return a player name.
+         */
+        @NotNull
+        public String getName() {
+            return profile.getName();
+        }
+
+        /**
+         * Gets the texture value of this profile.
+         *
+         * @return an optional base64-encoded texture value.
+         */
+        @NotNull
+        public Optional<String> getTexture() {
+            for (Property texture : profile.getProperties().get("textures")) {
+                if (texture != null) {
+                    try {
+                        return Optional.ofNullable((String) GET_VALUE.invoke(texture));
+                    } catch (Throwable t) {
+                        throw new RuntimeException("Cannot get texture value from Property object");
+                    }
+                }
+            }
+            return Optional.empty();
+        }
+
+        /**
+         * Gets the json representation of this profile texture value.
+         *
+         * @return an optional json texture value.
+         */
+        @NotNull
+        public Optional<JsonObject> getTextureJson() {
+            return getTexture().map(base64 -> {
+                String value;
+                try {
+                    value = new String(Base64.getDecoder().decode(base64));
+                } catch (IllegalArgumentException e) {
+                    // Already decoded
+                    value = base64;
+                }
+                return JSON_PARSER.parse(value).getAsJsonObject();
+            });
+        }
+
+        /**
+         * Gets the signature of this profile texture value.
+         *
+         * @return an optional signature value.
+         */
+        @NotNull
+        public Optional<String> getSignature() {
+            for (Property texture : profile.getProperties().get("textures")) {
+                if (texture != null) {
+                    try {
+                        return Optional.ofNullable((String) GET_SIGNATURE.invoke(texture));
+                    } catch (Throwable t) {
+                        throw new RuntimeException("Cannot get texture signature from Property object");
+                    }
+                }
+            }
+            return Optional.empty();
+        }
+
+        /**
+         * Gets the skin url of this profile texture value.
+         *
+         * @return an optional extracted url from texture value.
+         */
+        @NotNull
+        public Optional<URL> getSkinUrl() {
+            return getTextureJson().map(json -> {
+                final JsonObject textures = json.getAsJsonObject("textures");
+                if (textures != null) {
+                    final JsonObject skin = textures.getAsJsonObject("SKIN");
+                    if (skin != null) {
+                        final JsonPrimitive url = skin.getAsJsonPrimitive("url");
+                        if (url != null) {
+                            try {
+                                return new URL(url.getAsString());
+                            } catch (MalformedURLException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                    }
+                }
+                return null;
+            });
+        }
+
+        /**
+         * Gets the cape url of this profile texture value.
+         *
+         * @return an optional extracted url from texture value.
+         */
+        @NotNull
+        public Optional<URL> getCapeUrl() {
+            return getTextureJson().map(json -> {
+                final JsonObject textures = json.getAsJsonObject("textures");
+                if (textures != null) {
+                    final JsonObject skin = textures.getAsJsonObject("CAPE");
+                    if (skin != null) {
+                        final JsonPrimitive url = skin.getAsJsonPrimitive("url");
+                        if (url != null) {
+                            try {
+                                return new URL(url.getAsString());
+                            } catch (MalformedURLException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                    }
+                }
+                return null;
+            });
+        }
+    }
+
+    /**
+     * Mojang SkullTexture implementation that retrieves profiles using Mojang API.
      */
     @ApiStatus.Experimental
     public static class Mojang extends SkullTexture {
@@ -727,7 +968,7 @@ public class SkullTexture {
          *
          * @param cache the cache to save encoded textures.
          */
-        public Mojang(@NotNull Cache<String, String> cache) {
+        public Mojang(@NotNull Cache<String, Profile> cache) {
             super(cache);
         }
 
@@ -746,27 +987,31 @@ public class SkullTexture {
          * @param cache    the cache to save encoded textures.
          * @param executor the default executor to use in async operations.
          */
-        public Mojang(@NotNull Cache<String, String> cache, @NotNull Executor executor) {
+        public Mojang(@NotNull Cache<String, Profile> cache, @NotNull Executor executor) {
             super(cache, executor);
         }
 
         @Override
-        protected @Nullable String fetchTexture(@NotNull String name) {
-            final JsonObject user = fetchJson(USER_API + name);
-            if (user.has("id")) {
-                return decodeUrl(fetchJson(SESSION_API + user.get("id").getAsString()));
-            }
-            return null;
+        protected @NotNull Profile fetchProfile(@NotNull String name) {
+            return fetchJson(USER_API + name).flatMap(user -> {
+                final JsonPrimitive id = user.getAsJsonPrimitive("id");
+                if (id != null) {
+                    return fetchJson(SESSION_API + id.getAsString()).map(session -> profileSession(session, "id", "name"));
+                }
+                return Optional.empty();
+            }).orElse(Profile.empty());
         }
 
         @Override
-        protected @Nullable String fetchTexture(@NotNull UUID uniqueId) {
-            return decodeUrl(fetchJson(SESSION_API + uniqueId.toString().replace('-', '\0')));
+        protected @NotNull Profile fetchProfile(@NotNull UUID uniqueId) {
+            return fetchJson(SESSION_API + uniqueId.toString().replace('-', '\0')).map(session ->
+                    profileSession(session, "id", "name")
+            ).orElse(Profile.empty());
         }
     }
 
     /**
-     * PlayerDB SkullTexture implementation that retrieves textures using PlayerDB API.
+     * PlayerDB SkullTexture implementation that retrieves profiles using PlayerDB API.
      */
     @ApiStatus.Experimental
     public static class PlayerDB extends SkullTexture {
@@ -787,7 +1032,7 @@ public class SkullTexture {
          *
          * @param cache the cache to save encoded textures.
          */
-        public PlayerDB(@NotNull Cache<String, String> cache) {
+        public PlayerDB(@NotNull Cache<String, Profile> cache) {
             super(cache);
         }
 
@@ -806,41 +1051,43 @@ public class SkullTexture {
          * @param cache    the cache to save encoded textures.
          * @param executor the default executor to use in async operations.
          */
-        public PlayerDB(@NotNull Cache<String, String> cache, @NotNull Executor executor) {
+        public PlayerDB(@NotNull Cache<String, Profile> cache, @NotNull Executor executor) {
             super(cache, executor);
         }
 
         @Override
-        protected @Nullable String fetchTexture(@NotNull String name) {
+        protected @NotNull Profile fetchProfile(@NotNull String name) {
             return fetchAny(name);
         }
 
         @Override
-        protected @Nullable String fetchTexture(@NotNull UUID uniqueId) {
+        protected @NotNull Profile fetchProfile(@NotNull UUID uniqueId) {
             return fetchAny(uniqueId.toString());
         }
 
         /**
-         * Fetch player texture using player name or id.
+         * Fetch player profile using player name or id.
          *
          * @param any the name or id to find.
-         * @return    an encoded texture value if found, null otherwise.
+         * @return    a profile value if found, {@link Profile#empty()} otherwise.
          */
-        @Nullable
-        protected String fetchAny(@NotNull String any) {
-            final JsonObject profile = fetchJson(API + any);
-            if (profile.has("data")) {
-                final JsonObject data = profile.getAsJsonObject("data");
-                if (data.has("player")) {
-                    return decodeUrl(data.getAsJsonObject("player"));
+        @NotNull
+        protected Profile fetchAny(@NotNull String any) {
+            return fetchJson(API + any).map(json -> {
+                final JsonObject data = json.getAsJsonObject("data");
+                if (data != null) {
+                    final JsonObject player = data.getAsJsonObject("player");
+                    if (player != null) {
+                        return profileSession(player, "raw_id", "username");
+                    }
                 }
-            }
-            return null;
+                return null;
+            }).orElse(Profile.empty());
         }
     }
 
     /**
-     * CraftHead SkullTexture implementation that retrieves textures using CraftHead API.
+     * CraftHead SkullTexture implementation that retrieves profiles using CraftHead API.
      */
     @ApiStatus.Experimental
     public static class CraftHead extends SkullTexture {
@@ -861,7 +1108,7 @@ public class SkullTexture {
          *
          * @param cache the cache to save encoded textures.
          */
-        public CraftHead(@NotNull Cache<String, String> cache) {
+        public CraftHead(@NotNull Cache<String, Profile> cache) {
             super(cache);
         }
 
@@ -880,29 +1127,18 @@ public class SkullTexture {
          * @param cache    the cache to save encoded textures.
          * @param executor the default executor to use in async operations.
          */
-        public CraftHead(@NotNull Cache<String, String> cache, @NotNull Executor executor) {
+        public CraftHead(@NotNull Cache<String, Profile> cache, @NotNull Executor executor) {
             super(cache, executor);
         }
 
         @Override
-        protected @Nullable String fetchTexture(@NotNull String name) {
-            return fetchAny(name);
+        protected @NotNull Profile fetchProfile(@NotNull String name) {
+            return fetchJson(API + name).map(session -> profileSession(session, "id", "name")).orElse(Profile.empty());
         }
 
         @Override
-        protected @Nullable String fetchTexture(@NotNull UUID uniqueId) {
-            return fetchAny(uniqueId.toString());
-        }
-
-        /**
-         * Fetch player texture using player name or id.
-         *
-         * @param any the name or id to find.
-         * @return    an encoded texture value if found, null otherwise.
-         */
-        @Nullable
-        protected String fetchAny(@NotNull String any) {
-            return decodeUrl(fetchJson(API + any));
+        protected @NotNull Profile fetchProfile(@NotNull UUID uniqueId) {
+            return fetchJson(API + uniqueId).map(session -> profileSession(session, "id", "name")).orElse(Profile.empty());
         }
     }
 }
