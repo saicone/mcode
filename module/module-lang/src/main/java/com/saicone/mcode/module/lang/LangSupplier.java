@@ -1,5 +1,6 @@
 package com.saicone.mcode.module.lang;
 
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -91,8 +92,9 @@ public interface LangSupplier {
 
         @NotNull
         @Contract("_ -> this")
-        public Value<T> parser(@NotNull BiFunction<Object, Object, T> parser) {
-            this.parser = parser;
+        @SuppressWarnings("unchecked")
+        public <SenderT> Value<T> parser(@NotNull BiFunction<SenderT, Object, T> parser) {
+            this.parser = (BiFunction<Object, Object, T>) parser;
             this.memoize = false;
             return this;
         }
@@ -171,6 +173,7 @@ public interface LangSupplier {
             return holder;
         }
 
+        @ApiStatus.Internal
         public void setHolder(@Nullable DisplayHolder<?> holder) {
             this.holder = holder;
         }

@@ -90,6 +90,20 @@ public abstract class DisplayHolder<SenderT> implements LangSupplier {
         });
     }
 
+    @NotNull
+    public <T> Value<T> value(@NotNull String path, @NotNull String... aliases) {
+        final Value<T> value = new Value<>(path, aliases);
+        value.setHolder(this);
+        return value;
+    }
+
+    @NotNull
+    public Path path(@NotNull String path, @NotNull String... aliases) {
+        final Path p = new Path(path, aliases);
+        p.setHolder(this);
+        return p;
+    }
+
     protected abstract void log(int level, @NotNull String msg);
 
     protected void log(int level, @NotNull Throwable exception) {
