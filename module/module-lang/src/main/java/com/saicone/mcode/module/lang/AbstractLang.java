@@ -79,6 +79,25 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
         clear();
     }
 
+    public void reload() {
+        reload(getLangFolder());
+    }
+
+    public void reload(@NotNull File langFolder) {
+        clear();
+        load(langFolder);
+    }
+
+    @Override
+    public void clear() {
+        super.clear();
+        for (Path path : paths) {
+            if (path instanceof Value) {
+                ((Value<?>) path).clear();
+            }
+        }
+    }
+
     protected abstract void saveFile(@NotNull File folder, @NotNull String name);
 
     public void setLangSupplier(@Nullable LangSupplier langSupplier) {

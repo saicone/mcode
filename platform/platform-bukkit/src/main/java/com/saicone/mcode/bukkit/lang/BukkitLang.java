@@ -201,7 +201,7 @@ public class BukkitLang extends AbstractLang<CommandSender> {
     }
 
     @Override
-    public void load(@NotNull File langFolder) {
+    public void reload(@NotNull File langFolder) {
         cachedAliases = null;
         super.load(langFolder);
     }
