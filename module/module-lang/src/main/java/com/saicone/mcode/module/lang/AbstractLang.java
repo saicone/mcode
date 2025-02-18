@@ -17,8 +17,8 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
     private final Class<?>[] langProviders;
 
     // Instance fields parameters
-    private Path[] paths = new Path[0];
-    private final List<DisplayLoader<SenderT>> displayLoaders = new ArrayList<>();
+    private Path[] paths;
+    private List<DisplayLoader<SenderT>> displayLoaders;
 
     // Mutable parameters
     private transient boolean useSettings;
@@ -39,8 +39,6 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
         this.langSupplier = langSupplier;
         this.langProviders = langProviders;
         langProviders[langProviders.length - 1] = this.getClass();
-        computePaths();
-        computeDisplayLoaders();
     }
 
     public void load() {
@@ -134,7 +132,7 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
             objects = getFileObjects(file);
         }
         return DMap.of(objects).asDeepPath(".", (pathKey, value) -> {
-            for (Path path : this.paths) {
+            for (Path path : this.getPaths()) {
                 if (path.getPath().equals(pathKey) || path.getAliases().contains(pathKey)) {
                     if (path instanceof Value) {
                         ((Value<?>) path).setValue(language, value);
@@ -164,6 +162,9 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
 
     @NotNull
     public Path[] getPaths() {
+        if (paths == null) {
+            computePaths();
+        }
         return paths;
     }
 
@@ -175,6 +176,9 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
     @NotNull
     @Override
     public List<DisplayLoader<SenderT>> getDisplayLoaders() {
+        if (displayLoaders == null) {
+            computeDisplayLoaders();
+        }
         return displayLoaders;
     }
 
@@ -233,9 +237,6 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
     }
 
     private void computePaths() {
-        if (paths.length > 0) {
-            return;
-        }
         final List<Path> paths = new ArrayList<>();
         computeFields(getLangProviders(), Path.class, (name, path) -> {
             path.setHolder(this);
@@ -246,9 +247,7 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
 
     @SuppressWarnings("unchecked")
     private void computeDisplayLoaders() {
-        if (!displayLoaders.isEmpty()) {
-            return;
-        }
+        displayLoaders = new ArrayList<>();
         final Set<String> loaded = new HashSet<>();
         computeFields(getLangProviders(), DisplayLoader.class, (name, loader) -> {
             if (loaded.contains(name)) {
