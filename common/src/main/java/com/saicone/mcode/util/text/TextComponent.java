@@ -5,11 +5,12 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
+import com.saicone.mcode.platform.MC;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 
-public class RawJson {
+public class TextComponent {
 
     @SuppressWarnings("deprecation")
     private static final JsonParser JSON_PARSER = new JsonParser();
@@ -80,11 +81,16 @@ public class RawJson {
 
     @NotNull
     public static JsonArray toJson(@NotNull String s) {
-        return toJson(s, "white");
+        return toJson(MC.version(), s);
     }
 
     @NotNull
-    public static JsonArray toJson(@NotNull String s, @NotNull String defaultColor) {
+    public static JsonArray toJson(@NotNull MC version, @NotNull String s) {
+        return toJson(version, s, "white");
+    }
+
+    @NotNull
+    public static JsonArray toJson(@NotNull MC version, @NotNull String s, @NotNull String defaultColor) {
         final JsonArray array = new JsonArray();
         final boolean containsUrl = s.contains("http");
         if (s.isBlank() || (s.indexOf(COLOR_CHAR) < 0 && !containsUrl)) {
@@ -205,13 +211,20 @@ public class RawJson {
 
                     final JsonObject clickEvent = new JsonObject();
                     clickEvent.add("action", new JsonPrimitive("open_url"));
-                    clickEvent.add("value", url);
-                    object.add("clickEvent", clickEvent);
+                    if (version.isNewerThanOrEquals(MC.V_1_21_5)) {
+                        clickEvent.add("url", url);
+                        object.add("click_event", clickEvent);
+                    } else {
+                        clickEvent.add("value", url);
+                        object.add("clickEvent", clickEvent);
+                    }
 
                     array.add(object);
                     object = new JsonObject();
                     text = new StringBuilder();
                     i = end - 1;
+                } else {
+                    text.append(c);
                 }
             } else {
                 text.append(c);

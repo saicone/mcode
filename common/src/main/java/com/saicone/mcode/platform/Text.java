@@ -7,6 +7,7 @@ import com.saicone.mcode.Platform;
 import com.saicone.mcode.util.text.MStrings;
 import com.saicone.mcode.util.text.Replacer;
 import com.saicone.mcode.util.text.Strings;
+import com.saicone.mcode.util.text.TextComponent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -365,7 +366,7 @@ public abstract class Text {
 
         @Override
         public @NotNull RawJson getAsRawJson() {
-            return Text.valueOf(Text.RAW_JSON, com.saicone.mcode.util.text.RawJson.toJson(getValue())).getAsRawJson();
+            return Text.valueOf(Text.RAW_JSON, TextComponent.toJson(getValue())).getAsRawJson();
         }
 
         @Override
@@ -410,7 +411,7 @@ public abstract class Text {
 
         @Override
         public @NotNull Colored getAsColored() {
-            return Text.valueOf(Text.COLORED, com.saicone.mcode.util.text.RawJson.fromJson(getValue())).getAsColored();
+            return Text.valueOf(Text.COLORED, TextComponent.fromJson(getValue())).getAsColored();
         }
 
         @Override
