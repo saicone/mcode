@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
@@ -56,6 +57,12 @@ public interface Cache<K, V> {
 
     @NotNull
     ConcurrentMap<K, V> asMap();
+
+    @NotNull
+    @SuppressWarnings("unchecked")
+    default Set<K> asSet() {
+        return Collections.newSetFromMap((Map<K, Boolean>) asMap());
+    }
 
     interface Builder<K, V> {
 
