@@ -238,8 +238,8 @@ public class EasyLookup {
         if (clazz == null) {
             try {
                 if (id.endsWith("[]")) {
-                    final Class<?> nonArray = classById(id.substring(0, id.length() - 2));
-                    return addClassId(id, "[" + nonArray);
+                    final Class<?> componentType = classById(id.substring(0, id.length() - 2));
+                    return addClassId(id, arrayType(componentType));
                 }
                 if (id.contains(".")) {
                     return addClass(id);
@@ -248,6 +248,24 @@ public class EasyLookup {
             throw new IllegalArgumentException("The class with ID '" + id + "' doesn't exist");
         }
         return clazz;
+    }
+
+    private static Class<?> arrayType(@NotNull Class<?> componentType) throws ClassNotFoundException {
+        // This can be simplified by using Class#descriptorString().replace('/', '.') from Java +12
+        if (componentType.isArray()) {
+            return Class.forName("[" + componentType.getName());
+        } else if (componentType.isPrimitive()) {
+            // This can be simplified by using Wrapper#forPrimitiveType() from sun API
+            if (componentType == long.class) {
+                return Class.forName("[J");
+            } else if (componentType == boolean.class) {
+                return Class.forName("[Z");
+            } else {
+                return Class.forName("[" + Character.toUpperCase(componentType.getSimpleName().charAt(0)));
+            }
+        } else {
+            return Class.forName("[L" + componentType.getName() + ";");
+        }
     }
 
     /**
