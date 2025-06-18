@@ -110,7 +110,7 @@ public interface Loader {
                 return (T) clazz.getDeclaredMethod(method).invoke(null);
             }
             for (Method m : clazz.getDeclaredMethods()) {
-                if (matches(m, params)) {
+                if (m.getName().equals(method) && matches(m, params)) {
                     return (T) m.invoke(null, params);
                 }
             }
