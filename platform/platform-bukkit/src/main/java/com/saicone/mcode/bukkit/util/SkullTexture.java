@@ -182,7 +182,7 @@ public class SkullTexture {
      *
      * @param cache the cache to save profiles.
      */
-    public SkullTexture(@NotNull Cache<String, Profile> cache) {
+    public SkullTexture(@Nullable Cache<String, Profile> cache) {
         this(cache, CompletableFuture.completedFuture(null).defaultExecutor());
     }
 
@@ -334,7 +334,7 @@ public class SkullTexture {
     @NotNull
     public Profile profileFromName(@NotNull String name) {
         final Profile profile = profileFromPlayer(Bukkit.getPlayer(name));
-        return profile.isEmpty() ? profile : fetchProfile(name);
+        return profile.isEmpty() || profile.isOffline() ? fetchProfile(name) : profile;
     }
 
     /**
@@ -364,7 +364,7 @@ public class SkullTexture {
     @NotNull
     public Profile profileFromId(@NotNull UUID uniqueId) {
         final Profile profile = profileFromPlayer(Bukkit.getPlayer(uniqueId));
-        return profile.isEmpty() ? profile : fetchProfile(uniqueId);
+        return profile.isEmpty() || profile.isOffline() ? fetchProfile(uniqueId) : profile;
     }
 
     /**
@@ -418,7 +418,7 @@ public class SkullTexture {
      * @return     a profile value if found, {@link Profile#empty()} otherwise.
      */
     @NotNull
-    protected Profile fetchProfile(@NotNull String name) {
+    public Profile fetchProfile(@NotNull String name) {
         throw new IllegalStateException("Current SkullTexture instance doesn't provide texture lookup using player name");
     }
 
@@ -429,7 +429,7 @@ public class SkullTexture {
      * @return         a profile value if found, {@link Profile#empty()} otherwise.
      */
     @NotNull
-    protected Profile fetchProfile(@NotNull UUID uniqueId) {
+    public Profile fetchProfile(@NotNull UUID uniqueId) {
         throw new IllegalStateException("Current SkullTexture instance doesn't provide texture lookup using player id");
     }
 
@@ -442,12 +442,12 @@ public class SkullTexture {
      * @return        a newly generated profile value.
      */
     @NotNull
-    protected Profile profileSession(@NotNull JsonObject session, @NotNull String idKey, @NotNull String nameKey) {
+    public Profile profileSession(@NotNull JsonObject session, @NotNull String idKey, @NotNull String nameKey) {
         final JsonPrimitive id = session.getAsJsonPrimitive(idKey);
         final JsonPrimitive name = session.getAsJsonPrimitive(nameKey);
 
         final UUID uniqueId;
-        if (id == null) {
+        if (id == null || id.isJsonNull()) {
             uniqueId = Profile.EMPTY_ID;
         } else {
             uniqueId = UUID.fromString(new StringBuilder(id.getAsString())
@@ -542,7 +542,7 @@ public class SkullTexture {
         try {
             return new Profile((GameProfile) GET_PROFILE.invoke(player));
         } catch (Throwable t) {
-            throw new RuntimeException("Cannot get online player texture from '" + player.getName() + "'", t);
+            throw new RuntimeException("Cannot get online player profile from '" + player.getName() + "'", t);
         }
     }
 
@@ -688,7 +688,7 @@ public class SkullTexture {
     public static class Profile {
 
         private static final UUID EMPTY_ID = new UUID(0, 0);
-        private static final Profile EMPTY = valueOf(EMPTY_ID, "null");
+        private static final Profile EMPTY = createProfile(EMPTY_ID, "null", null, null);
 
         private final GameProfile profile;
 
@@ -754,6 +754,11 @@ public class SkullTexture {
             if (uniqueId.equals(EMPTY_ID) && name.equals("null") && texture == null) {
                 return empty();
             }
+            return createProfile(uniqueId, name, texture, signature);
+        }
+
+        @NotNull
+        private static Profile createProfile(@NotNull UUID uniqueId, @NotNull String name, @Nullable String texture, @Nullable String signature) {
             final GameProfile profile = new GameProfile(uniqueId, name);
             if (texture != null) {
                 profile.getProperties().put("textures", new Property("textures", texture, signature));
@@ -968,7 +973,7 @@ public class SkullTexture {
          *
          * @param cache the cache to save encoded textures.
          */
-        public Mojang(@NotNull Cache<String, Profile> cache) {
+        public Mojang(@Nullable Cache<String, Profile> cache) {
             super(cache);
         }
 
@@ -987,12 +992,12 @@ public class SkullTexture {
          * @param cache    the cache to save encoded textures.
          * @param executor the default executor to use in async operations.
          */
-        public Mojang(@NotNull Cache<String, Profile> cache, @NotNull Executor executor) {
+        public Mojang(@Nullable Cache<String, Profile> cache, @NotNull Executor executor) {
             super(cache, executor);
         }
 
         @Override
-        protected @NotNull Profile fetchProfile(@NotNull String name) {
+        public @NotNull Profile fetchProfile(@NotNull String name) {
             return fetchJson(USER_API + name).flatMap(user -> {
                 final JsonPrimitive id = user.getAsJsonPrimitive("id");
                 if (id != null) {
@@ -1003,7 +1008,7 @@ public class SkullTexture {
         }
 
         @Override
-        protected @NotNull Profile fetchProfile(@NotNull UUID uniqueId) {
+        public @NotNull Profile fetchProfile(@NotNull UUID uniqueId) {
             return fetchJson(SESSION_API + uniqueId.toString().replace('-', '\0')).map(session ->
                     profileSession(session, "id", "name")
             ).orElse(Profile.empty());
@@ -1032,7 +1037,7 @@ public class SkullTexture {
          *
          * @param cache the cache to save encoded textures.
          */
-        public PlayerDB(@NotNull Cache<String, Profile> cache) {
+        public PlayerDB(@Nullable Cache<String, Profile> cache) {
             super(cache);
         }
 
@@ -1051,17 +1056,17 @@ public class SkullTexture {
          * @param cache    the cache to save encoded textures.
          * @param executor the default executor to use in async operations.
          */
-        public PlayerDB(@NotNull Cache<String, Profile> cache, @NotNull Executor executor) {
+        public PlayerDB(@Nullable Cache<String, Profile> cache, @NotNull Executor executor) {
             super(cache, executor);
         }
 
         @Override
-        protected @NotNull Profile fetchProfile(@NotNull String name) {
+        public @NotNull Profile fetchProfile(@NotNull String name) {
             return fetchAny(name);
         }
 
         @Override
-        protected @NotNull Profile fetchProfile(@NotNull UUID uniqueId) {
+        public @NotNull Profile fetchProfile(@NotNull UUID uniqueId) {
             return fetchAny(uniqueId.toString());
         }
 
@@ -1108,7 +1113,7 @@ public class SkullTexture {
          *
          * @param cache the cache to save encoded textures.
          */
-        public CraftHead(@NotNull Cache<String, Profile> cache) {
+        public CraftHead(@Nullable Cache<String, Profile> cache) {
             super(cache);
         }
 
@@ -1127,17 +1132,17 @@ public class SkullTexture {
          * @param cache    the cache to save encoded textures.
          * @param executor the default executor to use in async operations.
          */
-        public CraftHead(@NotNull Cache<String, Profile> cache, @NotNull Executor executor) {
+        public CraftHead(@Nullable Cache<String, Profile> cache, @NotNull Executor executor) {
             super(cache, executor);
         }
 
         @Override
-        protected @NotNull Profile fetchProfile(@NotNull String name) {
+        public @NotNull Profile fetchProfile(@NotNull String name) {
             return fetchJson(API + name).map(session -> profileSession(session, "id", "name")).orElse(Profile.empty());
         }
 
         @Override
-        protected @NotNull Profile fetchProfile(@NotNull UUID uniqueId) {
+        public @NotNull Profile fetchProfile(@NotNull UUID uniqueId) {
             return fetchJson(API + uniqueId).map(session -> profileSession(session, "id", "name")).orElse(Profile.empty());
         }
     }
