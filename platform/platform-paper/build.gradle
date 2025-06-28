@@ -5,7 +5,12 @@ repositories {
 
 dependencies {
     compileOnly libs.paper.api
-    compileOnly('org.spigotmc:spigot:1.21.4-R0.1-SNAPSHOT:remapped-mojang') { transitive = false }
+    compileOnly(libs.spigot) {
+        transitive = false
+        artifact {
+            classifier = 'remapped-mojang'
+        }
+    }
     api project(':platform:platform-bukkit')
     compileOnlyApi libs.nbt.mapper.minecraft
 

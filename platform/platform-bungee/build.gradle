@@ -5,7 +5,7 @@ repositories {
 
 dependencies {
     compileOnly libs.bungeecord.api
-    compileOnlyApi libs.nbt.mapper.jo.nbt
+    compileOnlyApi libs.nbt.mapper.bungeecord
 
     // Task module
     compileOnly project(':module:module-task')

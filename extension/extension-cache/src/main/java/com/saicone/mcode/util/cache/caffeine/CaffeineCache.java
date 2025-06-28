@@ -251,17 +251,17 @@ public class CaffeineCache<K, V> implements Cache<K, V> {
         public @NotNull LoadingCache<K, V> build(@NotNull CacheLoader<K, V> loader) {
             return new Loading<>(this.builder.build(new com.github.benmanes.caffeine.cache.CacheLoader<>() {
                 @Override
-                public @org.checkerframework.checker.nullness.qual.Nullable V load(K key) throws Exception {
+                public @Nullable V load(@NotNull K key) throws Exception {
                     return loader.load(key);
                 }
 
                 @Override
-                public Map<? extends K, ? extends V> loadAll(Set<? extends K> keys) throws Exception {
+                public @NotNull Map<? extends K, ? extends V> loadAll(@NotNull Set<? extends K> keys) throws Exception {
                     return loader.loadAll(keys);
                 }
 
                 @Override
-                public @org.checkerframework.checker.nullness.qual.Nullable V reload(K key, V oldValue) throws Exception {
+                public @Nullable V reload(@NotNull K key, @NotNull V oldValue) throws Exception {
                     return loader.reload(key, oldValue);
                 }
             }));
