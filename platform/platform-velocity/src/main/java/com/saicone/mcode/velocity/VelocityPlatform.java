@@ -38,8 +38,8 @@ public class VelocityPlatform extends Platform {
     }
 
     @Override
-    public @NotNull Text getText(byte type, @NotNull Object object) {
-        return VelocityText.valueOf(type, object);
+    public @NotNull Text getText(byte type, @Nullable MC version, @NotNull Object object) {
+        return VelocityText.valueOf(type, version, object);
     }
 
     @Override

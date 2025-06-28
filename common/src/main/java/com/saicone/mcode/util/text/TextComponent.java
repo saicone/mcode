@@ -6,9 +6,14 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import com.saicone.mcode.platform.MC;
+import com.saicone.nbt.Tag;
+import com.saicone.nbt.TagMapper;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 public class TextComponent {
 
@@ -332,5 +337,200 @@ public class TextComponent {
         }
 
         return object;
+    }
+
+    @NotNull
+    public static MC readVersion(@NotNull String s) {
+        for (int i = 0; i < s.length(); i++) {
+            final char c = s.charAt(i);
+            if (c == COLOR_CHAR && i + 1 < s.length()) {
+                final char c1 = s.charAt(i + 1);
+                String color = COLOR_NAMES.get(c1);
+                if (color == null) {
+                    if (c1 == '#') { // hex
+                        color = MStrings.isHexFormat(s, i + 2, 1, COLOR_CHAR);
+                        if (color != null) {
+                            return MC.V_1_16;
+                        }
+                    } else if (MStrings.BUNGEE_HEX && c1 == 'x') { // bungee hex
+                        color = MStrings.isHexFormat(s, i + 2, 2, COLOR_CHAR);
+                        if (color != null) {
+                            return MC.V_1_16;
+                        }
+                    }
+                }
+            }
+        }
+        return MC.V_1_7;
+    }
+
+    @NotNull
+    public static MC readVersion(@NotNull JsonElement element) {
+        final MC version = readVersion0(element);
+        return version != null ? version : MC.version();
+    }
+
+    @Nullable
+    private static MC readVersion0(@NotNull JsonElement element) {
+        if (element.isJsonObject()) {
+            return readVersion(element.getAsJsonObject());
+        } else if (element.isJsonArray()) {
+            MC result = MC.V_1_7;
+            for (JsonElement e : element.getAsJsonArray()) {
+                result = MC.max(result, readVersion0(e));
+            }
+            return result;
+        } else {
+            return null;
+        }
+    }
+
+    @NotNull
+    public static MC readVersion(@NotNull JsonObject object) {
+        MC result = MC.V_1_7;
+
+        if (object.has("click_event")) {
+            final JsonElement action = get(object, "click_event", "action");
+            if (matches(action, "custom") || matches(action, "show_dialog")) {
+                result = MC.V_1_21_6;
+            } else {
+                result = MC.V_1_21_5;
+            }
+        } else if (object.has("hover_event")) {
+            result = MC.V_1_21_5;
+        } else if (object.has("shadow_color")) {
+            result = MC.V_1_21_4;
+        } else if (get(object, "hoverEvent", "contents", "id") != null || get(object, "hoverEvent", "contents", "components") != null) {
+            result = MC.V_1_20_5;
+        } else if (object.has("type")) {
+            result = MC.V_1_20_3;
+        } else if (object.has("font") || get(object, "hoverEvent", "contents") != null || matches(object.get("color"), s -> s.startsWith("#"))) {
+            result = MC.V_1_16;
+        } else if (matches(get(object, "clickEvent", "action"), "copy_to_clipboard") || object.has("storage")) {
+            result = MC.V_1_15;
+        } else if (object.has("interpret") || object.has("block") || object.has("entity")) {
+            result = MC.V_1_14;
+        } else if (object.has("keybind")) {
+            result = MC.V_1_12;
+        } else if (object.has("selector") || object.has("score") || object.has("insertion")) {
+            result = MC.V_1_8;
+        }
+
+        final JsonElement extra = object.get("extra");
+        if (extra != null && extra.isJsonArray()) {
+            return MC.max(result, readVersion0(extra));
+        }
+        return result;
+    }
+
+    @NotNull
+    public static <T> MC readVersion(@NotNull T tag, @NotNull TagMapper<T> mapper) {
+        final MC version = readVersion0(tag, mapper);
+        return version != null ? version : MC.version();
+    }
+
+    @Nullable
+    @SuppressWarnings("unchecked")
+    private static <T> MC readVersion0(@NotNull T tag, @NotNull TagMapper<T> mapper) {
+        final byte type = mapper.typeId(tag);
+        if (type == Tag.COMPOUND) {
+            return readVersion((Map<String, T>) mapper.extract(tag), mapper);
+        } else if (type == Tag.LIST) {
+            MC result = MC.V_1_7;
+            for (T element : (List<T>) mapper.extract(tag)) {
+                result = MC.max(result, readVersion0(element, mapper));
+            }
+            return result;
+        } else {
+            return null;
+        }
+    }
+
+    @NotNull
+    public static <T> MC readVersion(@NotNull Map<String, T> map, @NotNull TagMapper<T> mapper) {
+        MC result = MC.V_1_7;
+
+        if (map.containsKey("click_event")) {
+            final Object action = mapper.extract(get(map, mapper, "click_event", "action"));
+            if (matches(action, "custom") || matches(action, "show_dialog")) {
+                result = MC.V_1_21_6;
+            } else {
+                result = MC.V_1_21_5;
+            }
+        } else if (map.containsKey("hover_event")) {
+            result = MC.V_1_21_5;
+        } else if (map.containsKey("shadow_color")) {
+            result = MC.V_1_21_4;
+        } else if (get(map, mapper, "hoverEvent", "contents", "id") != null || get(map, mapper, "hoverEvent", "contents", "components") != null) {
+            result = MC.V_1_20_5;
+        } else if (map.containsKey("type")) {
+            result = MC.V_1_20_3;
+        } else if (map.containsKey("font") || get(map, mapper, "hoverEvent", "contents") != null || matches(mapper.extract(map.get("color")), s -> s.startsWith("#"))) {
+            result = MC.V_1_16;
+        } else if (matches(mapper.extract(get(map, mapper, "clickEvent", "action")), "copy_to_clipboard") || map.containsKey("storage")) {
+            result = MC.V_1_15;
+        } else if (map.containsKey("interpret") || map.containsKey("block") || map.containsKey("entity")) {
+            result = MC.V_1_14;
+        } else if (map.containsKey("keybind")) {
+            result = MC.V_1_12;
+        } else if (map.containsKey("selector") || map.containsKey("score") || map.containsKey("insertion")) {
+            result = MC.V_1_8;
+        }
+
+        final T extra = map.get("extra");
+        if (mapper.typeId(extra) == Tag.LIST) {
+            return MC.max(result, readVersion0(extra, mapper));
+        }
+        return result;
+    }
+
+    private static boolean matches(@Nullable Object object, @NotNull String s) {
+        return matches(object, source -> source.equalsIgnoreCase(s));
+    }
+
+    private static boolean matches(@Nullable Object object, @NotNull Predicate<String> predicate) {
+        if (object instanceof JsonPrimitive) {
+            object = ((JsonPrimitive) object).getAsString();
+        }
+        if (object instanceof String) {
+            if (((String) object).toLowerCase().startsWith("minecraft:")) {
+                return predicate.test(((String) object).substring(10));
+            } else {
+                return predicate.test((String) object);
+            }
+        }
+        return false;
+    }
+
+    @Nullable
+    private static JsonElement get(@NotNull JsonElement object, @NotNull String... path) {
+        if (object.isJsonObject()) {
+            int count = 0;
+            for (@NotNull String key : path) {
+                count++;
+                object = object.getAsJsonObject().get(key);
+                if (!object.isJsonObject()) {
+                    return count == path.length ? object : null;
+                }
+            }
+            return object;
+        }
+        return null;
+    }
+
+    @Nullable
+    @SuppressWarnings("unchecked")
+    private static <T> T get(@NotNull Map<String, T> map, @NotNull TagMapper<T> mapper, @NotNull String... path) {
+        T tag = null;
+        int count = 0;
+        for (@NotNull String key : path) {
+            count++;
+            tag = map.get(key);
+            if (mapper.typeId(tag) != Tag.COMPOUND) {
+                return count == path.length ? tag : null;
+            }
+            map = (Map<String, T>) mapper.extract(tag);
+        }
+        return tag;
     }
 }

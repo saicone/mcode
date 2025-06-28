@@ -1,5 +1,6 @@
 package com.saicone.mcode;
 
+import com.saicone.mcode.platform.MC;
 import com.saicone.mcode.platform.PlatformType;
 import com.saicone.mcode.platform.Text;
 import org.jetbrains.annotations.NotNull;
@@ -45,7 +46,7 @@ public abstract class Platform {
     }
 
     @NotNull
-    public abstract Text getText(byte type, @NotNull Object object);
+    public abstract Text getText(byte type, @Nullable MC version, @NotNull Object object);
 
     @NotNull
     public abstract Collection<?> getOnlinePlayers();

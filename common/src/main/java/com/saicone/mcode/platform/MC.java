@@ -1,6 +1,7 @@
 package com.saicone.mcode.platform;
 
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -98,7 +99,8 @@ public enum MC {
     V_1_21_2(4080, 768, 42, 57, 2),
     V_1_21_3(4082, 768, 42, 57, 2),
     V_1_21_4(4189, 769, 46, 61, 3),
-    V_1_21_5(4324, 770, 55, 71, 4);
+    V_1_21_5(4324, 770, 55, 71, 4),
+    V_1_21_6(4435, 771, 63, 80, 5);
 
     public static final MC[] VALUES = values();
     @ApiStatus.Internal
@@ -126,6 +128,11 @@ public enum MC {
     @NotNull
     public static MC version() {
         return VERSION;
+    }
+
+    @NotNull
+    public static MC latest() {
+        return VALUES[VALUES.length - 1];
     }
 
     MC(@Nullable Integer dataVersion, int protocol, int resourcePackFormat, @Nullable Integer dataPackFormat, int revision) {
@@ -324,5 +331,27 @@ public enum MC {
                 return def.length > 0 ? def[0] : null;
             }
         };
+    }
+
+    @Nullable
+    @Contract("!null, _ -> !null; _, !null -> !null")
+    public static MC max(@Nullable MC version1, @Nullable MC version2) {
+        if (version1 == null) {
+            return version2;
+        } else if (version2 == null) {
+            return version1;
+        }
+        return version1.ordinal() > version2.ordinal() ? version1 : version2;
+    }
+
+    @Nullable
+    @Contract("!null, _ -> !null; _, !null -> !null")
+    public static MC min(@Nullable MC version1, @Nullable MC version2) {
+        if (version1 == null) {
+            return version2;
+        } else if (version2 == null) {
+            return version1;
+        }
+        return version1.ordinal() < version2.ordinal() ? version1 : version2;
     }
 }

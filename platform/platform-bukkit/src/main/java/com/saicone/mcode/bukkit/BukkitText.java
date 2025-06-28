@@ -4,8 +4,10 @@ import com.google.common.base.Suppliers;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.gson.JsonElement;
+import com.saicone.mcode.platform.MC;
 import com.saicone.mcode.platform.Text;
 import com.saicone.mcode.util.text.Replacer;
+import com.saicone.mcode.util.text.TextComponent;
 import com.saicone.nbt.io.TagReader;
 import com.saicone.nbt.io.TagWriter;
 import com.saicone.nbt.mapper.BukkitTagMapper;
@@ -66,29 +68,38 @@ public class BukkitText {
     };
 
     @NotNull
-    public static Text valueOf(byte type, @NotNull Object value) {
+    public static Text valueOf(byte type, @Nullable MC version, @NotNull Object value) {
         switch (type) {
             case Text.EMPTY:
                 return Text.empty();
             case Text.PLAIN_TEXT:
-                return new PlainText(String.valueOf(value));
+                return new PlainText(version != null ? version : MC.version(), String.valueOf(value));
             case Text.COLORED:
-                return new Colored((String) value);
+                if (version == null) {
+                    return new Colored((String) value);
+                }
+                return new Colored(version, (String) value);
             case Text.RAW_JSON:
-                return new RawJson((JsonElement) value);
+                if (version == null) {
+                    return new Json((JsonElement) value);
+                }
+                return new Json(version, (JsonElement) value);
             case Text.NBT:
                 if (value instanceof String) {
-                    return new Nbt(TagReader.fromString((String) value, BukkitTagMapper.INSTANCE));
+                    value = TagReader.fromString((String) value, BukkitTagMapper.INSTANCE);
                 }
-                return new Nbt(value);
+                if (version == null) {
+                    return new Nbt(value);
+                }
+                return new Nbt(version, value);
             default:
                 throw new IllegalArgumentException("Invalid text type: " + type);
         }
     }
 
     public static class PlainText extends Text.PlainText {
-        public PlainText(@NotNull String value) {
-            super(value);
+        public PlainText(@NotNull MC version, @NotNull String value) {
+            super(version, value);
         }
 
         @Override
@@ -103,7 +114,7 @@ public class BukkitText {
 
         @Override
         public @NotNull Nbt<?> getAsNbt() {
-            return Text.valueOf(Text.NBT, TagReader.fromString(getValue(), BukkitTagMapper.INSTANCE)).getAsNbt();
+            return Text.valueOf(Text.NBT, getVersion(), TagReader.fromString(getValue(), BukkitTagMapper.INSTANCE)).getAsNbt();
         }
     }
 
@@ -112,6 +123,10 @@ public class BukkitText {
             super(value);
         }
 
+        public Colored(@NotNull MC version, @NotNull String value) {
+            super(version, value);
+        }
+
         @Override
         public @NotNull Text placeholders(@Nullable Object subject, char start, char end) {
             return placeholders(subject, start, end, PLACEHOLDER_LOOKUP);
@@ -123,35 +138,43 @@ public class BukkitText {
         }
     }
 
-    public static class RawJson extends Text.RawJson {
-        public RawJson(@NotNull JsonElement value) {
+    public static class Json extends Text.Json {
+        public Json(@NotNull JsonElement value) {
             super(value);
+        }
+
+        public Json(@NotNull MC version, @NotNull JsonElement value) {
+            super(version, value);
         }
 
         @Override
         public @NotNull Nbt<?> getAsNbt() {
-            return Text.valueOf(Text.NBT, TagJson.fromJson(getValue(), BukkitTagMapper.INSTANCE)).getAsNbt();
+            return Text.valueOf(Text.NBT, getVersion(), TagJson.fromJson(getValue(), BukkitTagMapper.INSTANCE)).getAsNbt();
         }
     }
 
     public static class Nbt extends Text.Nbt<Object> {
         public Nbt(@NotNull Object value) {
-            super(value);
+            this(TextComponent.readVersion(value, BukkitTagMapper.INSTANCE), value);
+        }
+
+        public Nbt(@NotNull MC version, @NotNull Object value) {
+            super(version, value);
         }
 
         @Override
         public @NotNull StringText getAsString() {
-            return Text.valueOf(Text.PLAIN_TEXT, TagWriter.toString(getValue(), BukkitTagMapper.INSTANCE)).getAsString();
+            return Text.valueOf(Text.PLAIN_TEXT, getVersion(), TagWriter.toString(getValue(), BukkitTagMapper.INSTANCE)).getAsString();
         }
 
         @Override
         public @NotNull PlainText getAsPlainText() {
-            return Text.valueOf(Text.PLAIN_TEXT, TagWriter.toString(getValue(), BukkitTagMapper.INSTANCE)).getAsPlainText();
+            return Text.valueOf(Text.PLAIN_TEXT, getVersion(), TagWriter.toString(getValue(), BukkitTagMapper.INSTANCE)).getAsPlainText();
         }
 
         @Override
-        public @NotNull RawJson getAsRawJson() {
-            return Text.valueOf(Text.RAW_JSON, TagJson.toJson(getValue(), BukkitTagMapper.INSTANCE)).getAsRawJson();
+        public @NotNull Text.Json getAsJson() {
+            return Text.valueOf(Text.RAW_JSON, getVersion(), TagJson.toJson(getValue(), BukkitTagMapper.INSTANCE)).getAsJson();
         }
     }
 }

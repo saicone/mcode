@@ -23,10 +23,15 @@ public abstract class Text {
     public static final byte RAW_JSON = 3;
     public static final byte NBT = 4;
 
-    private static final Text EMPTY_TEXT = new Text() {
+    private static final Text EMPTY_TEXT = new Text(MC.VERSION) {
         @Override
         public boolean isEmpty() {
             return true;
+        }
+
+        @Override
+        public @NotNull MC getVersion() {
+            return MC.version();
         }
 
         @Override
@@ -49,62 +54,112 @@ public abstract class Text {
 
     @NotNull
     public static Text plain(@NotNull String s) {
-        return valueOf(PLAIN_TEXT, s);
+        return plain(MC.version(), s);
+    }
+
+    @NotNull
+    public static Text plain(@NotNull MC version, @NotNull String s) {
+        return valueOf(PLAIN_TEXT, version, s);
     }
 
     @NotNull
     public static Text colored(@NotNull String s) {
-        return valueOf(COLORED, s);
+        return valueOf(COLORED, null, s);
+    }
+
+    @NotNull
+    public static Text colored(@NotNull MC version, @NotNull String s) {
+        return valueOf(COLORED, version, s);
     }
 
     @NotNull
     @SuppressWarnings("deprecation")
-    public static Text rawJson(@NotNull String json) {
-        return rawJson(JSON_PARSER.parse(json));
+    public static Text json(@NotNull String json) {
+        return json(JSON_PARSER.parse(json));
     }
 
     @NotNull
-    public static Text rawJson(@NotNull JsonElement json) {
-        return valueOf(RAW_JSON, json);
+    public static Text json(@NotNull JsonElement json) {
+        return valueOf(RAW_JSON, null, json);
+    }
+
+    @NotNull
+    @SuppressWarnings("deprecation")
+    public static Text json(@NotNull MC version, @NotNull String json) {
+        return json(version, JSON_PARSER.parse(json));
+    }
+
+    @NotNull
+    public static Text json(@NotNull MC version, @NotNull JsonElement json) {
+        return valueOf(RAW_JSON, version, json);
     }
 
     @NotNull
     public static Text nbt(@NotNull String snbt) {
-        return valueOf(NBT, snbt);
+        return valueOf(NBT, null, snbt);
     }
 
     @NotNull
     public static Text nbt(@NotNull Object tag) {
-        return valueOf(NBT, tag);
+        return valueOf(NBT, null, tag);
+    }
+
+    @NotNull
+    public static Text nbt(@NotNull MC version, @NotNull String snbt) {
+        return valueOf(NBT, version, snbt);
+    }
+
+    @NotNull
+    public static Text nbt(@NotNull MC version, @NotNull Object tag) {
+        return valueOf(NBT, version, tag);
+    }
+
+    @NotNull
+    public static Text valueOf(@Nullable Object object) {
+        return valueOf(null, object);
     }
 
     @NotNull
     @SuppressWarnings("deprecation")
-    public static Text valueOf(@Nullable Object object) {
+    public static Text valueOf(@Nullable MC version, @Nullable Object object) {
         if (object == null) {
             return empty();
         } else if (object instanceof String) {
             final String s = (String) object;
 
             try {
-                return valueOf(RAW_JSON, JSON_PARSER.parse(s));
+                return valueOf(RAW_JSON, version, JSON_PARSER.parse(s));
             } catch (JsonParseException ignored) { }
 
             if (s.indexOf(MStrings.COLOR_CHAR) >= 0) {
-                return valueOf(COLORED, object);
+                return valueOf(COLORED, version, object);
             } else {
-                return valueOf(PLAIN_TEXT, object);
+                return valueOf(PLAIN_TEXT, version, object);
             }
         } else if (object instanceof JsonElement) {
-            return valueOf(RAW_JSON, object);
+            return valueOf(RAW_JSON, version, object);
         } else {
-            return valueOf(NBT, object);
+            return valueOf(NBT, version, object);
         }
     }
 
     @NotNull
     public static Text valueOf(byte type, @NotNull Object object) {
-        return Platform.getInstance().getText(type, object);
+        return valueOf(type, null, object);
+    }
+
+    @NotNull
+    public static Text valueOf(byte type, @Nullable MC version, @NotNull Object object) {
+        if (type == EMPTY || (object instanceof JsonElement && ((JsonElement) object).isJsonNull())) {
+            return empty();
+        }
+        return Platform.getInstance().getText(type, version, object);
+    }
+
+    private final MC version;
+
+    public Text(@NotNull MC version) {
+        this.version = version;
     }
 
     public boolean isEmpty() {
@@ -123,12 +178,17 @@ public abstract class Text {
         return false;
     }
 
-    public boolean isRawJson() {
+    public boolean isJson() {
         return false;
     }
 
     public boolean isNbt() {
         return false;
+    }
+
+    @NotNull
+    public MC getVersion() {
+        return version;
     }
 
     public abstract byte getType();
@@ -152,7 +212,7 @@ public abstract class Text {
     }
 
     @NotNull
-    public RawJson getAsRawJson() {
+    public Text.Json getAsJson() {
         throw new IllegalStateException("The current text implementation doesn't support conversion to raw json");
     }
 
@@ -260,7 +320,8 @@ public abstract class Text {
 
         private final String value;
 
-        public StringText(@NotNull String value) {
+        public StringText(@NotNull MC version, @NotNull String value) {
+            super(version);
             this.value = value;
         }
 
@@ -281,12 +342,12 @@ public abstract class Text {
 
         @Override
         public @NotNull Text args(@Nullable Object... args) {
-            return Text.valueOf(getType(), Strings.replaceArgs(getValue(), args));
+            return Text.valueOf(getType(), getVersion(), Strings.replaceArgs(getValue(), args));
         }
 
         @Override
         public @NotNull Text args(@NotNull Map<String, Object> args) {
-            return Text.valueOf(getType(), Strings.replaceArgs(getValue(), args));
+            return Text.valueOf(getType(), getVersion(), Strings.replaceArgs(getValue(), args));
         }
 
         @Override
@@ -301,19 +362,19 @@ public abstract class Text {
 
         @Override
         public @NotNull Text center(int width, char colorChar) {
-            return Text.valueOf(getType(), MStrings.centerText(getValue(), width, colorChar));
+            return Text.valueOf(getType(), getVersion(), MStrings.centerText(getValue(), width, colorChar));
         }
 
         @Override
         public @NotNull Text placeholders(@Nullable Object subject, @Nullable Object relative, char start, char end, @NotNull Function<String, Replacer> lookup) {
-            return Text.valueOf(getType(), Strings.replacePlaceholder(subject, relative, getValue(), start, end, lookup));
+            return Text.valueOf(getType(), getVersion(), Strings.replacePlaceholder(subject, relative, getValue(), start, end, lookup));
         }
     }
 
     public static class PlainText extends StringText {
 
-        public PlainText(@NotNull String value) {
-            super(value);
+        public PlainText(@NotNull MC version, @NotNull String value) {
+            super(version, value);
         }
 
         @Override
@@ -333,20 +394,24 @@ public abstract class Text {
 
         @Override
         public @NotNull Colored getAsColored() {
-            return Text.valueOf(Text.COLORED, MStrings.color(getValue())).getAsColored();
+            return Text.valueOf(Text.COLORED, getVersion(), MStrings.color(getValue())).getAsColored();
         }
 
         @Override
         @SuppressWarnings("deprecation")
-        public @NotNull RawJson getAsRawJson() {
-            return Text.valueOf(Text.RAW_JSON, JSON_PARSER.parse(getValue())).getAsRawJson();
+        public @NotNull Text.Json getAsJson() {
+            return Text.valueOf(Text.RAW_JSON, getVersion(), JSON_PARSER.parse(getValue())).getAsJson();
         }
     }
 
     public static class Colored extends StringText {
 
         public Colored(@NotNull String value) {
-            super(value);
+            this(TextComponent.readVersion(value), value);
+        }
+
+        public Colored(@NotNull MC version, @NotNull String value) {
+            super(version, value);
         }
 
         @Override
@@ -365,26 +430,31 @@ public abstract class Text {
         }
 
         @Override
-        public @NotNull RawJson getAsRawJson() {
-            return Text.valueOf(Text.RAW_JSON, TextComponent.toJson(getValue())).getAsRawJson();
+        public @NotNull Text.Json getAsJson() {
+            return Text.valueOf(Text.RAW_JSON, getVersion(), TextComponent.toJson(getValue())).getAsJson();
         }
 
         @Override
         public @NotNull Nbt<?> getAsNbt() {
-            return getAsRawJson().getAsNbt();
+            return getAsJson().getAsNbt();
         }
     }
 
-    public static class RawJson extends Text {
+    public static class Json extends Text {
 
         private final JsonElement value;
 
-        public RawJson(@NotNull JsonElement value) {
+        public Json(@NotNull JsonElement value) {
+            this(TextComponent.readVersion(value), value);
+        }
+
+        public Json(@NotNull MC version, @NotNull JsonElement value) {
+            super(version);
             this.value = value;
         }
 
         @Override
-        public boolean isRawJson() {
+        public boolean isJson() {
             return true;
         }
 
@@ -401,21 +471,21 @@ public abstract class Text {
 
         @Override
         public @NotNull StringText getAsString() {
-            return Text.valueOf(Text.PLAIN_TEXT, getValue().toString()).getAsString();
+            return Text.valueOf(Text.PLAIN_TEXT, getVersion(), getValue().toString()).getAsString();
         }
 
         @Override
         public @NotNull PlainText getAsPlainText() {
-            return Text.valueOf(Text.PLAIN_TEXT, getValue().toString()).getAsPlainText();
+            return Text.valueOf(Text.PLAIN_TEXT, getVersion(), getValue().toString()).getAsPlainText();
         }
 
         @Override
         public @NotNull Colored getAsColored() {
-            return Text.valueOf(Text.COLORED, TextComponent.fromJson(getValue())).getAsColored();
+            return Text.valueOf(Text.COLORED, getVersion(), TextComponent.fromJson(getValue())).getAsColored();
         }
 
         @Override
-        public @NotNull RawJson getAsRawJson() {
+        public @NotNull Text.Json getAsJson() {
             return this;
         }
     }
@@ -424,7 +494,8 @@ public abstract class Text {
 
         private final T value;
 
-        public Nbt(@NotNull T value) {
+        public Nbt(@NotNull MC version, @NotNull T value) {
+            super(version);
             this.value = value;
         }
 
@@ -446,7 +517,7 @@ public abstract class Text {
 
         @Override
         public @NotNull Colored getAsColored() {
-            return getAsRawJson().getAsColored();
+            return getAsJson().getAsColored();
         }
 
         @Override

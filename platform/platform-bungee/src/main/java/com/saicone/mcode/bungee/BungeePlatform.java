@@ -47,8 +47,8 @@ public class BungeePlatform extends Platform {
     }
 
     @Override
-    public @NotNull Text getText(byte type, @NotNull Object object) {
-        return BungeeText.valueOf(type, object);
+    public @NotNull Text getText(byte type, @Nullable MC version, @NotNull Object object) {
+        return BungeeText.valueOf(type, version, object);
     }
 
     @Override
