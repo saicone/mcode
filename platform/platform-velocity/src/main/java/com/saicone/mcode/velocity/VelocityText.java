@@ -12,6 +12,8 @@ import net.kyori.adventure.nbt.BinaryTag;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.function.UnaryOperator;
+
 public class VelocityText {
 
     @NotNull
@@ -92,6 +94,11 @@ public class VelocityText {
         @Override
         public @NotNull Text.Json getAsJson() {
             return Text.valueOf(Text.RAW_JSON, getVersion(), TagJson.toJson(getValue(), AdventureTagMapper.INSTANCE)).getAsJson();
+        }
+
+        @Override
+        public @NotNull Text apply(@NotNull UnaryOperator<String> operator) {
+            return Text.nbt(getVersion(), TextComponent.apply(getValue(), AdventureTagMapper.INSTANCE, operator));
         }
     }
 }

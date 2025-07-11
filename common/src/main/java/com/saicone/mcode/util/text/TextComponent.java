@@ -8,12 +8,16 @@ import com.google.gson.JsonPrimitive;
 import com.saicone.mcode.platform.MC;
 import com.saicone.nbt.Tag;
 import com.saicone.nbt.TagMapper;
+import com.saicone.nbt.TagType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 
 public class TextComponent {
 
@@ -532,5 +536,49 @@ public class TextComponent {
             map = (Map<String, T>) mapper.extract(tag);
         }
         return tag;
+    }
+
+    @NotNull
+    public static JsonElement apply(@NotNull JsonElement element, @NotNull UnaryOperator<String> operator) {
+        if (element.isJsonObject()) {
+            final JsonObject object = new JsonObject();
+            for (Map.Entry<String, JsonElement> entry : element.getAsJsonObject().entrySet()) {
+                object.add(entry.getKey(), apply(entry.getValue(), operator));
+            }
+            return object;
+        } else if (element.isJsonArray()) {
+            final JsonArray array = new JsonArray();
+            for (JsonElement e : element.getAsJsonArray()) {
+                array.add(apply(e, operator));
+            }
+            return array;
+        } else if (element.isJsonPrimitive() && ((JsonPrimitive) element).isString()) {
+            return new JsonPrimitive(operator.apply(element.getAsString()));
+        } else {
+            return element;
+        }
+    }
+
+    @NotNull
+    @SuppressWarnings("unchecked")
+    public static <T> T apply(@NotNull T tag, @NotNull TagMapper<T> mapper, @NotNull UnaryOperator<String> operator) {
+        final byte type = mapper.typeId(tag);
+        if (type == Tag.COMPOUND) {
+            final Map<String, T> map = new HashMap<>();
+            for (Map.Entry<String, T> entry : ((Map<String, T>) mapper.extract(tag)).entrySet()) {
+                map.put(entry.getKey(), apply(entry.getValue(), mapper, operator));
+            }
+            return mapper.build(TagType.COMPOUND, map);
+        } else if (type == Tag.LIST) {
+            final List<T> list = new ArrayList<>();
+            for (T element : (List<T>) mapper.extract(tag)) {
+                list.add(apply(element, mapper, operator));
+            }
+            return mapper.build(TagType.LIST, list);
+        } else if (type == Tag.STRING) {
+            return mapper.build(TagType.STRING, operator.apply((String) mapper.extract(tag)));
+        } else {
+            return tag;
+        }
     }
 }

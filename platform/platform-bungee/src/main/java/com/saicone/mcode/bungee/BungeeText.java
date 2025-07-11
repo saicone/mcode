@@ -12,6 +12,8 @@ import net.md_5.bungee.nbt.TypedTag;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.function.UnaryOperator;
+
 public class BungeeText {
 
     @NotNull
@@ -92,6 +94,11 @@ public class BungeeText {
         @Override
         public @NotNull Text.Json getAsJson() {
             return Text.valueOf(Text.RAW_JSON, getVersion(), TagJson.toJson(getValue(), BungeecordTagMapper.INSTANCE)).getAsJson();
+        }
+
+        @Override
+        public @NotNull Text apply(@NotNull UnaryOperator<String> operator) {
+            return Text.nbt(getVersion(), TextComponent.apply(getValue(), BungeecordTagMapper.INSTANCE, operator));
         }
     }
 }

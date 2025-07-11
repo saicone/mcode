@@ -24,6 +24,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 
 public class BukkitText {
 
@@ -175,6 +176,11 @@ public class BukkitText {
         @Override
         public @NotNull Text.Json getAsJson() {
             return Text.valueOf(Text.RAW_JSON, getVersion(), TagJson.toJson(getValue(), BukkitTagMapper.INSTANCE)).getAsJson();
+        }
+
+        @Override
+        public @NotNull Text apply(@NotNull UnaryOperator<String> operator) {
+            return Text.nbt(getVersion(), TextComponent.apply(getValue(), BukkitTagMapper.INSTANCE, operator));
         }
     }
 }

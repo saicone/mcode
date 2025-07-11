@@ -14,6 +14,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 public abstract class Text {
 
@@ -222,6 +223,11 @@ public abstract class Text {
     }
 
     @NotNull
+    public Text apply(@NotNull UnaryOperator<String> operator) {
+        throw new IllegalStateException("The current text implementation doesn't support text transformation");
+    }
+
+    @NotNull
     public Text parse(@Nullable Object subject) {
         return placeholders(subject, '%', '%');
     }
@@ -252,12 +258,12 @@ public abstract class Text {
 
     @NotNull
     public Text args(@Nullable Object... args) {
-        throw new IllegalStateException("The current text implementation doesn't support argument replacement");
+        return apply(s -> Strings.replaceArgs(s, args));
     }
 
     @NotNull
     public Text args(@NotNull Map<String, Object> args) {
-        throw new IllegalStateException("The current text implementation doesn't support argument replacement");
+        return apply(s -> Strings.replaceArgs(s, args));
     }
 
     @NotNull
@@ -292,7 +298,7 @@ public abstract class Text {
 
     @NotNull
     public Text center(int width, char colorChar) {
-        throw new IllegalStateException("The current text implementation doesn't support centering");
+        return apply(s -> MStrings.centerText(s, width, colorChar));
     }
 
     @NotNull
@@ -313,7 +319,7 @@ public abstract class Text {
 
     @NotNull
     public Text placeholders(@Nullable Object subject, @Nullable Object relative, char start, char end, @NotNull Function<String, Replacer> lookup) {
-        throw new IllegalStateException("The current text implementation doesn't support placeholder replacement");
+        return apply(s -> Strings.replacePlaceholder(subject, relative, s, start, end, lookup));
     }
 
     public static abstract class StringText extends Text {
@@ -341,13 +347,8 @@ public abstract class Text {
         }
 
         @Override
-        public @NotNull Text args(@Nullable Object... args) {
-            return Text.valueOf(getType(), getVersion(), Strings.replaceArgs(getValue(), args));
-        }
-
-        @Override
-        public @NotNull Text args(@NotNull Map<String, Object> args) {
-            return Text.valueOf(getType(), getVersion(), Strings.replaceArgs(getValue(), args));
+        public @NotNull Text apply(@NotNull UnaryOperator<String> operator) {
+            return Text.valueOf(getType(), getVersion(), operator.apply(getValue()));
         }
 
         @Override
@@ -358,16 +359,6 @@ public abstract class Text {
         @Override
         public @NotNull Text color(char colorChar, @NotNull List<String> colors) {
             return Text.colored(Strings.color(colorChar, getValue(), colors));
-        }
-
-        @Override
-        public @NotNull Text center(int width, char colorChar) {
-            return Text.valueOf(getType(), getVersion(), MStrings.centerText(getValue(), width, colorChar));
-        }
-
-        @Override
-        public @NotNull Text placeholders(@Nullable Object subject, @Nullable Object relative, char start, char end, @NotNull Function<String, Replacer> lookup) {
-            return Text.valueOf(getType(), getVersion(), Strings.replacePlaceholder(subject, relative, getValue(), start, end, lookup));
         }
     }
 
@@ -487,6 +478,11 @@ public abstract class Text {
         @Override
         public @NotNull Text.Json getAsJson() {
             return this;
+        }
+
+        @Override
+        public @NotNull Text apply(@NotNull UnaryOperator<String> operator) {
+            return Text.json(getVersion(), TextComponent.apply(getValue(), operator));
         }
     }
 
