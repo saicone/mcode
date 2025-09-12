@@ -39,7 +39,7 @@ public interface Loader {
         final String pkg = new String(new char[] {'c','o','m','.','g','o','o','g','l','e','.','g','s','o','n'});
         final boolean packageMatches = "com.google.gson".equals(pkg);
         if (!versionMatches || !packageMatches) {
-            final var gson = ezlib.dependency("com.google.code.gson:gson:" + (versionMatches ? "2.11.0" : "${gson_version}"));
+            final var gson = ezlib.dependency("com.google.code.gson:gson:" + (versionMatches ? "2.13.2" : "${gson_version}"));
             if (!packageMatches) {
                 gson.relocations(Map.of(pkg, "com.google.gson"));
             }

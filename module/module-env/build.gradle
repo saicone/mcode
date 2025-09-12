@@ -1,9 +1,9 @@
 plugins {
-    id 'com.gradleup.shadow' version '8.3.1'
+    id 'com.gradleup.shadow' version '8.3.9'
 }
 
 dependencies {
-    implementation 'org.ow2.asm:asm:9.7'
+    implementation 'org.ow2.asm:asm:9.8'
 }
 
 jar {

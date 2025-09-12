@@ -402,7 +402,7 @@ public class BukkitLang extends AbstractLang<CommandSender> {
         @Override
         protected @Nullable Sound parseSound(@NotNull String s, float volume, float pitch) {
             if (USE_XSERIES) {
-                return XSound.matchXSound(s).map(XSound::parseSound).orElse(null);
+                return XSound.of(s).map(XSound::get).orElse(null);
             }
             try {
                 return Sound.valueOf(s.replace('.', '_').toUpperCase());
