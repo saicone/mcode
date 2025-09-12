@@ -169,6 +169,11 @@ public class PaperBootstrap extends JavaPlugin implements Bootstrap {
     }
 
     @Override
+    public @NotNull Object logger() {
+        return this.getLogger();
+    }
+
+    @Override
     public void log(int level, @NotNull Supplier<String> msg) {
         this.getLogger().log(level(level), msg);
     }

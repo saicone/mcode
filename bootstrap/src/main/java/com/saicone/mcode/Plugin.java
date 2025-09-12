@@ -76,6 +76,12 @@ public class Plugin {
         return BOOTSTRAP.folder();
     }
 
+    @NotNull
+    @SuppressWarnings("unchecked")
+    public <L> L getLogger() {
+        return (L) BOOTSTRAP.logger();
+    }
+
     public int getLogLevel() {
         return logLevel;
     }

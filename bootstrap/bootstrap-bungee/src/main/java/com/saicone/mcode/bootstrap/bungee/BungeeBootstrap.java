@@ -163,6 +163,11 @@ public class BungeeBootstrap extends net.md_5.bungee.api.plugin.Plugin implement
     }
 
     @Override
+    public @NotNull Object logger() {
+        return this.getLogger();
+    }
+
+    @Override
     public void log(int level, @NotNull Supplier<String> msg) {
         this.getLogger().log(level(level), msg);
     }

@@ -21,6 +21,9 @@ public interface Bootstrap extends Loader {
     @NotNull
     Path folder();
 
+    @NotNull
+    Object logger();
+
     void log(int level, @NotNull Supplier<String> msg);
 
     void logException(int level, @NotNull Throwable throwable);

@@ -161,6 +161,11 @@ public class VelocityBootstrap implements Bootstrap {
     }
 
     @Override
+    public @NotNull Object logger() {
+        return this.logger;
+    }
+
+    @Override
     public void log(int level, @NotNull Supplier<String> msg) {
         switch (level) {
             case 1:
