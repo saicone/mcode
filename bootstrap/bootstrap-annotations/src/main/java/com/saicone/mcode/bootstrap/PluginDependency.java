@@ -15,7 +15,7 @@ public @interface PluginDependency {
 
     String id() default ""; // Optional Velocity support
 
-    String value();
+    String value() default "";
 
     boolean required() default true;
 
