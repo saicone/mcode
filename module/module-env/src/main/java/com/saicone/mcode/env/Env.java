@@ -15,6 +15,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -90,11 +91,14 @@ public class Env {
     }
 
     public static void execute(@NotNull Executes executes, boolean previous) {
-        for (Executable executable : EXECUTABLES) {
-            if (executable.shouldRun(executes, previous)) {
-                executable.run(executes);
-            }
+        Comparator<Executable> comparator = Comparator.comparingInt(Executable::priority);
+        if (executes == Executes.DISABLE) {
+            comparator = comparator.reversed();
         }
+        EXECUTABLES.stream()
+                .filter(executable -> executable.shouldRun(executes, previous))
+                .sorted(comparator)
+                .forEachOrdered(executable -> executable.run(executes));
     }
 
     public static void annotated(@NotNull Class<? extends Annotation> annotation, @NotNull BiConsumer<String, Map<String, Object>> consumer) {
