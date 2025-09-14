@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -99,6 +100,24 @@ public class Env {
                 .filter(executable -> executable.shouldRun(executes, previous))
                 .sorted(comparator)
                 .forEachOrdered(executable -> executable.run(executes));
+    }
+
+    @NotNull
+    @SuppressWarnings("unchecked")
+    public static <T> Optional<T> instanceOf(@NotNull Class<T> type) {
+        // equals
+        for (Map.Entry<Object, Object> entry : INSTANCES.entrySet()) {
+            if (entry.getValue().getClass().equals(type)) {
+                return Optional.of((T) entry.getValue());
+            }
+        }
+        // assignable
+        for (Map.Entry<Object, Object> entry : INSTANCES.entrySet()) {
+            if (type.isAssignableFrom(entry.getValue().getClass())) {
+                return Optional.of((T) entry.getValue());
+            }
+        }
+        return Optional.empty();
     }
 
     public static void annotated(@NotNull Class<? extends Annotation> annotation, @NotNull BiConsumer<String, Map<String, Object>> consumer) {
@@ -215,6 +234,7 @@ public class Env {
                         instance = constructor.newInstance();
                     }
                 }
+                // TODO: Create instance based on cached instances
             }
             if (instance != null) {
                 INSTANCES.put(type, instance);
@@ -222,7 +242,7 @@ public class Env {
                     REGISTRAR.register(instance);
                 }
             } else {
-                throw new IllegalArgumentException("The type " + type + " doesn't have an INSTANCE field of empty constructor");
+                throw new IllegalArgumentException("The type " + type + " doesn't have an INSTANCE field or valid constructor");
             }
         }
         return instance;
