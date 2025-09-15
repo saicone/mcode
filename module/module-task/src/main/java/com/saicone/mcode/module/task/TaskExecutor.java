@@ -6,6 +6,9 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 public class TaskExecutor implements com.saicone.delivery4j.util.TaskExecutor<Object> {
+
+    public static final TaskExecutor INSTANCE = new TaskExecutor();
+
     @Override
     public @NotNull Object execute(@NotNull Runnable command) {
         return Task.runAsync(command);
