@@ -70,7 +70,7 @@ public interface Scheduler<TaskT> {
     }
 
     @NotNull
-    default Executor asExecutor() {
+    default Executor executor() {
         return this::runAsync;
     }
 }

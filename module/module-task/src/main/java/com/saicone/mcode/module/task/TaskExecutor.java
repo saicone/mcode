@@ -1,12 +1,11 @@
 package com.saicone.mcode.module.task;
 
-import com.saicone.delivery4j.util.DelayedExecutor;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
-public class TaskExecutor implements DelayedExecutor<Object> {
+public class TaskExecutor implements com.saicone.delivery4j.util.TaskExecutor<Object> {
     @Override
     public @NotNull Object execute(@NotNull Runnable command) {
         return Task.runAsync(command);
@@ -28,7 +27,7 @@ public class TaskExecutor implements DelayedExecutor<Object> {
     }
 
     @Override
-    public @NotNull Executor asExecutor() {
-        return Task.getScheduler().asExecutor();
+    public @NotNull Executor executor() {
+        return Task.getScheduler().executor();
     }
 }
