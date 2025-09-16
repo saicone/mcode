@@ -14,7 +14,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -34,7 +33,7 @@ public class Env {
     private static DelayedExecutor EXECUTOR;
     private static Registrar REGISTRAR;
     private static final Map<String, Object> CONDITIONS = new HashMap<>();
-    private static final List<Executable> EXECUTABLES = new ArrayList<>();
+    private static final Map<String, Executable> EXECUTABLES = new HashMap<>();
     private static final Map<Object, Object> INSTANCES = new HashMap<>();
 
     Env() {
@@ -44,14 +43,26 @@ public class Env {
         if (RUNTIME != null) {
             throw new IllegalStateException("The plugin environment is already initialized");
         }
+        RUNTIME = new JarRuntime(clazz.getClassLoader()) {
+            @Override
+            public @NotNull JarRuntime reload() {
+                final JarRuntime result = super.reload();
+                Env.annotated(Awake.class, (name, awake) -> {
+                    if (EXECUTABLES.containsKey(name)) {
+                        return;
+                    }
+                    EXECUTABLES.put(name, load(awake, runnable(name)));
+                });
+                return result;
+            }
+        };
         try {
-            RUNTIME = JarRuntime.of(clazz);
+            RUNTIME.append(clazz.getProtectionDomain().getCodeSource().getLocation());
         } catch (IOException e) {
             throw new RuntimeException("Cannot initialize JarRuntime", e);
         }
         condition("java.version", Runtime.version().feature());
         RUNTIME.reload();
-        annotated(Awake.class, (name, awake) -> load(awake, runnable(name)));
     }
 
     @NotNull
@@ -92,14 +103,14 @@ public class Env {
     }
 
     public static void execute(@NotNull Executes executes, boolean previous) {
-        Comparator<Executable> comparator = Comparator.comparingInt(Executable::priority);
+        Comparator<Map.Entry<String, Executable>> comparator = Comparator.comparingInt(entry -> entry.getValue().priority());
         if (executes == Executes.DISABLE) {
             comparator = comparator.reversed();
         }
-        EXECUTABLES.stream()
-                .filter(executable -> executable.shouldRun(executes, previous))
+        EXECUTABLES.entrySet().stream()
+                .filter((entry) -> entry.getValue().shouldRun(executes, previous))
                 .sorted(comparator)
-                .forEachOrdered(executable -> executable.run(executes));
+                .forEachOrdered(entry -> entry.getValue().run(executes));
     }
 
     @NotNull
@@ -265,8 +276,9 @@ public class Env {
         return instance;
     }
 
+    @NotNull
     @SuppressWarnings("unchecked")
-    private static void load(@NotNull Map<String, Object> awake, @NotNull Runnable runnable) {
+    private static Executable load(@NotNull Map<String, Object> awake, @NotNull Runnable runnable) {
         final Set<Executes> when = new HashSet<>();
         for (String name : (List<String>) awake.getOrDefault("when", List.<String>of())) {
             when.add(Executes.valueOf(name));
@@ -284,7 +296,7 @@ public class Env {
         } else {
             executable = new Executable(runnable, when, priority, condition(awake));
         }
-        EXECUTABLES.add(executable);
+        return executable;
     }
 
     @Nullable
