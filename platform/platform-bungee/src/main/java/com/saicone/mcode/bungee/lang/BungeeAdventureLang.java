@@ -1,5 +1,6 @@
 package com.saicone.mcode.bungee.lang;
 
+import com.google.common.base.Suppliers;
 import com.saicone.mcode.module.lang.AdventureBossBar;
 import com.saicone.mcode.module.lang.AdventureLang;
 import com.saicone.mcode.module.lang.display.BossBarDisplay;
@@ -13,9 +14,11 @@ import net.md_5.bungee.api.plugin.Plugin;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.function.Supplier;
+
 public class BungeeAdventureLang extends BungeeLang implements AdventureLang<CommandSender> {
 
-    private final BungeeAudiences audiences;
+    private final Supplier<BungeeAudiences> audiences = Suppliers.memoize(() -> BungeeAudiences.create(getPlugin()));
 
     private final AdventureLang.ActionBarLoader<CommandSender> actionbar = new AdventureLang.ActionBarLoader<>(this);
     private final AdventureLang.BossBarLoader<CommandSender> bossbar = new AdventureLang.BossBarLoader<>(this) {
@@ -61,7 +64,6 @@ public class BungeeAdventureLang extends BungeeLang implements AdventureLang<Com
 
     public BungeeAdventureLang(@NotNull Plugin plugin, @NotNull Object... providers) {
         super(plugin, providers);
-        this.audiences = BungeeAudiences.create(plugin);
     }
 
     @Override
@@ -76,7 +78,7 @@ public class BungeeAdventureLang extends BungeeLang implements AdventureLang<Com
 
     @NotNull
     public BungeeAudiences getAudiences() {
-        return audiences;
+        return audiences.get();
     }
 
     @NotNull

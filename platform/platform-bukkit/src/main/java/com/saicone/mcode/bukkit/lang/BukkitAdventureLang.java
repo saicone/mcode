@@ -1,5 +1,6 @@
 package com.saicone.mcode.bukkit.lang;
 
+import com.google.common.base.Suppliers;
 import com.saicone.mcode.module.lang.AdventureBossBar;
 import com.saicone.mcode.module.lang.AdventureLang;
 import com.saicone.mcode.module.lang.display.BossBarDisplay;
@@ -13,9 +14,11 @@ import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.function.Supplier;
+
 public class BukkitAdventureLang extends BukkitLang implements AdventureLang<CommandSender> {
 
-    private final BukkitAudiences audiences;
+    private final Supplier<BukkitAudiences> audiences = Suppliers.memoize(() -> BukkitAudiences.create(getPlugin()));
 
     private final AdventureLang.ActionBarLoader<CommandSender> actionbar = new AdventureLang.ActionBarLoader<>(this);
     private final AdventureLang.BossBarLoader<CommandSender> bossbar = new AdventureLang.BossBarLoader<>(this) {
@@ -57,7 +60,6 @@ public class BukkitAdventureLang extends BukkitLang implements AdventureLang<Com
 
     public BukkitAdventureLang(@NotNull Plugin plugin, @NotNull Object... providers) {
         super(plugin, providers);
-        this.audiences = BukkitAudiences.create(plugin);
     }
 
     @Override
@@ -72,7 +74,7 @@ public class BukkitAdventureLang extends BukkitLang implements AdventureLang<Com
 
     @NotNull
     public BukkitAudiences getAudiences() {
-        return audiences;
+        return audiences.get();
     }
 
     @NotNull
