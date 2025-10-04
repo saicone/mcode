@@ -68,7 +68,7 @@ public enum Addon {
     private final EzlibLoader.Dependency dependency;
 
     Addon(@NotNull String path) {
-        this.dependency = new EzlibLoader.Dependency().path(path.replace("{}", "."));
+        this.dependency = new EzlibLoader.Dependency().path(path.replace("{}", ".")).repository("https://jitpack.io/");
     }
 
     public boolean isModule() {

@@ -6,49 +6,51 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 public enum MC {
 
-    V_1_7(null, 3, 1, null, 1),
-    V_1_7_1(null, 3, 1, null, 1),
-    V_1_7_2(null, 4, 1, null, 1),
-    V_1_7_3(null, 4, 1, null, 2),
-    V_1_7_4(null, 4, 1, null, 2),
-    V_1_7_5(null, 4, 1, null, 2),
-    V_1_7_6(null, 5, 1, null, 3),
-    V_1_7_7(null, 5, 1, null, 3),
-    V_1_7_8(null, 5, 1, null, 3),
-    V_1_7_9(null, 5, 1, null, 3),
-    V_1_7_10(null, 5, 1, null, 4),
+    // data-version | protocol | resource-pack-format | data-pack-format | revision
+    V_1_7(null, 3, 1, (Float) null, 1),
+    V_1_7_1(null, 3, 1, (Float) null, 1),
+    V_1_7_2(null, 4, 1, (Float) null, 1),
+    V_1_7_3(null, 4, 1, (Float) null, 2),
+    V_1_7_4(null, 4, 1, (Float) null, 2),
+    V_1_7_5(null, 4, 1, (Float) null, 2),
+    V_1_7_6(null, 5, 1, (Float) null, 3),
+    V_1_7_7(null, 5, 1, (Float) null, 3),
+    V_1_7_8(null, 5, 1, (Float) null, 3),
+    V_1_7_9(null, 5, 1, (Float) null, 3),
+    V_1_7_10(null, 5, 1, (Float) null, 4),
 
-    V_1_8(null, 47, 1, null, 1),
-    V_1_8_1(null, 47, 1, null, 1),
-    V_1_8_2(null, 47, 1, null, 1),
-    V_1_8_3(null, 47, 1, null, 2),
-    V_1_8_4(null, 47, 1, null, 2),
-    V_1_8_5(null, 47, 1, null, 2),
-    V_1_8_6(null, 47, 1, null, 2),
-    V_1_8_7(null, 47, 1, null, 2),
-    V_1_8_8(null, 47, 1, null, 3),
-    V_1_8_9(null, 47, 1, null, 3),
+    V_1_8(null, 47, 1, (Float) null, 1),
+    V_1_8_1(null, 47, 1, (Float) null, 1),
+    V_1_8_2(null, 47, 1, (Float) null, 1),
+    V_1_8_3(null, 47, 1, (Float) null, 2),
+    V_1_8_4(null, 47, 1, (Float) null, 2),
+    V_1_8_5(null, 47, 1, (Float) null, 2),
+    V_1_8_6(null, 47, 1, (Float) null, 2),
+    V_1_8_7(null, 47, 1, (Float) null, 2),
+    V_1_8_8(null, 47, 1, (Float) null, 3),
+    V_1_8_9(null, 47, 1, (Float) null, 3),
 
-    V_1_9(169, 107, 2, null, 1),
-    V_1_9_1(175, 108, 2, null, 1),
-    V_1_9_2(176, 109, 2, null, 1),
-    V_1_9_3(183, 110, 2, null, 2),
-    V_1_9_4(184, 110, 2, null, 2),
+    V_1_9(169, 107, 2, (Float) null, 1),
+    V_1_9_1(175, 108, 2, (Float) null, 1),
+    V_1_9_2(176, 109, 2, (Float) null, 1),
+    V_1_9_3(183, 110, 2, (Float) null, 2),
+    V_1_9_4(184, 110, 2, (Float) null, 2),
 
-    V_1_10(510, 210, 2, null, 1),
-    V_1_10_1(511, 210, 2, null, 1),
-    V_1_10_2(512, 210, 2, null, 1),
+    V_1_10(510, 210, 2, (Float) null, 1),
+    V_1_10_1(511, 210, 2, (Float) null, 1),
+    V_1_10_2(512, 210, 2, (Float) null, 1),
 
-    V_1_11(819, 315, 3, null, 1),
-    V_1_11_1(921, 316, 3, null, 1),
-    V_1_11_2(922, 316, 3, null, 1),
+    V_1_11(819, 315, 3, (Float) null, 1),
+    V_1_11_1(921, 316, 3, (Float) null, 1),
+    V_1_11_2(922, 316, 3, (Float) null, 1),
 
-    V_1_12(1139, 335, 3, null, 1),
+    V_1_12(1139, 335, 3, (Float) null, 1),
     V_1_12_1(1241, 338, 3, 3, 1),
     V_1_12_2(1343, 340, 3, 3, 1),
 
@@ -100,16 +102,22 @@ public enum MC {
     V_1_21_3(4082, 768, 42, 57, 2),
     V_1_21_4(4189, 769, 46, 61, 3),
     V_1_21_5(4324, 770, 55, 71, 4),
-    V_1_21_6(4435, 771, 63, 80, 5);
+    V_1_21_6(4435, 771, 63, 80, 5),
+    V_1_21_7(4438, 772, 64, 81, 5),
+    V_1_21_8(4440, 772, 64, 81, 5),
+    V_1_21_9(4554, 773, 69.0f, 88.0f, 6);
+    // data-version | protocol | resource-pack-format | data-pack-format | revision
 
     public static final MC[] VALUES = values();
     @ApiStatus.Internal
     public static MC VERSION = VALUES[VALUES.length - 1];
 
-    private final Integer dataVersion;
+    @SuppressWarnings("all")
+    private final Optional<Integer> dataVersion;
     private final int protocol;
-    private final int resourcePackFormat;
-    private final Integer dataPackFormat;
+    private final float resourcePackFormat;
+    @SuppressWarnings("all")
+    private final Optional<Float> dataPackFormat;
     private final int revision;
 
     private final int major;
@@ -136,10 +144,14 @@ public enum MC {
     }
 
     MC(@Nullable Integer dataVersion, int protocol, int resourcePackFormat, @Nullable Integer dataPackFormat, int revision) {
-        this.dataVersion = dataVersion;
+        this(dataVersion, protocol, (float) resourcePackFormat, dataPackFormat == null ? null : dataPackFormat.floatValue(), revision);
+    }
+
+    MC(@Nullable Integer dataVersion, int protocol, float resourcePackFormat, @Nullable Float dataPackFormat, int revision) {
+        this.dataVersion = Optional.ofNullable(dataVersion);
         this.protocol = protocol;
         this.resourcePackFormat = resourcePackFormat;
-        this.dataPackFormat = dataPackFormat;
+        this.dataPackFormat = Optional.ofNullable(dataPackFormat);
         this.revision = revision;
 
         final String[] split = this.name().split("_");
@@ -198,7 +210,7 @@ public enum MC {
     }
 
     @Nullable
-    public Integer dataVersion() {
+    public Optional<Integer> dataVersion() {
         return dataVersion;
     }
 
@@ -206,12 +218,12 @@ public enum MC {
         return protocol;
     }
 
-    public int resourcePackFormat() {
+    public float resourcePackFormat() {
         return resourcePackFormat;
     }
 
     @Nullable
-    public Integer dataPackFormat() {
+    public Optional<Float> dataPackFormat() {
         return dataPackFormat;
     }
 

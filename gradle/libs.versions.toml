@@ -21,10 +21,10 @@ types = "1.4.0"
 nbt = "1.0.2"
 
 # Platforms
-spigot = "1.21.8-R0.1-SNAPSHOT"
-bungeecord = "1.21-R0.4-SNAPSHOT"
+spigot = "1.21.9-R0.1-SNAPSHOT"
+bungeecord = "1.21-R0.5-SNAPSHOT"
 folia = "1.21.8-R0.1-SNAPSHOT"
-paper = "1.21.8-R0.1-SNAPSHOT"
+paper = "1.21.9-R0.1-SNAPSHOT"
 velocity = "3.4.0-SNAPSHOT"
 
 # Plugins
