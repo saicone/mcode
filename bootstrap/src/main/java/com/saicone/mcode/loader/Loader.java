@@ -35,11 +35,11 @@ public interface Loader {
         final Ezlib ezlib = new Ezlib();
         ezlib.init();
 
-        final boolean versionMatches = "${gson_version}".equals(new String(new char[] {'$','{','g','s','o','n','_','v','e','r','s','i','o','n','}'}));
+        final boolean versionMatches = "@gson_version@".equals(new String(new char[] {'@','g','s','o','n','_','v','e','r','s','i','o','n','@'}));
         final String pkg = new String(new char[] {'c','o','m','.','g','o','o','g','l','e','.','g','s','o','n'});
         final boolean packageMatches = "com.google.gson".equals(pkg);
         if (!versionMatches || !packageMatches) {
-            final var gson = ezlib.dependency("com.google.code.gson:gson:" + (versionMatches ? "2.13.2" : "${gson_version}"));
+            final var gson = ezlib.dependency("com.google.code.gson:gson:" + (versionMatches ? "2.13.2" : "@gson_version@"));
             if (!packageMatches) {
                 gson.relocations(Map.of(pkg, "com.google.gson"));
             }

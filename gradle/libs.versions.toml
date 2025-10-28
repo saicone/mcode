@@ -3,67 +3,67 @@ metadata.format.version = "1.1"
 [versions]
 
 # Libraries
-gson = "2.13.2"
-snakeyaml = "2.5"
-guava = "33.4.8-jre"
-caffeine = "3.2.2"
-annotations = "26.0.2"
-
-adventure = "4.24.0"
+adventure = "4.25.0"
 adventure-platform = "4.4.1"
-
+annotations = "26.0.2"
+asm = "9.9"
 authlib = "1.5.26" # 3.11.50
 brigadier = "1.0.18"
+caffeine = "3.2.3"
+delivery4j = "1.1.4"
 ezlib = "1.3.2"
-delivery4j = "1.1.3"
-settings = "1.0.3"
-types = "1.4.0"
+gson = "2.13.2"
+guava = "33.5.0-jre"
 nbt = "1.0.2"
+settings = "1.0.4"
+snakeyaml = "2.5"
+types = "1.4.1"
 
 # Platforms
-spigot = "1.21.9-R0.1-SNAPSHOT"
 bungeecord = "1.21-R0.5-SNAPSHOT"
 folia = "1.21.8-R0.1-SNAPSHOT"
-paper = "1.21.9-R0.1-SNAPSHOT"
+paper = "1.21.10-R0.1-SNAPSHOT"
+spigot = "1.21.10-R0.1-SNAPSHOT"
 velocity = "3.4.0-SNAPSHOT"
 
 # Plugins
+blossom = "2.2.0"
 shadow = "9.2.2"
 
 [libraries]
 
-gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
-snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
-guava = { module = "com.google.guava:guava", version.ref = "guava" }
-caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "caffeine" }
-annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
-
 adventure-api = { module = "net.kyori:adventure-api", version.ref = "adventure" }
 adventure-nbt = { module = "net.kyori:adventure-nbt", version.ref = "adventure" }
-adventure-text-minimessage = { module = "net.kyori:adventure-text-minimessage", version.ref = "adventure" }
-adventure-text-serializer-legacy = { module = "net.kyori:adventure-text-serializer-legacy", version.ref = "adventure" }
 adventure-platform-bukkit = { module = "net.kyori:adventure-platform-bukkit", version.ref = "adventure-platform" }
 adventure-platform-bungeecord = { module = "net.kyori:adventure-platform-bungeecord", version.ref = "adventure-platform" }
-
+adventure-text-minimessage = { module = "net.kyori:adventure-text-minimessage", version.ref = "adventure" }
+adventure-text-serializer-legacy = { module = "net.kyori:adventure-text-serializer-legacy", version.ref = "adventure" }
+annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
+asm = { module = "org.ow2.asm:asm", version.ref = "asm" }
 authlib = { module = "com.mojang:authlib", version.ref = "authlib" }
 brigadier = { module = "com.mojang:brigadier", version.ref = "brigadier" }
-ezlib = { module = "com.saicone.ezlib:loader", version.ref = "ezlib" }
+caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "caffeine" }
 delivery4j = { module = "com.saicone.delivery4j:delivery4j", version.ref = "delivery4j" }
-settings = { module = "com.saicone.settings:settings", version.ref = "settings" }
-types = { module = "com.saicone:types", version.ref = "types" }
+ezlib = { module = "com.saicone.ezlib:loader", version.ref = "ezlib" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+guava = { module = "com.google.guava:guava", version.ref = "guava" }
 nbt = { module = "com.saicone.nbt:nbt", version.ref = "nbt" }
 nbt-mapper-adventure = { module = "com.saicone.nbt:mapper-adventure", version.ref = "nbt" }
 nbt-mapper-bukkit = { module = "com.saicone.nbt:mapper-bukkit", version.ref = "nbt" }
 nbt-mapper-bungeecord = { module = "com.saicone.nbt:mapper-bungeecord", version.ref = "nbt" }
 nbt-mapper-minecraft = { module = "com.saicone.nbt:mapper-minecraft", version.ref = "nbt" }
+settings = { module = "com.saicone.settings:settings", version.ref = "settings" }
+snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
+types = { module = "com.saicone:types", version.ref = "types" }
 
-spigot = { module = "org.spigotmc:spigot", version.ref = "spigot" }
-spigot-api = { module = "org.spigotmc:spigot-api", version.ref = "spigot" }
 bungeecord-api = { module = "net.md-5:bungeecord-api", version.ref = "bungeecord" }
 folia-api = { module = "dev.folia:folia-api", version.ref = "folia" }
 paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
+spigot = { module = "org.spigotmc:spigot", version.ref = "spigot" }
+spigot-api = { module = "org.spigotmc:spigot-api", version.ref = "spigot" }
 velocity-api = { module = "com.velocitypowered:velocity-api", version.ref = "velocity" }
 
 [plugins]
 
+blossom = { id = "net.kyori.blossom", version.ref = "blossom" }
 shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }

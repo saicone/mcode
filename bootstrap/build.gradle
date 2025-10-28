@@ -1,5 +1,5 @@
 plugins {
-    id 'com.gradleup.shadow' version '9.2.2'
+    alias(libs.plugins.blossom)
 }
 
 allprojects {
@@ -19,10 +19,19 @@ dependencies {
     api libs.ezlib
 }
 
-shadowJar {
-    relocate '${mcode_group}', ((System.getenv("GROUP") ?: "com.saicone") + "." + (System.getenv("ARTIFACT") ?: "mcode")).replace('.', '{}')
-    relocate '${mcode_version}', System.getenv("VERSION") ?: project.version
-    relocate '${delivery4j_version}', libs.delivery4j.get().version
-    relocate '${settings_version}', libs.settings.get().version
-    relocate '${types_version}', libs.types.get().version
+def mcodeGroup = ((System.getenv("GROUP") ?: "com.saicone") + "." + (System.getenv("ARTIFACT") ?: "mcode")).replace('.', '{}')
+def mcodeVersion = System.getenv("VERSION") ?: project.version
+
+sourceSets {
+    main {
+        blossom {
+            javaSources {
+                property('group', mcodeGroup)
+                property("version", mcodeVersion)
+                property('delivery4j_version', libs.delivery4j.get().version)
+                property('settings_version', libs.settings.get().version)
+                property('types_version', libs.types.get().version)
+            }
+        }
+    }
 }

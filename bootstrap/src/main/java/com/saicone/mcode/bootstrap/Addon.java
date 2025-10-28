@@ -1,6 +1,7 @@
 package com.saicone.mcode.bootstrap;
 
 import com.saicone.ezlib.EzlibLoader;
+import com.saicone.mcode.env.Constants;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -10,64 +11,36 @@ import java.util.Map;
 public enum Addon {
 
     // Common
-    COMMON("${mcode_group}:common:${mcode_version}",
-            "com.saicone.mcode.Platform"
-    ),
+    COMMON(mcode("common"), "com.saicone.mcode.Platform"),
 
     // Modules
-    MODULE_COMMAND("${mcode_group}:module-command:${mcode_version}",
-            "com.saicone.mcode.module.command.CommandNode"
-    ),
-    MODULE_COMMAND_BRIGADIER("${mcode_group}:module-command-brigadier:${mcode_version}",
-            "com.saicone.mcode.module.command.brigadier.BrigadierCommandBuilder"
-    ),
-    MODULE_ENV("${mcode_group}:module-env:${mcode_version}",
-            "com.saicone.mcode.env.Env"
-    ),
-    MODULE_LANG("${mcode_group}:module-lang:${mcode_version}",
-            "com.saicone.mcode.module.lang.AbstractLang"
-    ),
-    MODULE_LANG_ADVENTURE("${mcode_group}:module-lang-adventure:${mcode_version}",
-            "com.saicone.mcode.module.lang.AdventureLang"
-    ),
-    MODULE_SCRIPT("${mcode_group}:module-script:${mcode_version}",
-            "com.saicone.mcode.module.script.Script"
-    ),
-    MODULE_SCRIPT_JS("${mcode_group}:module-script-js:${mcode_version}"),
-    MODULE_TASK("${mcode_group}:module-task:${mcode_version}",
-            "com.saicone.mcode.module.task.Scheduler"
-    ),
+    MODULE_COMMAND(mcode("module-command"), "com.saicone.mcode.module.command.CommandNode"),
+    MODULE_COMMAND_BRIGADIER(mcode("module-command-brigadier"), "com.saicone.mcode.module.command.brigadier.BrigadierCommandBuilder"),
+    MODULE_ENV(mcode("module-env"), "com.saicone.mcode.env.Env"),
+    MODULE_LANG(mcode("module-lang"), "com.saicone.mcode.module.lang.AbstractLang"),
+    MODULE_LANG_ADVENTURE(mcode("module-lang-adventure"), "com.saicone.mcode.module.lang.AdventureLang"),
+    MODULE_SCRIPT(mcode("module-script"), "com.saicone.mcode.module.script.Script"),
+    MODULE_SCRIPT_JS(mcode("module-script-js")),
+    MODULE_TASK(mcode("module-task"), "com.saicone.mcode.module.task.Scheduler"),
 
     // Extensions
-    EXTENSION_CACHE("${mcode_group}:extension-cache:${mcode_version}",
-            "com.saicone.mcode.util.cache.Cache"
-    ),
-    EXTENSION_LOOKUP("${mcode_group}:extension-lookup:${mcode_version}",
-            "com.saicone.mcode.util.invoke.EasyLookup"
-    ),
+    EXTENSION_CACHE(mcode("extension-cache"), "com.saicone.mcode.util.cache.Cache"),
+    EXTENSION_LOOKUP(mcode("extension-lookup"), "com.saicone.mcode.util.invoke.EasyLookup"),
 
     // Platforms
-    PLATFORM_BUKKIT("${mcode_group}:platform-bukkit:${mcode_version}",
-            "com.saicone.mcode.bukkit.BukkitPlatform"
-    ),
-    PLATFORM_BUNGEE("${mcode_group}:platform-bungee:${mcode_version}",
-            "com.saicone.mcode.bungee.BungeePlatform"
-    ),
-    PLATFORM_PAPER("${mcode_group}:platform-paper:${mcode_version}",
-            "com.saicone.mcode.paper.scheduler.PaperScheduler"
-    ),
-    PLATFORM_VELOCITY("${mcode_group}:platform-velocity:${mcode_version}",
-            "com.saicone.mcode.velocity.VelocityPlatform"
-    ),
+    PLATFORM_BUKKIT(mcode("platform-bukkit"), "com.saicone.mcode.bukkit.BukkitPlatform"),
+    PLATFORM_BUNGEE(mcode("platform-bungee"), "com.saicone.mcode.bungee.BungeePlatform"),
+    PLATFORM_PAPER(mcode("platform-paper"), "com.saicone.mcode.paper.scheduler.PaperScheduler"),
+    PLATFORM_VELOCITY(mcode("platform-velocity"), "com.saicone.mcode.velocity.VelocityPlatform"),
 
     // Libraries
-    LIBRARY_DELIVERY4J("com{}saicone{}delivery4j:delivery4j:${delivery4j_version}",
+    LIBRARY_DELIVERY4J(library("com{}saicone{}delivery4j", "delivery4j", Constants.DELIVERY4J_VERSION),
             "com.saicone.delivery4j.Broker"
     ),
-    LIBRARY_SETTINGS("com{}saicone{}settings:settings:${settings_version}",
+    LIBRARY_SETTINGS(library("com{}saicone{}settings", "settings", Constants.SETTINGS_VERSION),
             "com.saicone.settings.Settings"
     ),
-    LIBRARY_TYPES("com{}saicone:types:${types_version}",
+    LIBRARY_TYPES(library("com{}saicone", "types", Constants.TYPES_VERSION),
             "com.saicone.types.Types"
     );
 
@@ -170,5 +143,15 @@ public enum Addon {
             }
         }
         return null;
+    }
+
+    @NotNull
+    private static String mcode(@NotNull String name) {
+        return library(Constants.GROUP, name, Constants.VERSION);
+    }
+
+    @NotNull
+    private static String library(@NotNull String group, @NotNull String name, @NotNull String version) {
+        return group + ":" + name + ":" + version;
     }
 }

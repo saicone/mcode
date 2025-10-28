@@ -31,31 +31,33 @@ subprojects {
         withJavadocJar()
     }
 
-    if (plugins.hasPlugin('com.gradleup.shadow')) {
-        jar {
-            enabled = false
-            dependsOn (shadowJar)
-        }
+    afterEvaluate {
+        if (plugins.hasPlugin(libs.plugins.shadow.get().pluginId)) {
+            jar {
+                enabled = false
+                dependsOn (shadowJar)
+            }
 
-        shadowJar {
-            archiveClassifier.set('')
-        }
+            shadowJar {
+                archiveClassifier.set('')
+            }
 
-        publishing {
-            publications {
-                shadow(MavenPublication) {
-                    artifact shadowJar
+            publishing {
+                publications {
+                    shadow(MavenPublication) {
+                        artifact shadowJar
+                    }
                 }
             }
-        }
-    } else {
-        publishing {
-            publications {
-                maven(MavenPublication) {
-                    groupId project.group
-                    artifactId project.name
-                    version project.version
-                    from components.java
+        } else {
+            publishing {
+                publications {
+                    maven(MavenPublication) {
+                        groupId project.group
+                        artifactId project.name
+                        version project.version
+                        from components.java
+                    }
                 }
             }
         }
