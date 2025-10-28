@@ -45,6 +45,8 @@ public @interface PluginDescription {
 
     PlatformType[] platform() default {};
 
+    PlatformType[] serializer() default {};
+
     Addon[] addons() default {};
 
     String main() default "";

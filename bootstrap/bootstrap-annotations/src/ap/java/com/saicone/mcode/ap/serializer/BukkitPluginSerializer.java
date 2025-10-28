@@ -3,6 +3,7 @@ package com.saicone.mcode.ap.serializer;
 import com.saicone.mcode.ap.SerializedDependency;
 import com.saicone.mcode.bootstrap.PluginDescription;
 import com.saicone.mcode.platform.MC;
+import com.saicone.mcode.platform.PlatformType;
 
 import java.io.BufferedWriter;
 import java.util.HashSet;
@@ -51,7 +52,11 @@ public class BukkitPluginSerializer extends YamlSerializer {
 
         // Load
 
-        map.put("main", getMain(".mcode.bootstrap.bukkit.BukkitBootstrap"));
+        if (this.plugin.platform().length == 1 && this.plugin.platform()[0] == PlatformType.PAPER) {
+            map.put("main", getMain(".mcode.bootstrap.paper.PaperBootstrap"));
+        } else {
+            map.put("main", getMain(".mcode.bootstrap.bukkit.BukkitBootstrap"));
+        }
 
 
         // Behaviour

@@ -21,6 +21,7 @@ import javax.tools.FileObject;
 import javax.tools.StandardLocation;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -127,7 +128,8 @@ public class BootstrapAnnotationProcessor extends AbstractProcessor {
             if (mainClass.isBlank()) {
                 environment.getMessager().printMessage(Diagnostic.Kind.ERROR, "Cannot generate boostrap without provided platform");
             } else {
-                serialize(plugin, type != null ? type : PlatformType.VELOCITY, mainClass);
+                platforms.add(type != null ? type : PlatformType.VELOCITY);
+                serialize(plugin, platforms, plugin.serializer(), mainClass);
             }
         } else {
             if (type != null && !platforms.contains(type)) {
@@ -151,8 +153,19 @@ public class BootstrapAnnotationProcessor extends AbstractProcessor {
                     platforms.add(type);
                 }
             }
-            for (PlatformType platform : platforms) {
-                serialize(plugin, platform, mainClass);
+            serialize(plugin, platforms, plugin.serializer(), mainClass);
+        }
+    }
+
+    @SuppressWarnings("fallthrough")
+    private void serialize(PluginDescription plugin, Collection<PlatformType> types, PlatformType[] serializers, String mainClass) {
+        if (serializers.length == 0) {
+            for (PlatformType type : types) {
+                serialize(plugin, type, mainClass);
+            }
+        } else {
+            for (PlatformType serializer : serializers) {
+                serialize(plugin, serializer, mainClass);
             }
         }
     }
