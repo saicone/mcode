@@ -1,5 +1,5 @@
 plugins {
-    id 'net.kyori.blossom' version '1.3.1'
+    id 'com.gradleup.shadow' version '9.2.2'
 }
 
 allprojects {
@@ -15,15 +15,14 @@ subprojects {
     }
 }
 
-blossom {
-    replaceTokenIn('src/main/java/com/saicone/mcode/bootstrap/Addon.java')
-    replaceToken '${mcode_group}', ((System.getenv("GROUP") ?: "com.saicone") + "." + (System.getenv("ARTIFACT") ?: "mcode")).replace('.', '{}')
-    replaceToken '${mcode_version}', System.getenv("VERSION") ?: project.version
-    replaceToken '${delivery4j_version}', libs.delivery4j.get().version
-    replaceToken '${settings_version}', libs.settings.get().version
-    replaceToken '${types_version}', libs.types.get().version
-}
-
 dependencies {
     api libs.ezlib
+}
+
+shadowJar {
+    relocate '${mcode_group}', ((System.getenv("GROUP") ?: "com.saicone") + "." + (System.getenv("ARTIFACT") ?: "mcode")).replace('.', '{}')
+    relocate '${mcode_version}', System.getenv("VERSION") ?: project.version
+    relocate '${delivery4j_version}', libs.delivery4j.get().version
+    relocate '${settings_version}', libs.settings.get().version
+    relocate '${types_version}', libs.types.get().version
 }

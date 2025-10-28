@@ -31,7 +31,24 @@ subprojects {
         withJavadocJar()
     }
 
-    if (project.name != 'module-env') {
+    if (plugins.hasPlugin('com.gradleup.shadow')) {
+        jar {
+            enabled = false
+            dependsOn (shadowJar)
+        }
+
+        shadowJar {
+            archiveClassifier.set('')
+        }
+
+        publishing {
+            publications {
+                shadow(MavenPublication) {
+                    artifact shadowJar
+                }
+            }
+        }
+    } else {
         publishing {
             publications {
                 maven(MavenPublication) {
