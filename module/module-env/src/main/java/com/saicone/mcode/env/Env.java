@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Comparator;
@@ -22,6 +23,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
@@ -214,7 +217,12 @@ public class Env {
                     result = instanceFor(type);
                 }
             } catch (Throwable t) {
-                throw new RuntimeException("Cannot invoke " + name, t);
+                if ((t instanceof InvocationTargetException || t instanceof ExecutionException || t instanceof CompletionException || t instanceof ExceptionInInitializerError) && t.getCause() != null) {
+                    // throw real exception cause
+                    throw new RuntimeException("Cannot invoke " + name, t.getCause());
+                } else {
+                    throw new RuntimeException("Cannot invoke " + name, t);
+                }
             }
 
             if (result instanceof Runnable) {
