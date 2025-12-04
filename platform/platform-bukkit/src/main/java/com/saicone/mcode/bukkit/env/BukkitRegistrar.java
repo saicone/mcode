@@ -16,7 +16,7 @@ public class BukkitRegistrar implements Registrar {
 
     @Override
     public boolean isPresent(@NotNull String dependency) {
-        return Bukkit.getPluginManager().isPluginEnabled(dependency);
+        return Bukkit.getPluginManager().getPlugin(dependency) != null;
     }
 
     @Override

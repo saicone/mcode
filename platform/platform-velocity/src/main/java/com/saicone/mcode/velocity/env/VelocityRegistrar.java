@@ -19,7 +19,7 @@ public class VelocityRegistrar implements Registrar {
 
     @Override
     public boolean isPresent(@NotNull String dependency) {
-        return this.proxy.getPluginManager().isLoaded(dependency);
+        return this.proxy.getPluginManager().getPlugin(dependency).isPresent() || this.proxy.getPluginManager().getPlugin(dependency.toLowerCase()).isPresent();
     }
 
     @Override
