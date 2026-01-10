@@ -28,7 +28,7 @@ velocity = "3.4.0-SNAPSHOT"
 
 # Plugins
 blossom = "2.2.0"
-shadow = "9.2.2"
+shadow = "9.3.1"
 
 [libraries]
 
