@@ -3,6 +3,7 @@ package com.saicone.mcode.spigot.delivery;
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
+import com.saicone.delivery4j.util.LogFilter;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
@@ -50,7 +51,7 @@ public class SpigotForwardBroker extends SpigotBroker {
 
     @Override
     @SuppressWarnings("all")
-    public void onSend(@NotNull String channel, byte[] data) {
+    public void send(@NotNull String channel, byte[] data) {
         final ByteArrayDataOutput out = ByteStreams.newDataOutput();
         out.writeUTF("Forward");  // Subchannel
         out.writeUTF("ALL");      // Server name
@@ -58,7 +59,7 @@ public class SpigotForwardBroker extends SpigotBroker {
         out.writeShort(data.length); // Bytes length
         out.write(data);             // Bytes
 
-        super.onSend(preChannel, out.toByteArray());
+        super.send(preChannel, out.toByteArray());
     }
 
     @Override
@@ -75,7 +76,7 @@ public class SpigotForwardBroker extends SpigotBroker {
                     try {
                         receive(channel, data);
                     } catch (IOException e) {
-                        getLogger().log(2, "Cannot process received message from channel '" + channel + "'", e);
+                        getLogger().log(LogFilter.WARNING, "Cannot process received message from channel '" + channel + "'", e);
                     }
                 }
             }

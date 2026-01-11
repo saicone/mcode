@@ -26,7 +26,7 @@ public class BungeePlatform extends Platform {
         super(PlatformType.BUNGEECORD);
         MStrings.BUNGEE_HEX = true;
         // Ser current version
-        MC version = MC.VALUES[MC.VALUES.length - 1];
+        MC version = MC.last();
         final Field[] fields = ProtocolConstants.class.getDeclaredFields();
         for (int i = fields.length; i-- > 0; ) {
             final Field field = fields[i];

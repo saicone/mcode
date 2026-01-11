@@ -2,6 +2,7 @@ package com.saicone.mcode.spigot.delivery;
 
 import com.google.common.collect.Iterables;
 import com.saicone.delivery4j.Broker;
+import com.saicone.delivery4j.util.LogFilter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -53,7 +54,7 @@ public class SpigotBroker extends Broker implements PluginMessageListener {
     }
 
     @Override
-    public void onSend(@NotNull String channel, byte[] data) {
+    public void send(@NotNull String channel, byte[] data) {
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -73,7 +74,7 @@ public class SpigotBroker extends Broker implements PluginMessageListener {
             try {
                 receive(channel, message);
             } catch (IOException e) {
-                getLogger().log(2, "Cannot process received message from channel '" + channel + "'", e);
+                getLogger().log(LogFilter.WARNING, "Cannot process received message from channel '" + channel + "'", e);
             }
         }
     }

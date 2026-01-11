@@ -3,6 +3,7 @@ package com.saicone.mcode.bungee.delivery;
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteStreams;
 import com.saicone.delivery4j.Broker;
+import com.saicone.delivery4j.util.LogFilter;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.PluginMessageEvent;
@@ -80,7 +81,7 @@ public class BungeeBroker extends Broker implements Listener {
     }
 
     @Override
-    public void onSend(@NotNull String channel, byte[] data) {
+    public void send(@NotNull String channel, byte[] data) {
         final boolean all = forward.contains("*");
         for (Map.Entry<String, ServerInfo> entry : plugin.getProxy().getServers().entrySet()) {
             if (all || forward.contains(entry.getKey())) {
@@ -116,7 +117,7 @@ public class BungeeBroker extends Broker implements Listener {
                     try {
                         receive(channel, data);
                     } catch (IOException e) {
-                        getLogger().log(2, "Cannot process received message from channel '" + channel + "'", e);
+                        getLogger().log(LogFilter.WARNING, "Cannot process received message from channel '" + channel + "'", e);
                     }
                 }
             }
@@ -125,7 +126,7 @@ public class BungeeBroker extends Broker implements Listener {
             try {
                 receive(event.getTag(), event.getData());
             } catch (IOException e) {
-                getLogger().log(2, "Cannot process received message from channel '" + event.getTag() + "'", e);
+                getLogger().log(LogFilter.WARNING, "Cannot process received message from channel '" + event.getTag() + "'", e);
             }
         }
 

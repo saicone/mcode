@@ -3,6 +3,7 @@ package com.saicone.mcode.velocity.delivery;
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteStreams;
 import com.saicone.delivery4j.Broker;
+import com.saicone.delivery4j.util.LogFilter;
 import com.saicone.mcode.velocity.VelocityPlatform;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
@@ -86,7 +87,7 @@ public class VelocityBroker extends Broker {
     }
 
     @Override
-    public void onSend(@NotNull String channel, byte[] data) {
+    public void send(@NotNull String channel, byte[] data) {
         final boolean all = forward.contains("*");
         final LegacyChannelIdentifier id = new LegacyChannelIdentifier(channel);
         for (RegisteredServer server : proxy.getAllServers()) {
@@ -123,7 +124,7 @@ public class VelocityBroker extends Broker {
                     try {
                         receive(channel, data);
                     } catch (IOException e) {
-                        getLogger().log(2, "Cannot process received message from channel '" + channel + "'", e);
+                        getLogger().log(LogFilter.WARNING, "Cannot process received message from channel '" + channel + "'", e);
                     }
                 }
             }
@@ -132,7 +133,7 @@ public class VelocityBroker extends Broker {
             try {
                 receive(event.getIdentifier().getId(), event.getData());
             } catch (IOException e) {
-                getLogger().log(2, "Cannot process received message from channel '" + event.getIdentifier().getId() + "'", e);
+                getLogger().log(LogFilter.WARNING, "Cannot process received message from channel '" + event.getIdentifier().getId() + "'", e);
             }
         }
 
