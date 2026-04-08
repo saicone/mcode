@@ -13,7 +13,7 @@ subprojects {
 
     repositories {
         mavenCentral()
-        maven { url 'https://jitpack.io' }
+        maven { url = uri('https://jitpack.io') }
     }
 
     dependencies {
@@ -53,9 +53,9 @@ subprojects {
             publishing {
                 publications {
                     maven(MavenPublication) {
-                        groupId project.group
-                        artifactId project.name
-                        version project.version
+                        groupId = project.group
+                        artifactId = project.name
+                        version = project.version
                         from components.java
                     }
                 }
@@ -92,9 +92,12 @@ def javadocProjects= [
         'extension:extension-lookup'
 ]
 
-task allJavadoc(type: Javadoc) {
+tasks.register('allJavadoc', Javadoc) {
+    group = 'documentation'
+
     source javadocProjects.collect { project(it).sourceSets.main.allJava }
     classpath = files(javadocProjects.collect { project(it).sourceSets.main.compileClasspath })
+
     options {
         // Java
         links 'https://docs.oracle.com/en/java/javase/11/docs/api/'
