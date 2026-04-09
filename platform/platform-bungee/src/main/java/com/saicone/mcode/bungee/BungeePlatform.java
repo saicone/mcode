@@ -25,17 +25,7 @@ public class BungeePlatform extends Platform {
     public BungeePlatform() {
         super(PlatformType.BUNGEECORD);
         MStrings.BUNGEE_HEX = true;
-        // Ser current version
-        MC version = MC.last();
-        final Field[] fields = ProtocolConstants.class.getDeclaredFields();
-        for (int i = fields.length; i-- > 0; ) {
-            final Field field = fields[i];
-            if (field.getName().startsWith("MINECRAFT_")) {
-                version = MC.fromString(field.getName().substring(10).replace('_', '.'));
-                break;
-            }
-        }
-        MC.VERSION = version;
+        MC.VERSION = computeVersion();
     }
 
     @Override
@@ -54,5 +44,11 @@ public class BungeePlatform extends Platform {
     @Override
     public @NotNull Collection<?> getOnlinePlayers() {
         return ProxyServer.getInstance().getPlayers();
+    }
+
+    @NotNull
+    private static MC computeVersion() {
+        final MC version = MC.fromString(ProtocolConstants.SUPPORTED_VERSIONS.get(ProtocolConstants.SUPPORTED_VERSIONS.size() - 1));
+        return version == null ? MC.last() : version;
     }
 }

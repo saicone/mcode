@@ -24,8 +24,7 @@ public class VelocityPlatform extends Platform {
 
     public VelocityPlatform(@NotNull ProxyServer proxy) {
         super(PlatformType.VELOCITY);
-        final ProtocolVersion[] versions = ProtocolVersion.values();
-        MC.VERSION = MC.fromString(versions[versions.length - 1].getMostRecentSupportedVersion());
+        MC.VERSION = computeVersion();
         this.proxy = proxy;
     }
 
@@ -50,5 +49,11 @@ public class VelocityPlatform extends Platform {
     @NotNull
     public ProxyServer getProxy() {
         return proxy;
+    }
+
+    @NotNull
+    private static MC computeVersion() {
+        final MC version = MC.fromString(ProtocolVersion.MAXIMUM_VERSION.getMostRecentSupportedVersion());
+        return version == null ? MC.last() : version;
     }
 }
