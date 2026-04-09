@@ -7,9 +7,6 @@ dependencies {
     compileOnly libs.paper.api
     compileOnly(libs.spigot) {
         transitive = false
-        artifact {
-            classifier = 'remapped-mojang'
-        }
     }
     api project(':platform:platform-bukkit')
     compileOnlyApi libs.nbt.mapper.minecraft

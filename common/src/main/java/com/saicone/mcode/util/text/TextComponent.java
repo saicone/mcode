@@ -365,7 +365,7 @@ public class TextComponent {
                 }
             }
         }
-        return MC.V_1_7;
+        return MC.first();
     }
 
     @NotNull
@@ -379,7 +379,7 @@ public class TextComponent {
         if (element.isJsonObject()) {
             return readVersion(element.getAsJsonObject());
         } else if (element.isJsonArray()) {
-            MC result = MC.V_1_7;
+            MC result = MC.first();
             for (JsonElement e : element.getAsJsonArray()) {
                 result = MC.max(result, readVersion0(e));
             }
@@ -391,7 +391,7 @@ public class TextComponent {
 
     @NotNull
     public static MC readVersion(@NotNull JsonObject object) {
-        MC result = MC.V_1_7;
+        MC result = MC.first();
 
         if (object.has("click_event")) {
             final JsonElement action = get(object, "click_event", "action");
@@ -440,7 +440,7 @@ public class TextComponent {
         if (type == Tag.COMPOUND) {
             return readVersion((Map<String, T>) mapper.extract(tag), mapper);
         } else if (type == Tag.LIST) {
-            MC result = MC.V_1_7;
+            MC result = MC.first();
             for (T element : (List<T>) mapper.extract(tag)) {
                 result = MC.max(result, readVersion0(element, mapper));
             }
@@ -452,7 +452,7 @@ public class TextComponent {
 
     @NotNull
     public static <T> MC readVersion(@NotNull Map<String, T> map, @NotNull TagMapper<T> mapper) {
-        MC result = MC.V_1_7;
+        MC result = MC.first();
 
         if (map.containsKey("click_event")) {
             final Object action = mapper.extract(get(map, mapper, "click_event", "action"));
