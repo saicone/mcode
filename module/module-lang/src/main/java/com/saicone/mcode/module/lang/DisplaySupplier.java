@@ -125,7 +125,7 @@ public interface DisplaySupplier<SenderT> {
 
         if (object instanceof Map) {
             for (var entry : ((Map<?, ?>) object).entrySet()) {
-                if (String.valueOf(entry.getKey()).equalsIgnoreCase("type")) {
+                if (String.valueOf(entry.getKey()).equalsIgnoreCase(Display.TYPE_KEY)) {
                     return loadDisplayOrNull(String.valueOf(entry.getValue()), object);
                 }
             }

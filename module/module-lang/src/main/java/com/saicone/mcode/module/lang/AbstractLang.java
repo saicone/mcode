@@ -160,7 +160,7 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
                 }
             }
             if (value instanceof Map) {
-                return DMap.of((Map<?, ?>) value).getIgnoreCase("type") == null;
+                return DMap.of((Map<?, ?>) value).getIgnoreCase(Display.TYPE_KEY) == null;
             }
             return true;
         });

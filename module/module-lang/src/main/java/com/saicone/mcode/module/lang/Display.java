@@ -11,6 +11,7 @@ import java.util.function.Function;
 @FunctionalInterface
 public interface Display<SenderT> {
 
+    String TYPE_KEY = "type";
     String DEFAULT_TYPE = "text";
 
     @NotNull
