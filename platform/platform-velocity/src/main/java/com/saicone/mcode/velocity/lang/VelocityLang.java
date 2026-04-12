@@ -166,7 +166,8 @@ public class VelocityLang extends AbstractLang<CommandSource> implements Adventu
     }
 
     @Override
-    protected @NotNull Map<?, ?> getFileObjects(@NotNull File file) {
+    @SuppressWarnings("unchecked")
+    protected @NotNull Map<String, Object> getFileObjects(@NotNull File file) {
         if (!file.getName().contains(".")) {
             return new HashMap<>();
         }
@@ -190,7 +191,7 @@ public class VelocityLang extends AbstractLang<CommandSource> implements Adventu
         try {
             final ConfigurationNode value = loader.load();
             if (value.isMap()) {
-                return (Map<?, ?>) asObject(value);
+                return (Map<String, Object>) asObject(value);
             }
         } catch (IOException e) {
             sendLog(2, e, "Cannot load displays from configuration at file " + file.getName());
@@ -201,9 +202,9 @@ public class VelocityLang extends AbstractLang<CommandSource> implements Adventu
     @Nullable
     private Object asObject(@NotNull ConfigurationNode node) {
         if (node.isMap()) {
-            final Map<Object, Object> map = new HashMap<>();
+            final Map<String, Object> map = new HashMap<>();
             for (Map.Entry<Object, ? extends ConfigurationNode> entry : node.childrenMap().entrySet()) {
-                map.put(entry.getKey(), asObject(entry.getValue()));
+                map.put(String.valueOf(entry.getKey()), asObject(entry.getValue()));
             }
             return map;
         } else if (node.isList()) {

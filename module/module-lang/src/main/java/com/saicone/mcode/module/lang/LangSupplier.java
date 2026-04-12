@@ -1,5 +1,6 @@
 package com.saicone.mcode.module.lang;
 
+import com.saicone.mcode.util.DMap;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -53,7 +54,7 @@ public interface LangSupplier {
     }
 
     @NotNull
-    default String getEffectiveLanguage(@NotNull Object language) {
+    default String getEffectiveLanguage(@Nullable Object language) {
         final String s = (language instanceof String ? (String) language : getLanguageFor(language)).toLowerCase();
         if (getLanguageTypes().contains(s)) {
             return s;
@@ -70,7 +71,7 @@ public interface LangSupplier {
         private BiFunction<Object, Object, T> parser;
         private boolean memoize;
 
-        private transient final Map<String, Object> values = new HashMap<>();
+        private transient Map<String, Object> values;
         private transient final Map<String, T> cache = new HashMap<>();
 
         @NotNull
@@ -119,13 +120,44 @@ public interface LangSupplier {
             return this.parser.apply(sender, getValue(getHolder().getEffectiveLanguage(sender)));
         }
 
+        @NotNull
+        public Map<String, Object> getValues() {
+            if (values == null) {
+                values = new HashMap<>();
+                if (getHolder() instanceof AbstractLang) {
+                    final AbstractLang<?> lang = (AbstractLang<?>) getHolder();
+                    for (Map.Entry<String, DMap> entry : lang.getObjects().entrySet()) {
+                        final Object value = compute(entry.getKey(), entry.getValue());
+                        if (value != null) {
+                            values.put(entry.getKey(), value);
+                        }
+                    }
+                }
+            }
+            return values;
+        }
+
+        @Nullable
+        public Object compute(@NotNull String language, @NotNull DMap map) {
+            Object value = map.getDeep(getPath().split("\\."));
+            if (value == null) {
+                for (String alias : getAliases()) {
+                    value = map.getDeep(alias.split("\\."));
+                    if (value != null) {
+                        break;
+                    }
+                }
+            }
+            return value;
+        }
+
         @Nullable
         public Object getValue(@NotNull String language) {
-            final Object value = this.values.get(language);
+            final Object value = getValues().get(language);
             if (value != null) {
                 return value;
             }
-            return this.values.get(getHolder().getLanguage());
+            return getValues().get(getHolder().getLanguage());
         }
 
         public void setValue(@Nullable Object value) {
@@ -133,11 +165,11 @@ public interface LangSupplier {
         }
 
         public void setValue(@NotNull String language, @Nullable Object value) {
-            this.values.put(language, value);
+            getValues().put(language, value);
         }
 
         public void clear() {
-            this.values.clear();
+            this.values = null;
             this.cache.clear();
         }
     }

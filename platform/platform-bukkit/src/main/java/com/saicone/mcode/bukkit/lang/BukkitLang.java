@@ -228,7 +228,7 @@ public class BukkitLang extends AbstractLang<CommandSender> {
     }
 
     @Override
-    protected @NotNull Map<?, ?> getFileObjects(@NotNull File file) {
+    protected @NotNull Map<String, Object> getFileObjects(@NotNull File file) {
         final String name = file.getName().trim().toLowerCase();
         if (name.endsWith(".yaml") || name.endsWith(".yml")) {
             final YamlConfiguration config = new YamlConfiguration();

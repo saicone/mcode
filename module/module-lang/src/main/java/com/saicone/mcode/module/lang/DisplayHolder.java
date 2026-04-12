@@ -63,7 +63,7 @@ public abstract class DisplayHolder<SenderT> implements LangSupplier {
     }
 
     @Nullable
-    public Map<String, Display<SenderT>> getDisplays(@NotNull Object language) {
+    public Map<String, Display<SenderT>> getDisplays(@Nullable Object language) {
         return displays.get(language instanceof String ? language : getLanguageFor(language));
     }
 

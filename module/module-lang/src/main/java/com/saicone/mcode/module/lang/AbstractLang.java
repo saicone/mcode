@@ -9,6 +9,8 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> implements DisplaySupplier<SenderT> {
 
@@ -17,13 +19,14 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
     private final Class<?>[] langProviders;
 
     // Instance fields parameters
-    private Path[] paths;
+    private List<Path> paths;
     private List<DisplayLoader<SenderT>> displayLoaders;
 
     // Mutable parameters
     private transient boolean useSettings;
     private transient String fileSuffix = ".yml";
     private transient String displayType = Display.DEFAULT_TYPE;
+    private transient Map<String, DMap> objects = new HashMap<>();
 
     public AbstractLang(@NotNull Object... providers) {
         LangSupplier langSupplier = null;
@@ -63,6 +66,7 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
                 }
             }
         }
+        this.objects = new HashMap<>();
         getLangFiles(langFolder).forEach((key, list) -> list.forEach(file -> loadDisplays(key, file)));
     }
 
@@ -143,19 +147,27 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
     }
 
     @NotNull
+    public Map<String, DMap> getObjects() {
+        return objects;
+    }
+
+    @NotNull
     private Map<String, Object> getObjects(@NotNull String language, @NotNull File file) {
-        final Map<?, ?> objects;
+        final Map<String, Object> map;
         if (useSettings) {
-            objects = SettingsData.of(file.getName()).load(file.getParentFile()).asLiteralObject();
+            map = SettingsData.of(file.getName()).load(file.getParentFile()).asLiteralObject();
         } else {
-            objects = getFileObjects(file);
+            map = getFileObjects(file);
         }
-        return DMap.of(objects).asDeepPath(".", (pathKey, value) -> {
+        final DMap objects = DMap.of(map);
+        if (this.objects.containsKey(language)) {
+            this.objects.get(language).merge(objects);
+        } else {
+            this.objects.put(language, objects);
+        }
+        return objects.asDeepPath(".", (pathKey, value) -> {
             for (Path path : this.getPaths()) {
                 if (path.getPath().equals(pathKey) || path.getAliases().contains(pathKey)) {
-                    if (path instanceof Value) {
-                        ((Value<?>) path).setValue(language, value);
-                    }
                     return false;
                 }
             }
@@ -167,7 +179,7 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
     }
 
     @NotNull
-    protected abstract Map<?, ?> getFileObjects(@NotNull File file);
+    protected abstract Map<String, Object> getFileObjects(@NotNull File file);
 
     @Nullable
     public LangSupplier getLangSupplier() {
@@ -180,7 +192,7 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
     }
 
     @NotNull
-    public Path[] getPaths() {
+    public List<Path> getPaths() {
         if (paths == null) {
             computePaths();
         }
@@ -240,7 +252,7 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
     }
 
     @Override
-    public @NotNull String getEffectiveLanguage(@NotNull Object language) {
+    public @NotNull String getEffectiveLanguage(@Nullable Object language) {
         if (langSupplier != null) {
             return langSupplier.getEffectiveLanguage(language);
         }
@@ -255,13 +267,55 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
         return super.getLogLevel();
     }
 
+    @Nullable
+    public Object getValue(@Nullable Object language, @NotNull String... path) {
+        final DMap map = this.objects.get(getEffectiveLanguage(language));
+        if (map == null) {
+            return null;
+        }
+        return map.getDeep(path);
+    }
+
+    @Override
+    public @NotNull Path path(@NotNull String path, @NotNull String... aliases) {
+        final Path result = super.path(path, aliases);
+        getPaths().add(result);
+        return result;
+    }
+
+    @NotNull
+    public <T> Value<T> value(@NotNull String path, @NotNull String... aliases) {
+        final Value<T> value = new Value<>(path, aliases);
+        value.setHolder(this);
+        getPaths().add(value);
+        return value;
+    }
+
+    @NotNull
+    public <T> Value<T> value(@NotNull Function<DMap, Object> compute) {
+        return value((language, map) -> compute.apply(map));
+    }
+
+    @NotNull
+    public <T> Value<T> value(@NotNull BiFunction<String, DMap, Object> compute) {
+        final Value<T> value = new Value<>("") {
+            @Override
+            public @Nullable Object compute(@NotNull String language, @NotNull DMap map) {
+                return compute.apply(language, map);
+            }
+        };
+        value.setHolder(this);
+        getPaths().add(value);
+        return value;
+    }
+
     private void computePaths() {
         final List<Path> paths = new ArrayList<>();
         computeFields(getLangProviders(), Path.class, (name, path) -> {
             path.setHolder(this);
             paths.add(path);
         });
-        this.paths = paths.toArray(new Path[0]);
+        this.paths = paths;
     }
 
     @SuppressWarnings("unchecked")

@@ -129,7 +129,7 @@ public class BungeeLang extends AbstractLang<CommandSender> {
     }
 
     @Override
-    protected @NotNull Map<?, ?> getFileObjects(@NotNull File file) {
+    protected @NotNull Map<String, Object> getFileObjects(@NotNull File file) {
         final String name = file.getName().toLowerCase();
         final Configuration config;
         try {

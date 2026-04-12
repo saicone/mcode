@@ -108,6 +108,19 @@ public class DMap implements Map<String, Object> {
         }
     }
 
+    @Nullable
+    public Object getDeep(@NotNull String... path) {
+        Object current = this.map;
+        for (String key : path) {
+            if (current instanceof Map) {
+                current = ((Map<?, ?>) current).get(key);
+            } else {
+                return null;
+            }
+        }
+        return current;
+    }
+
     @NotNull
     public Map<String, Object> getMap() {
         return this.map;
@@ -152,6 +165,30 @@ public class DMap implements Map<String, Object> {
             finalMap.put(entry.getKey(), entry.getValue());
         }
         return finalMap;
+    }
+
+    public void merge(@NotNull Map<String, Object> map) {
+        merge(map, true, true);
+    }
+
+    public void merge(@NotNull Map<String, Object> map, boolean replace, boolean deep) {
+        merge(this.map, map, replace, deep);
+    }
+
+    @NotNull
+    @SuppressWarnings("unchecked")
+    public <K, V, M extends Map<K, V>> M merge(@NotNull M base, @NotNull M values, boolean replace, boolean deep) {
+        Object tempValue;
+        for (var entry : values.entrySet()) {
+            if (!base.containsKey(entry.getKey())) {
+                base.put(entry.getKey(), entry.getValue());
+            } else if (deep && entry.getValue() instanceof Map && (tempValue = base.get(entry.getKey())) instanceof Map) {
+                merge((Map<Object, Object>) tempValue, (Map<Object, Object>) entry.getValue(), replace, true);
+            } else if (replace) {
+                base.put(entry.getKey(), entry.getValue());
+            }
+        }
+        return base;
     }
 
     // Vanilla methods
