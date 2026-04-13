@@ -6,6 +6,7 @@ import com.saicone.mcode.module.lang.display.TextDisplay;
 import com.saicone.mcode.module.lang.display.TitleDisplay;
 import com.saicone.mcode.platform.MC;
 import com.saicone.mcode.platform.Text;
+import com.saicone.mcode.util.JarIO;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ProxyServer;
@@ -22,9 +23,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
-import java.nio.file.Files;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -50,15 +51,15 @@ public class BungeeLang extends AbstractLang<CommandSender> {
     }
 
     @Override
-    public @NotNull String getLanguageFor(@Nullable Object object) {
-        if (object instanceof CommandSender) {
-            if (object instanceof ProxiedPlayer) {
-                return ((ProxiedPlayer) object).getLocale().toLanguageTag().replace('-', '_');
+    public @NotNull Locale getHolderLocale(@Nullable Object holder) {
+        if (holder instanceof CommandSender) {
+            if (holder instanceof ProxiedPlayer) {
+                return ((ProxiedPlayer) holder).getLocale();
             } else {
-                return super.getLanguageFor(null);
+                return super.getHolderLocale(null);
             }
         }
-        return super.getLanguageFor(object);
+        return super.getHolderLocale(holder);
     }
 
     @Override
@@ -108,18 +109,10 @@ public class BungeeLang extends AbstractLang<CommandSender> {
     }
 
     @Override
-    protected void saveFile(@NotNull File folder, @NotNull String name) {
-        final File file = new File(folder, name);
-        if (file.exists()) {
-            return;
-        }
-        try (InputStream in = plugin.getResourceAsStream("lang/" + name)) {
-            if (in == null) {
-                return;
-            }
-            Files.copy(in, file.toPath());
-        } catch (IOException e) {
-            sendLog(2, e);
+    protected void saveFiles(@NotNull File folder) throws IOException {
+        final String prefix = folder.getName() + "/";
+        try (JarIO jar = JarIO.valueOf(plugin.getClass())) {
+            jar.saveResources(folder, entry -> !entry.isDirectory() && entry.getName().startsWith(prefix));
         }
     }
 

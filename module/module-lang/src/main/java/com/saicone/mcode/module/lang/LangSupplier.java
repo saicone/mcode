@@ -1,12 +1,14 @@
 package com.saicone.mcode.module.lang;
 
 import com.saicone.mcode.util.DMap;
+import com.saicone.mcode.util.MLocale;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
@@ -15,19 +17,19 @@ import java.util.function.Function;
 @FunctionalInterface
 public interface LangSupplier {
 
-    String DEFAULT_LANGUAGE = "en_us";
-    Set<String> DEFAULT_LANGUAGE_TYPES = Set.of("en_us");
-    Map<String, String> DEFAULT_LANGUAGE_ALIASES = Map.of(
-            "en_au", "en_us",
-            "en_ca", "en_us",
-            "en_gb", "en_us",
-            "en_nz", "en_us",
-            "es_ar", "es_es",
-            "es_cl", "es_es",
-            "es_ec", "es_es",
-            "es_mx", "es_es",
-            "es_uy", "es_es",
-            "es_ve", "es_es"
+    Locale DEFAULT_LOCALE = MLocale.fromMinecraftLocale("en_us");
+    Set<Locale> DEFAULT_LOCALE_TYPES = Set.of(MLocale.fromMinecraftLocale("en_us"), MLocale.fromMinecraftLocale("es_es"));
+    Map<Locale, Locale> DEFAULT_LOCALE_ALIASES = Map.of(
+            MLocale.fromMinecraftLocale("en_au"), MLocale.fromMinecraftLocale("en_us"),
+            MLocale.fromMinecraftLocale("en_ca"), MLocale.fromMinecraftLocale("en_us"),
+            MLocale.fromMinecraftLocale("en_gb"), MLocale.fromMinecraftLocale("en_us"),
+            MLocale.fromMinecraftLocale("en_nz"), MLocale.fromMinecraftLocale("en_us"),
+            MLocale.fromMinecraftLocale("es_ar"), MLocale.fromMinecraftLocale("es_es"),
+            MLocale.fromMinecraftLocale("es_cl"), MLocale.fromMinecraftLocale("es_es"),
+            MLocale.fromMinecraftLocale("es_ec"), MLocale.fromMinecraftLocale("es_es"),
+            MLocale.fromMinecraftLocale("es_mx"), MLocale.fromMinecraftLocale("es_es"),
+            MLocale.fromMinecraftLocale("es_uy"), MLocale.fromMinecraftLocale("es_es"),
+            MLocale.fromMinecraftLocale("es_ve"), MLocale.fromMinecraftLocale("es_es")
     );
     int DEFAULT_LOG_LEVEL = 2;
 
@@ -35,31 +37,44 @@ public interface LangSupplier {
         // empty default method
     }
 
-    @NotNull
-    String getLanguage();
+    @NotNull Locale getDefaultLocale();
 
     @NotNull
-    default String getLanguageFor(@Nullable Object object) {
-        return getLanguage();
+    default Locale getHolderLocale(@Nullable Object holder) {
+        return getDefaultLocale();
     }
 
     @NotNull
-    default Set<String> getLanguageTypes() {
-        return DEFAULT_LANGUAGE_TYPES;
-    }
-
-    @NotNull
-    default Map<String, String> getLanguageAliases() {
-        return DEFAULT_LANGUAGE_ALIASES;
-    }
-
-    @NotNull
-    default String getEffectiveLanguage(@Nullable Object language) {
-        final String s = (language instanceof String ? (String) language : getLanguageFor(language)).toLowerCase();
-        if (getLanguageTypes().contains(s)) {
-            return s;
+    default Locale getEffectiveLocale(@NotNull Locale locale) {
+        if (getLocaleTypes().contains(locale)) {
+            return locale;
         }
-        return getLanguageAliases().getOrDefault(s, getLanguage());
+
+        return getLocaleAliases().getOrDefault(locale, getDefaultLocale());
+    }
+
+    @NotNull
+    default Locale getEffectiveLocale(@Nullable Object object) {
+        final Locale locale;
+        if (object instanceof Locale) {
+            locale = (Locale) object;
+        } else if (object instanceof String) {
+            locale = MLocale.fromMinecraftLocale((String) object, getDefaultLocale());
+        } else {
+            locale = getHolderLocale(object);
+        }
+
+        return getEffectiveLocale(locale);
+    }
+
+    @NotNull
+    default Set<Locale> getLocaleTypes() {
+        return DEFAULT_LOCALE_TYPES;
+    }
+
+    @NotNull
+    default Map<Locale, Locale> getLocaleAliases() {
+        return DEFAULT_LOCALE_ALIASES;
     }
 
     default int getLogLevel() {
@@ -71,8 +86,8 @@ public interface LangSupplier {
         private BiFunction<Object, Object, T> parser;
         private boolean memoize;
 
-        private transient Map<String, Object> values;
-        private transient final Map<String, T> cache = new HashMap<>();
+        private transient Map<Locale, Object> values;
+        private transient final Map<Locale, T> cache = new HashMap<>();
 
         @NotNull
         public static <T> Value<T> path(@NotNull String path, @NotNull String... aliases) {
@@ -109,24 +124,24 @@ public interface LangSupplier {
 
         public <SenderT> T get(@NotNull SenderT sender) {
             if (this.memoize) {
-                final String language = getHolder().getEffectiveLanguage(sender);
-                T cached = this.cache.get(language);
+                final Locale locale = getHolder().getEffectiveLocale(sender);
+                T cached = this.cache.get(locale);
                 if (cached == null) {
-                    cached = this.parser.apply(sender, getValue(language));
-                    this.cache.put(language, cached);
+                    cached = this.parser.apply(sender, getValue(locale));
+                    this.cache.put(locale, cached);
                 }
                 return cached;
             }
-            return this.parser.apply(sender, getValue(getHolder().getEffectiveLanguage(sender)));
+            return this.parser.apply(sender, getValue(getHolder().getEffectiveLocale(sender)));
         }
 
         @NotNull
-        public Map<String, Object> getValues() {
+        public Map<Locale, Object> getValues() {
             if (values == null) {
                 values = new HashMap<>();
                 if (getHolder() instanceof AbstractLang) {
                     final AbstractLang<?> lang = (AbstractLang<?>) getHolder();
-                    for (Map.Entry<String, DMap> entry : lang.getObjects().entrySet()) {
+                    for (Map.Entry<Locale, DMap> entry : lang.getObjects().entrySet()) {
                         final Object value = compute(entry.getKey(), entry.getValue());
                         if (value != null) {
                             values.put(entry.getKey(), value);
@@ -138,7 +153,7 @@ public interface LangSupplier {
         }
 
         @Nullable
-        public Object compute(@NotNull String language, @NotNull DMap map) {
+        public Object compute(@NotNull Locale locale, @NotNull DMap map) {
             Object value = map.getDeep(getPath().split("\\."));
             if (value == null) {
                 for (String alias : getAliases()) {
@@ -152,20 +167,20 @@ public interface LangSupplier {
         }
 
         @Nullable
-        public Object getValue(@NotNull String language) {
-            final Object value = getValues().get(language);
+        public Object getValue(@NotNull Locale locale) {
+            final Object value = getValues().get(locale);
             if (value != null) {
                 return value;
             }
-            return getValues().get(getHolder().getLanguage());
+            return getValues().get(getHolder().getDefaultLocale());
         }
 
         public void setValue(@Nullable Object value) {
-            setValue(getHolder().getLanguage(), value);
+            setValue(getHolder().getDefaultLocale(), value);
         }
 
-        public void setValue(@NotNull String language, @Nullable Object value) {
-            getValues().put(language, value);
+        public void setValue(@NotNull Locale locale, @Nullable Object value) {
+            getValues().put(locale, value);
         }
 
         public void clear() {

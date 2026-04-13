@@ -10,6 +10,8 @@ import com.saicone.mcode.module.lang.display.*;
 import com.saicone.mcode.platform.Text;
 import com.saicone.mcode.util.DMap;
 import com.saicone.mcode.platform.MC;
+import com.saicone.mcode.util.JarIO;
+import com.saicone.mcode.util.MLocale;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
@@ -36,7 +38,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
-import java.nio.file.Files;
 import java.util.*;
 import java.util.logging.Level;
 
@@ -68,7 +69,9 @@ public class BukkitLang extends AbstractLang<CommandSender> {
     private final TextLoader text = new TextLoader();
     private final TitleLoader title = new TitleLoader();
 
-    private transient Map<String, String> cachedAliases;
+    private transient Locale cachedLocale;
+    private transient Set<Locale> cachedTypes;
+    private transient Map<Locale, Locale> cachedAliases;
 
     public BukkitLang(@NotNull Plugin plugin, @NotNull Object... providers) {
         super(providers);
@@ -86,54 +89,64 @@ public class BukkitLang extends AbstractLang<CommandSender> {
 
     @NotNull
     @Contract("_ -> this")
-    public BukkitLang useConfig(boolean useConfig) {
+    public BukkitLang useBukkitConfig(boolean useConfig) {
         this.useConfig = useConfig;
         return this;
     }
 
     @Override
-    public @NotNull String getLanguage() {
+    public @NotNull Locale getDefaultLocale() {
         if (useConfig) {
-            return plugin.getConfig().getString("Locale.Plugin", DEFAULT_LANGUAGE).toLowerCase();
+            if (cachedLocale == null) {
+                cachedLocale = MLocale.fromMinecraftLocale(plugin.getConfig().getString("locale.plugin"), super.getDefaultLocale());
+            }
+            return cachedLocale;
         }
-        return super.getLanguage();
+        return super.getDefaultLocale();
     }
 
     @Override
-    public @NotNull String getLanguageFor(@Nullable Object object) {
-        if (object instanceof CommandSender) {
-            if (object instanceof Player) {
-                return ((Player) object).getLocale();
+    public @NotNull Locale getHolderLocale(@Nullable Object holder) {
+        if (holder instanceof CommandSender) {
+            if (holder instanceof Player) {
+                // TODO: Add Player#locale() from paper API
+                return MLocale.fromMinecraftLocale(((Player) holder).getLocale(), getDefaultLocale());
             } else {
-                return super.getLanguageFor(null);
+                return super.getHolderLocale(null);
             }
         }
-        return super.getLanguageFor(object);
+        return super.getHolderLocale(holder);
     }
 
     @Override
-    public @NotNull Set<String> getLanguageTypes() {
+    public @NotNull Set<Locale> getLocaleTypes() {
         if (useConfig) {
-            final ConfigurationSection section = plugin.getConfig().getConfigurationSection("Locale.Aliases");
-            if (section != null) {
-                return section.getKeys(false);
+            if (cachedTypes == null) {
+                cachedTypes = new HashSet<>();
+                final ConfigurationSection section = plugin.getConfig().getConfigurationSection("locale.types");
+                if (section != null) {
+                    for (String key : section.getKeys(false)) {
+                        cachedTypes.add(MLocale.fromMinecraftLocale(key, null));
+                    }
+                }
             }
+            return cachedTypes;
         }
-        return super.getLanguageTypes();
+        return super.getLocaleTypes();
     }
 
     @Override
-    public @NotNull Map<String, String> getLanguageAliases() {
+    public @NotNull Map<Locale, Locale> getLocaleAliases() {
         if (useConfig) {
             if (cachedAliases == null) {
                 cachedAliases = new HashMap<>();
-                final ConfigurationSection section = plugin.getConfig().getConfigurationSection("Locale.Aliases");
+                final ConfigurationSection section = plugin.getConfig().getConfigurationSection("locale.aliases");
                 if (section != null) {
                     for (String key : section.getKeys(false)) {
                         final Object object = section.get(key);
                         if (object instanceof List) {
                             for (Object o : (List<?>) object) {
-                                cachedAliases.put(key.toLowerCase(), String.valueOf(o).toLowerCase());
+                                cachedAliases.put(MLocale.fromMinecraftLocale(key), MLocale.fromMinecraftLocale(String.valueOf(o)));
                             }
                         }
                     }
@@ -141,7 +154,7 @@ public class BukkitLang extends AbstractLang<CommandSender> {
             }
             return cachedAliases;
         } else {
-            return super.getLanguageAliases();
+            return super.getLocaleAliases();
         }
     }
 
@@ -201,24 +214,18 @@ public class BukkitLang extends AbstractLang<CommandSender> {
     }
 
     @Override
-    public void reload(@NotNull File langFolder) {
+    public void clear() {
+        super.clear();
+        cachedLocale = null;
+        cachedTypes = null;
         cachedAliases = null;
-        super.load(langFolder);
     }
 
     @Override
-    protected void saveFile(@NotNull File folder, @NotNull String name) {
-        final File file = new File(folder, name);
-        if (file.exists()) {
-            return;
-        }
-        try (InputStream in = plugin.getResource("lang/" + name)) {
-            if (in == null) {
-                return;
-            }
-            Files.copy(in, file.toPath());
-        } catch (IOException e) {
-            sendLog(2, e);
+    protected void saveFiles(@NotNull File folder) throws IOException {
+        final String prefix = folder.getName() + "/";
+        try (JarIO jar = JarIO.valueOf(plugin.getClass())) {
+            jar.saveResources(folder, entry -> !entry.isDirectory() && entry.getName().startsWith(prefix));
         }
     }
 

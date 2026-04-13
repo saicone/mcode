@@ -1,11 +1,13 @@
 package com.saicone.mcode.module.lang;
 
 import com.saicone.mcode.util.DMap;
+import com.saicone.mcode.util.MLocale;
 import com.saicone.settings.SettingsData;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -24,9 +26,8 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
 
     // Mutable parameters
     private transient boolean useSettings;
-    private transient String fileSuffix = ".yml";
     private transient String displayType = Display.DEFAULT_TYPE;
-    private transient Map<String, DMap> objects = new HashMap<>();
+    private transient Map<Locale, DMap> objects = new HashMap<>();
 
     public AbstractLang(@NotNull Object... providers) {
         LangSupplier langSupplier = null;
@@ -52,29 +53,28 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
         if (langSupplier != null) {
             langSupplier.load();
         }
+
         if (!langFolder.exists()) {
             langFolder.mkdirs();
         }
+
         // Save language files
-        for (String language : getLanguageTypes()) {
-            saveFile(langFolder, language + fileSuffix);
-            final int index = language.indexOf('_');
-            if (index > 0) {
-                final String formatted = language.substring(0, index).toLowerCase() + "_" + language.substring(index + 1).toUpperCase();
-                if (!formatted.equals(language)) {
-                    saveFile(langFolder, formatted + fileSuffix);
-                }
-            }
+        try {
+            saveFiles(langFolder);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
+
+        // Load objects
         this.objects = new HashMap<>();
         getLangFiles(langFolder).forEach((key, list) -> list.forEach(file -> loadDisplays(key, file)));
     }
 
-    protected void loadDisplays(@NotNull String language, @NotNull File file) {
-        for (var entry : getObjects(language, file).entrySet()) {
+    protected void loadDisplays(@NotNull Locale locale, @NotNull File file) {
+        for (var entry : getObjects(locale, file).entrySet()) {
             final Display<SenderT> display = loadDisplayOrNull(entry.getValue());
             if (display != null) {
-                this.put(language, entry.getKey(), display);
+                this.put(locale, entry.getKey(), display);
             }
         }
     }
@@ -102,7 +102,7 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
         }
     }
 
-    protected abstract void saveFile(@NotNull File folder, @NotNull String name);
+    protected abstract void saveFiles(@NotNull File folder) throws IOException;
 
     public void setLangSupplier(@Nullable LangSupplier langSupplier) {
         this.langSupplier = langSupplier;
@@ -110,10 +110,6 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
 
     public void setUseSettings(boolean useSettings) {
         this.useSettings = useSettings;
-    }
-
-    public void setFileSuffix(@NotNull String fileSuffix) {
-        this.fileSuffix = fileSuffix;
     }
 
     public void setDisplayType(@NotNull String displayType) {
@@ -128,8 +124,8 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
     public abstract File getLangFolder();
 
     @NotNull
-    protected Map<String, List<File>> getLangFiles(@NotNull File langFolder) {
-        final Map<String, List<File>> map = new HashMap<>();
+    protected Map<Locale, List<File>> getLangFiles(@NotNull File langFolder) {
+        final Map<Locale, List<File>> map = new HashMap<>();
         final File[] files = langFolder.listFiles();
         if (files == null) {
             return map;
@@ -140,19 +136,22 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
             } else {
                 final int index = file.getName().lastIndexOf('.');
                 final String name = index >= 1 ? file.getName().substring(0, index) : file.getName();
-                map.computeIfAbsent(name.toLowerCase(), s -> new ArrayList<>()).add(file);
+                final Locale locale = MLocale.fromMinecraftLocale(name, null);
+                if (locale != null) {
+                    map.computeIfAbsent(locale, s -> new ArrayList<>()).add(file);
+                }
             }
         }
         return map;
     }
 
     @NotNull
-    public Map<String, DMap> getObjects() {
+    public Map<Locale, DMap> getObjects() {
         return objects;
     }
 
     @NotNull
-    private Map<String, Object> getObjects(@NotNull String language, @NotNull File file) {
+    private Map<String, Object> getObjects(@NotNull Locale locale, @NotNull File file) {
         final Map<String, Object> map;
         if (useSettings) {
             map = SettingsData.of(file.getName()).load(file.getParentFile()).asLiteralObject();
@@ -160,10 +159,10 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
             map = getFileObjects(file);
         }
         final DMap objects = DMap.of(map);
-        if (this.objects.containsKey(language)) {
-            this.objects.get(language).merge(objects);
+        if (this.objects.containsKey(locale)) {
+            this.objects.get(locale).merge(objects);
         } else {
-            this.objects.put(language, objects);
+            this.objects.put(locale, objects);
         }
         return objects.asDeepPath(".", (pathKey, value) -> {
             for (Path path : this.getPaths()) {
@@ -200,11 +199,6 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
     }
 
     @NotNull
-    public String getFileSuffix() {
-        return fileSuffix;
-    }
-
-    @NotNull
     @Override
     public List<DisplayLoader<SenderT>> getDisplayLoaders() {
         if (displayLoaders == null) {
@@ -220,43 +214,43 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
     }
 
     @Override
-    public @NotNull String getLanguage() {
+    public @NotNull Locale getDefaultLocale() {
         if (langSupplier != null) {
-            return langSupplier.getLanguage();
+            return langSupplier.getDefaultLocale();
         }
-        return super.getLanguage();
+        return super.getDefaultLocale();
     }
 
     @Override
-    public @NotNull String getLanguageFor(@Nullable Object object) {
+    public @NotNull Locale getHolderLocale(@Nullable Object holder) {
         if (langSupplier != null) {
-            return langSupplier.getLanguageFor(object);
+            return langSupplier.getHolderLocale(holder);
         }
-        return super.getLanguageFor(object);
+        return super.getHolderLocale(holder);
     }
 
     @Override
-    public @NotNull Set<String> getLanguageTypes() {
+    public @NotNull Locale getEffectiveLocale(@Nullable Object object) {
         if (langSupplier != null) {
-            return langSupplier.getLanguageTypes();
+            return langSupplier.getEffectiveLocale(object);
         }
-        return super.getLanguageTypes();
+        return super.getEffectiveLocale(object);
     }
 
     @Override
-    public @NotNull Map<String, String> getLanguageAliases() {
+    public @NotNull Set<Locale> getLocaleTypes() {
         if (langSupplier != null) {
-            return langSupplier.getLanguageAliases();
+            return langSupplier.getLocaleTypes();
         }
-        return super.getLanguageAliases();
+        return super.getLocaleTypes();
     }
 
     @Override
-    public @NotNull String getEffectiveLanguage(@Nullable Object language) {
+    public @NotNull Map<Locale, Locale> getLocaleAliases() {
         if (langSupplier != null) {
-            return langSupplier.getEffectiveLanguage(language);
+            return langSupplier.getLocaleAliases();
         }
-        return super.getEffectiveLanguage(language);
+        return super.getLocaleAliases();
     }
 
     @Override
@@ -269,7 +263,7 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
 
     @Nullable
     public Object getValue(@Nullable Object language, @NotNull String... path) {
-        final DMap map = this.objects.get(getEffectiveLanguage(language));
+        final DMap map = this.objects.get(getEffectiveLocale(language));
         if (map == null) {
             return null;
         }
@@ -293,15 +287,15 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
 
     @NotNull
     public <T> Value<T> value(@NotNull Function<DMap, Object> compute) {
-        return value((language, map) -> compute.apply(map));
+        return value((locale, map) -> compute.apply(map));
     }
 
     @NotNull
-    public <T> Value<T> value(@NotNull BiFunction<String, DMap, Object> compute) {
+    public <T> Value<T> value(@NotNull BiFunction<Locale, DMap, Object> compute) {
         final Value<T> value = new Value<>("") {
             @Override
-            public @Nullable Object compute(@NotNull String language, @NotNull DMap map) {
-                return compute.apply(language, map);
+            public @Nullable Object compute(@NotNull Locale locale, @NotNull DMap map) {
+                return compute.apply(locale, map);
             }
         };
         value.setHolder(this);

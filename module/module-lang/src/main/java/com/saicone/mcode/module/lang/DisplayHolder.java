@@ -7,46 +7,47 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public abstract class DisplayHolder<SenderT> implements LangSupplier {
 
-    private final Map<String, Map<String, Display<SenderT>>> displays = new HashMap<>();
+    private final Map<Locale, Map<String, Display<SenderT>>> displays = new HashMap<>();
 
     @Nullable
-    public Display<SenderT> put(@NotNull String language, @NotNull String key, @NotNull Display<SenderT> display) {
-        if (!displays.containsKey(language)) {
-            displays.put(language, new HashMap<>());
+    public Display<SenderT> put(@NotNull Locale locale, @NotNull String key, @NotNull Display<SenderT> display) {
+        if (!displays.containsKey(locale)) {
+            displays.put(locale, new HashMap<>());
         }
-        return displays.get(language).put(key, display);
+        return displays.get(locale).put(key, display);
     }
 
     @Override
-    public @NotNull String getLanguage() {
-        return DEFAULT_LANGUAGE;
+    public @NotNull Locale getDefaultLocale() {
+        return DEFAULT_LOCALE;
     }
 
     @NotNull
     public Display<SenderT> getDisplay(@NotNull String key) {
-        return getDisplay(getLanguage(), key);
+        return getDisplay(getDefaultLocale(), key);
     }
 
     @NotNull
-    public Display<SenderT> getDisplay(@NotNull Object language, @NotNull String key) {
-        final Display<SenderT> display = getDisplayOrNull(language, key);
+    public Display<SenderT> getDisplay(@NotNull Locale locale, @NotNull String key) {
+        final Display<SenderT> display = getDisplayOrNull(locale, key);
         return display != null ? display : Display.empty();
     }
 
     @Nullable
     public Display<SenderT> getDisplayOrNull(@NotNull String key) {
-        return getDisplayOrNull(getLanguage(), key);
+        return getDisplayOrNull(getDefaultLocale(), key);
     }
 
     @Nullable
-    public Display<SenderT> getDisplayOrNull(@NotNull Object language, @NotNull String key) {
-        final Map<String, Display<SenderT>> displays = getDisplays(language);
+    public Display<SenderT> getDisplayOrNull(@NotNull Locale locale, @NotNull String key) {
+        final Map<String, Display<SenderT>> displays = getDisplays(locale);
         if (displays == null) {
             return null;
         }
@@ -54,8 +55,8 @@ public abstract class DisplayHolder<SenderT> implements LangSupplier {
     }
 
     @NotNull
-    public Display<SenderT> getDisplayOrDefault(@NotNull Object language, @NotNull String key) {
-        final Display<SenderT> display = getDisplayOrNull(language, key);
+    public Display<SenderT> getDisplayOrDefault(@NotNull Locale locale, @NotNull String key) {
+        final Display<SenderT> display = getDisplayOrNull(locale, key);
         if (display != null) {
             return display;
         }
@@ -63,8 +64,8 @@ public abstract class DisplayHolder<SenderT> implements LangSupplier {
     }
 
     @Nullable
-    public Map<String, Display<SenderT>> getDisplays(@Nullable Object language) {
-        return displays.get(language instanceof String ? language : getLanguageFor(language));
+    public Map<String, Display<SenderT>> getDisplays(@NotNull Locale locale) {
+        return displays.get(locale);
     }
 
     @NotNull
@@ -74,15 +75,15 @@ public abstract class DisplayHolder<SenderT> implements LangSupplier {
     protected abstract Collection<? extends SenderT> getSenders();
 
     public void clear() {
-        for (Map.Entry<String, Map<String, Display<SenderT>>> entry : displays.entrySet()) {
+        for (var entry : displays.entrySet()) {
             entry.getValue().clear();
         }
         displays.clear();
     }
 
-    public void clear(@NotNull String language) {
+    public void clear(@NotNull Locale locale) {
         displays.entrySet().removeIf(entry -> {
-            if (entry.getKey().equalsIgnoreCase(language)) {
+            if (entry.getKey().equals(locale)) {
                 entry.getValue().clear();
                 return true;
             }
@@ -134,70 +135,70 @@ public abstract class DisplayHolder<SenderT> implements LangSupplier {
     }
 
     public void sendTo(@NotNull SenderT sender, @NotNull String path, @Nullable Object... args) {
-        sendTo(sender, getLanguageFor(sender), path, args);
+        sendTo(sender, getHolderLocale(sender), path, args);
     }
 
-    protected void sendTo(@NotNull SenderT sender, @NotNull String language, @NotNull String path, @Nullable Object... args) {
-        getDisplayOrDefault(getEffectiveLanguage(language), path).sendArgs(sender, args);
+    protected void sendTo(@NotNull SenderT sender, @NotNull Locale locale, @NotNull String path, @Nullable Object... args) {
+        getDisplayOrDefault(getEffectiveLocale(locale), path).sendArgs(sender, args);
     }
 
     public void sendTo(@NotNull SenderT sender, @NotNull String path, @NotNull Function<String, String> parser) {
-        sendTo(sender, getLanguageFor(sender), path, parser);
+        sendTo(sender, getHolderLocale(sender), path, parser);
     }
 
-    protected void sendTo(@NotNull SenderT sender, @NotNull String language, @NotNull String path, @NotNull Function<Text, Text> parser) {
-        getDisplayOrDefault(getEffectiveLanguage(language), path).sendTo(sender, parser);
+    protected void sendTo(@NotNull SenderT sender, @NotNull Locale locale, @NotNull String path, @NotNull Function<Text, Text> parser) {
+        getDisplayOrDefault(getEffectiveLocale(locale), path).sendTo(sender, parser);
     }
 
     public void sendWith(@NotNull SenderT agent, @NotNull SenderT sender, @NotNull String path, @Nullable Object... args) {
-        sendWith(agent, sender, getLanguageFor(sender), path, args);
+        sendWith(agent, sender, getHolderLocale(sender), path, args);
     }
 
-    protected void sendWith(@NotNull SenderT agent, @NotNull SenderT sender, @NotNull String language, @NotNull String path, @Nullable Object... args) {
-        getDisplayOrDefault(getEffectiveLanguage(language), path).sendArgsWith(agent, sender, args);
+    protected void sendWith(@NotNull SenderT agent, @NotNull SenderT sender, @NotNull Locale locale, @NotNull String path, @Nullable Object... args) {
+        getDisplayOrDefault(getEffectiveLocale(locale), path).sendArgsWith(agent, sender, args);
     }
 
     public void sendToConsole(@NotNull String path, @Nullable Object... args) {
-        getDisplay(getLanguageFor(null), path).sendArgs(getConsole(), args);
+        getDisplay(getHolderLocale(null), path).sendArgs(getConsole(), args);
     }
 
     public void sendToConsole(@NotNull String path, @NotNull Function<Text, Text> parser) {
-        getDisplay(getLanguageFor(null), path).sendTo(getConsole(), parser);
+        getDisplay(getHolderLocale(null), path).sendTo(getConsole(), parser);
     }
 
     public void sendToConsoleWith(@NotNull SenderT agent, @NotNull String path, @Nullable Object... args) {
-        getDisplay(getLanguageFor(null), path).sendArgsWith(agent, getConsole(), args);
+        getDisplay(getHolderLocale(null), path).sendArgsWith(agent, getConsole(), args);
     }
 
     public void sendToAll(@NotNull String path, @Nullable Object... args) {
-        getDisplay(getLanguage(), path).sendArgs(getSenders(), args);
+        getDisplay(getDefaultLocale(), path).sendArgs(getSenders(), args);
     }
 
-    public void sendToAll(@NotNull String language, @NotNull String path, @Nullable Object... args) {
-        getDisplayOrDefault(getEffectiveLanguage(language), path).sendArgs(getSenders(), args);
+    public void sendToAll(@NotNull Locale locale, @NotNull String path, @Nullable Object... args) {
+        getDisplayOrDefault(getEffectiveLocale(locale), path).sendArgs(getSenders(), args);
     }
 
     public void sendToAll(@NotNull String path, @NotNull Function<Text, Text> parser) {
-        getDisplay(getLanguage(), path).sendTo(getSenders(), parser);
+        getDisplay(getDefaultLocale(), path).sendTo(getSenders(), parser);
     }
 
-    public void sendToAll(@NotNull String language, @NotNull String path, @NotNull Function<Text, Text> parser) {
-        getDisplayOrDefault(getEffectiveLanguage(language), path).sendTo(getSenders(), parser);
+    public void sendToAll(@NotNull Locale locale, @NotNull String path, @NotNull Function<Text, Text> parser) {
+        getDisplayOrDefault(getEffectiveLocale(locale), path).sendTo(getSenders(), parser);
     }
 
     public void sendToAll(@NotNull String path, @NotNull Function<Text, Text> parser, @NotNull BiFunction<SenderT, Text, Text> playerParser) {
-        getDisplay(getLanguage(), path).sendTo(getSenders(), parser, playerParser);
+        getDisplay(getDefaultLocale(), path).sendTo(getSenders(), parser, playerParser);
     }
 
-    public void sendToAll(@NotNull String language, @NotNull String path, @NotNull Function<Text, Text> parser, @NotNull BiFunction<SenderT, Text, Text> playerParser) {
-        getDisplayOrDefault(getEffectiveLanguage(language), path).sendTo(getSenders(), parser, playerParser);
+    public void sendToAll(@NotNull Locale locale, @NotNull String path, @NotNull Function<Text, Text> parser, @NotNull BiFunction<SenderT, Text, Text> playerParser) {
+        getDisplayOrDefault(getEffectiveLocale(locale), path).sendTo(getSenders(), parser, playerParser);
     }
 
     public void sendToAllWith(@NotNull SenderT agent, @NotNull String path, @Nullable Object... args) {
-        getDisplay(getLanguage(), path).sendArgsWith(agent, getSenders(), args);
+        getDisplay(getDefaultLocale(), path).sendArgsWith(agent, getSenders(), args);
     }
 
-    public void sendToAllWith(@NotNull SenderT agent, @NotNull String language, @NotNull String path, @Nullable Object... args) {
-        getDisplayOrDefault(getEffectiveLanguage(language), path).sendArgsWith(agent, getSenders(), args);
+    public void sendToAllWith(@NotNull SenderT agent, @NotNull Locale locale, @NotNull String path, @Nullable Object... args) {
+        getDisplayOrDefault(getEffectiveLocale(locale), path).sendArgsWith(agent, getSenders(), args);
     }
 }

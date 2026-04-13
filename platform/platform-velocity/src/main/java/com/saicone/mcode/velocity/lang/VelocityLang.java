@@ -4,6 +4,7 @@ import com.moandjiezana.toml.Toml;
 import com.saicone.mcode.module.lang.AdventureLang;
 import com.saicone.mcode.module.lang.AbstractLang;
 import com.saicone.mcode.module.lang.display.TextDisplay;
+import com.saicone.mcode.util.JarIO;
 import com.saicone.mcode.velocity.VelocityPlatform;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
@@ -19,7 +20,6 @@ import org.spongepowered.configurate.loader.ConfigurationLoader;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
 import java.io.*;
-import java.nio.file.Files;
 import java.util.*;
 
 public class VelocityLang extends AbstractLang<CommandSource> implements AdventureLang<CommandSource> {
@@ -85,15 +85,15 @@ public class VelocityLang extends AbstractLang<CommandSource> implements Adventu
     }
 
     @Override
-    public @NotNull String getLanguageFor(@Nullable Object object) {
-        if (object instanceof CommandSource) {
-            if (object instanceof Player player) {
-                return player.getPlayerSettings().getLocale().toLanguageTag().replace('-', '_');
+    public @NotNull Locale getHolderLocale(@Nullable Object holder) {
+        if (holder instanceof CommandSource) {
+            if (holder instanceof Player player) {
+                return player.getPlayerSettings().getLocale();
             } else {
-                return super.getLanguageFor(null);
+                return super.getHolderLocale(null);
             }
         }
-        return super.getLanguageFor(object);
+        return super.getHolderLocale(holder);
     }
 
     @Override
@@ -145,18 +145,10 @@ public class VelocityLang extends AbstractLang<CommandSource> implements Adventu
     }
 
     @Override
-    protected void saveFile(@NotNull File folder, @NotNull String name) {
-        final File file = new File(folder, name);
-        if (file.exists()) {
-            return;
-        }
-        try (InputStream in = plugin.getClass().getClassLoader().getResourceAsStream("lang/" + name)) {
-            if (in == null) {
-                return;
-            }
-            Files.copy(in, file.toPath());
-        } catch (IOException e) {
-            sendLog(2, e);
+    protected void saveFiles(@NotNull File folder) throws IOException {
+        final String prefix = folder.getName() + "/";
+        try (JarIO jar = JarIO.valueOf(plugin.getClass())) {
+            jar.saveResources(folder, entry -> !entry.isDirectory() && entry.getName().startsWith(prefix));
         }
     }
 
