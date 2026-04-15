@@ -299,7 +299,6 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
             }
         };
         value.setHolder(this);
-        getPaths().add(value);
         return value;
     }
 
