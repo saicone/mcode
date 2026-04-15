@@ -151,6 +151,10 @@ public class BungeeBootstrap extends net.md_5.bungee.api.plugin.Plugin implement
 
     @Override
     public void onDisable() {
+        // Shutdown task scheduler
+        if (this.addons.contains(Addon.MODULE_TASK)) {
+            run("com.saicone.mcode.module.task.Task", "shutdown");
+        }
         // Disable
         Env.execute(Executes.DISABLE, true);
         this.plugin.onDisable();

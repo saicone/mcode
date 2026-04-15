@@ -31,6 +31,6 @@ public class TaskExecutor implements com.saicone.delivery4j.util.TaskExecutor<Ob
 
     @Override
     public @NotNull Executor executor() {
-        return Task.getScheduler().executor();
+        return Task.executor();
     }
 }

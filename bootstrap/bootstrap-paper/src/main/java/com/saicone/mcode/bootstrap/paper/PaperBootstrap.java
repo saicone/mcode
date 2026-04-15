@@ -157,6 +157,10 @@ public class PaperBootstrap extends JavaPlugin implements Bootstrap {
 
     @Override
     public void onDisable() {
+        // Shutdown task scheduler
+        if (this.addons.contains(Addon.MODULE_TASK)) {
+            run("com.saicone.mcode.module.task.Task", "shutdown");
+        }
         // Disable
         Env.execute(Executes.DISABLE, true);
         this.plugin.onDisable();

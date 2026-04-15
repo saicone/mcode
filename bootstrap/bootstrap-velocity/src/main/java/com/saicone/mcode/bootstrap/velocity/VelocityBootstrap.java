@@ -149,6 +149,10 @@ public class VelocityBootstrap implements Bootstrap {
 
     @Subscribe
     public void onShut(ProxyShutdownEvent e) {
+        // Shutdown task scheduler
+        if (this.addons.contains(Addon.MODULE_TASK)) {
+            run("com.saicone.mcode.module.task.Task", "shutdown");
+        }
         // Disable
         Env.execute(Executes.DISABLE, true);
         this.plugin.onDisable();

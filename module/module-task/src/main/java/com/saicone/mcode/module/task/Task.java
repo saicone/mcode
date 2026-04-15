@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 public class Task {
@@ -154,5 +155,44 @@ public class Task {
     public static void stopAllAndClear() {
         stopAll();
         TIMERS.clear();
+    }
+
+    @NotNull
+    public static Executor executor() {
+        return Task::run;
+    }
+
+    @NotNull
+    public static Executor asyncExecutor() {
+        return Task::runAsync;
+    }
+
+    public void shutdown() {
+        stopAllAndClear();
+        final Scheduler<Object> delegate = SCHEDULER;
+        SCHEDULER = new Scheduler<>() {
+            @Override
+            public Object runAsync(@NotNull Runnable runnable) {
+                runnable.run();
+                return null;
+            }
+
+            @Override
+            public Object laterAsync(@NotNull Runnable runnable, long delay, @NotNull TimeUnit unit) {
+                runnable.run();
+                return null;
+            }
+
+            @Override
+            public Object timerAsync(@NotNull Runnable runnable, long delay, long period, @NotNull TimeUnit unit) {
+                runnable.run();
+                return null;
+            }
+
+            @Override
+            public void stop(Object task) {
+                delegate.stop(task);
+            }
+        };
     }
 }
