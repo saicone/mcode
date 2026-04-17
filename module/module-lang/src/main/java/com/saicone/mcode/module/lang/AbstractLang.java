@@ -132,7 +132,7 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
         }
         for (File file : files) {
             if (file.isDirectory()) {
-                getLangFiles(langFolder).forEach((key, list) -> map.computeIfAbsent(key, s -> new ArrayList<>()).addAll(list));
+                getLangFiles(file).forEach((key, list) -> map.computeIfAbsent(key, s -> new ArrayList<>()).addAll(list));
             } else {
                 final int index = file.getName().lastIndexOf('.');
                 final String name = index >= 1 ? file.getName().substring(0, index) : file.getName();
