@@ -167,7 +167,7 @@ public class Task {
         return Task::runAsync;
     }
 
-    public void shutdown() {
+    public static void shutdown() {
         stopAllAndClear();
         final Scheduler<Object> delegate = SCHEDULER;
         SCHEDULER = new Scheduler<>() {
