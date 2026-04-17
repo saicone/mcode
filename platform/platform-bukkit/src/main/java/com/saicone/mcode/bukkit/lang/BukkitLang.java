@@ -230,8 +230,8 @@ public class BukkitLang extends AbstractLang<CommandSender> {
     }
 
     @Override
-    public @NotNull File getLangFolder() {
-        return new File(plugin.getDataFolder(), "lang");
+    public @NotNull File getRootFolder() {
+        return plugin.getDataFolder();
     }
 
     @Override

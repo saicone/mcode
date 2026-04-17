@@ -46,7 +46,7 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
     }
 
     public void load() {
-        load(getLangFolder());
+        load(getRootFolder());
     }
 
     public void load(@NotNull File langFolder) {
@@ -84,7 +84,7 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
     }
 
     public void reload() {
-        reload(getLangFolder());
+        reload(getRootFolder());
     }
 
     public void reload(@NotNull File langFolder) {
@@ -121,7 +121,7 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
     }
 
     @NotNull
-    public abstract File getLangFolder();
+    public abstract File getRootFolder();
 
     @NotNull
     protected Map<Locale, List<File>> getLangFiles(@NotNull File langFolder) {

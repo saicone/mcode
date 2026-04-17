@@ -153,8 +153,8 @@ public class VelocityLang extends AbstractLang<CommandSource> implements Adventu
     }
 
     @Override
-    public @NotNull File getLangFolder() {
-        return java.nio.file.Path.of("plugins", proxy.getPluginManager().ensurePluginContainer(plugin).getDescription().getId(), "lang").toFile();
+    public @NotNull File getRootFolder() {
+        return java.nio.file.Path.of("plugins", proxy.getPluginManager().ensurePluginContainer(plugin).getDescription().getId()).toFile();
     }
 
     @Override
