@@ -55,7 +55,7 @@ subprojects {
 
             publishing {
                 publications {
-                    maven(MavenPublication) {
+                    "${project.name}" {
                         from components.shadow
 
                         afterEvaluate {
@@ -68,7 +68,7 @@ subprojects {
         } else {
             publishing {
                 publications {
-                    maven(MavenPublication) {
+                    "${project.name}" {
                         from components.java
                     }
                 }
