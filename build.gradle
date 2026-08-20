@@ -54,23 +54,19 @@ subprojects {
             }
 
             publishing {
-                publications {
-                    getByName(project.name, MavenPublication) {
-                        from components.shadow
+                publications.named(project.name, MavenPublication) {
+                    from components.shadow
 
-                        afterEvaluate {
-                            artifact tasks.named('sourcesJar')
-                            artifact tasks.named('javadocJar')
-                        }
+                    afterEvaluate {
+                        artifact tasks.named('sourcesJar')
+                        artifact tasks.named('javadocJar')
                     }
                 }
             }
         } else {
             publishing {
-                publications {
-                    getByName(project.name, MavenPublication) {
-                        from components.java
-                    }
+                publications.named(project.name, MavenPublication) {
+                    from components.java
                 }
             }
         }
