@@ -28,10 +28,17 @@ subprojects {
     }
 
     java {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        toolchain.languageVersion.set(JavaLanguageVersion.of(11))
         withSourcesJar()
         withJavadocJar()
+    }
+
+    javadoc {
+        options {
+            links 'https://docs.oracle.com/en/java/javase/25/docs/api/'
+            // annotations
+            links "https://javadoc.io/doc/org.jetbrains/annotations/${libs.annotations.get().version}/"
+        }
     }
 
     afterEvaluate {
@@ -101,33 +108,18 @@ tasks.register('allJavadoc', Javadoc) {
     group = 'documentation'
 
     source javadocProjects.collect { project(it).sourceSets.main.allJava }
-    classpath = files(javadocProjects.collect { project(it).sourceSets.main.compileClasspath })
+    classpath = files(javadocProjects.collect { project(it).sourceSets.main.compileClasspath }) +
+            files(javadocProjects.collect { project(it).configurations.findByName('compileOnlyWith') }.findAll { it != null })
+    javadocTool.set(javaToolchains.javadocToolFor {
+        languageVersion.set(JavaLanguageVersion.of(25))
+    })
 
     options {
-        // Java
-        links 'https://docs.oracle.com/en/java/javase/11/docs/api/'
-        // Libraries
-        links 'https://javadoc.io/doc/com.google.code.gson/gson/latest/'
-        links 'https://javadoc.io/doc/com.google.guava/guava/latest/'
-        links 'https://javadoc.io/doc/com.github.ben-manes.caffeine/caffeine/latest/'
-        links 'https://javadoc.io/doc/org.jetbrains/annotations/latest/'
-
-        links 'https://jd.advntr.dev/api/latest/'
-        links 'https://jd.advntr.dev/text-minimessage/latest/'
-        links 'https://jd.advntr.dev/text-serializer-legacy/latest/'
-        links 'https://jd.advntr.dev/platform/bukkit/latest/'
-        links 'https://jd.advntr.dev/platform/bungeecord/latest/'
-
-        links 'https://javadoc.saicone.com/types/'
-        links 'https://javadoc.saicone.com/settings/'
-        links 'https://javadoc.saicone.com/delivery4j/'
-
-        links 'https://asm.ow2.io/javadoc/'
-
-        // Platforms
-        links 'https://hub.spigotmc.org/javadocs/bukkit/'
-        links 'https://javadoc.io/doc/net.md-5/bungeecord-api/latest/'
-        links 'https://jd.papermc.io/velocity/3.3.0/'
+        def allLinks = javadocProjects.collect { projectPath ->
+            project(projectPath).javadoc.options.links
+        }.flatten().unique()
+        allLinks.each { link -> links link }
     }
+
     destinationDir = file(project.layout.buildDirectory.dir('docs/all-javadoc'))
 }

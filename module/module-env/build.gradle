@@ -9,3 +9,9 @@ dependencies {
 shadowJar {
     relocate 'org.objectweb.asm', 'com.saicone.mcode.asm'
 }
+
+javadoc {
+    options {
+        links 'https://asm.ow2.io/javadoc/'
+    }
+}

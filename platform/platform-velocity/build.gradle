@@ -30,6 +30,11 @@ dependencies {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    toolchain.languageVersion.set(JavaLanguageVersion.of(25))
+}
+
+javadoc {
+    options {
+        links 'https://jd.papermc.io/velocity/4.1.0/'
+    }
 }
