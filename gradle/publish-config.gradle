@@ -2,7 +2,7 @@ apply plugin: 'maven-publish'
 
 publishing {
     publications {
-        "${project.name}"(MavenPublication) {
+        maven(MavenPublication) {
             groupId = project.group
             artifactId = project.name
             version = project.version
