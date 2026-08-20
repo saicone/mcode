@@ -1,3 +1,26 @@
+/*
+ *  MIT License.
+ *
+ *  Copyright (c) 2024-2026 Rubenicos
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ *
+ *  The above copyright notice and this permission notice shall be included in all
+ *  copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ *  SOFTWARE.
+ */
 package com.saicone.mcode.platform;
 
 import org.jetbrains.annotations.ApiStatus;
@@ -180,6 +203,10 @@ public final class MC implements Comparable<MC> {
             V_26_1_1 = ver(26, 1, 1).rev(1).data(4788).protocol(775).resource(84.0f, 101.1f),
             V_26_1_2 = ver(26, 1, 2).rev(1).data(4790).protocol(775).resource(84.0f, 101.1f);
 
+    // 	Chaos Cubed
+    public static final MC
+            V_26_2  = ver(26, 2).rev(1).data(4903).protocol(776).resource(88.0f, 107.1f);
+
     @NotNull
     private static MC ver(int major, int feature) {
         return new MC(major, feature);
@@ -205,7 +232,7 @@ public final class MC implements Comparable<MC> {
     }
 
     @ApiStatus.Internal
-    public static MC VERSION = VALUES.get(VALUES.size() - 1);
+    public static MC VERSION = last();
 
     /**
      * Get current server version.
@@ -215,6 +242,17 @@ public final class MC implements Comparable<MC> {
     @NotNull
     public static MC version() {
         return VERSION;
+    }
+
+    /**
+     * Get all supported versions.
+     *
+     * @return a list of all supported versions.
+     */
+    @NotNull
+    @ApiStatus.Internal
+    public static List<MC> values() {
+        return VALUES;
     }
 
     /**
@@ -708,45 +746,6 @@ public final class MC implements Comparable<MC> {
         return Integer.compare(version1.ordinal(), version2.ordinal());
     }
 
-    @NotNull
-    public static <T> Supplier<T> supply(@Nullable T t, @NotNull MC version, @Nullable T... def) {
-        return () -> {
-            if (MC.version().isNewerThanOrEquals(version)) {
-                return t;
-            } else {
-                return def.length > 0 ? def[0] : null;
-            }
-        };
-    }
-
-    @NotNull
-    public static <T> Supplier<T> supply(@Nullable T t1, @NotNull MC version1, @Nullable T t2, @NotNull MC version2, @Nullable T... def) {
-        return () -> {
-            if (MC.version().isNewerThanOrEquals(version1)) {
-                return t1;
-            } else if (MC.version().isNewerThanOrEquals(version2)) {
-                return t2;
-            } else {
-                return def.length > 0 ? def[0] : null;
-            }
-        };
-    }
-
-    @NotNull
-    public static <T> Supplier<T> supply(@Nullable T t1, @NotNull MC version1, @Nullable T t2, @NotNull MC version2, @Nullable T t3, @NotNull MC version3, @Nullable T... def) {
-        return () -> {
-            if (MC.version().isNewerThanOrEquals(version1)) {
-                return t1;
-            } else if (MC.version().isNewerThanOrEquals(version2)) {
-                return t2;
-            } else if (MC.version().isNewerThanOrEquals(version3)) {
-                return t3;
-            } else {
-                return def.length > 0 ? def[0] : null;
-            }
-        };
-    }
-
     /**
      * Get the maximum of two MC versions.
      *
@@ -783,5 +782,47 @@ public final class MC implements Comparable<MC> {
             return version1;
         }
         return version1.ordinal() < version2.ordinal() ? version1 : version2;
+    }
+
+    @NotNull
+    @ApiStatus.Experimental
+    public static <T> Supplier<T> supply(@Nullable T t, @NotNull MC version, @Nullable T... def) {
+        return () -> {
+            if (MC.version().isNewerThanOrEquals(version)) {
+                return t;
+            } else {
+                return def.length > 0 ? def[0] : null;
+            }
+        };
+    }
+
+    @NotNull
+    @ApiStatus.Experimental
+    public static <T> Supplier<T> supply(@Nullable T t1, @NotNull MC version1, @Nullable T t2, @NotNull MC version2, @Nullable T... def) {
+        return () -> {
+            if (MC.version().isNewerThanOrEquals(version1)) {
+                return t1;
+            } else if (MC.version().isNewerThanOrEquals(version2)) {
+                return t2;
+            } else {
+                return def.length > 0 ? def[0] : null;
+            }
+        };
+    }
+
+    @NotNull
+    @ApiStatus.Experimental
+    public static <T> Supplier<T> supply(@Nullable T t1, @NotNull MC version1, @Nullable T t2, @NotNull MC version2, @Nullable T t3, @NotNull MC version3, @Nullable T... def) {
+        return () -> {
+            if (MC.version().isNewerThanOrEquals(version1)) {
+                return t1;
+            } else if (MC.version().isNewerThanOrEquals(version2)) {
+                return t2;
+            } else if (MC.version().isNewerThanOrEquals(version3)) {
+                return t3;
+            } else {
+                return def.length > 0 ? def[0] : null;
+            }
+        };
     }
 }

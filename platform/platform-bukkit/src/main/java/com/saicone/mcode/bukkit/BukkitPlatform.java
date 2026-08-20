@@ -49,9 +49,11 @@ public class BukkitPlatform extends Platform {
             t.printStackTrace();
         }
 
+        // For some reason the server version cannot be parsed, so internal methods will be used
         if (version == null) {
             final String serverPackage = Bukkit.getServer().getClass().getPackage().getName();
             if (serverPackage.startsWith("org.bukkit.craftbukkit.v1_")) {
+                // Bad accuracy
                 version = MC.findReverse(MC::bukkitPackage, serverPackage.split("\\.")[3]);
             } else {
                 version = MC.findReverse(MC::dataVersion, getDataVersion(serverPackage));

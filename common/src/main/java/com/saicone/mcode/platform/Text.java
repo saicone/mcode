@@ -24,7 +24,7 @@ public abstract class Text {
     public static final byte RAW_JSON = 3;
     public static final byte NBT = 4;
 
-    private static final Text EMPTY_TEXT = new Text(MC.VERSION) {
+    private static final Text EMPTY_TEXT = new Text(MC.version()) {
         @Override
         public boolean isEmpty() {
             return true;
