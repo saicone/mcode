@@ -11,6 +11,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 public abstract class DisplayHolder<SenderT> implements LangSupplier {
 
@@ -142,8 +143,8 @@ public abstract class DisplayHolder<SenderT> implements LangSupplier {
         getDisplayOrDefault(getEffectiveLocale(locale), path).sendArgs(sender, args);
     }
 
-    public void sendTo(@NotNull SenderT sender, @NotNull String path, @NotNull Function<String, String> parser) {
-        sendTo(sender, getHolderLocale(sender), path, parser);
+    public void sendTo(@NotNull SenderT sender, @NotNull String path, @NotNull UnaryOperator<String> parser) {
+        sendTo(sender, getHolderLocale(sender), path, text -> text.apply(parser));
     }
 
     protected void sendTo(@NotNull SenderT sender, @NotNull Locale locale, @NotNull String path, @NotNull Function<Text, Text> parser) {
