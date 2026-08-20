@@ -57,10 +57,8 @@ subprojects {
                 publications.named(project.name, MavenPublication) {
                     from components.shadow
 
-                    afterEvaluate {
-                        artifact tasks.named('sourcesJar')
-                        artifact tasks.named('javadocJar')
-                    }
+                    artifact tasks.named('sourcesJar')
+                    artifact tasks.named('javadocJar')
                 }
             }
         } else {
