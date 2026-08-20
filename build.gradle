@@ -103,13 +103,26 @@ def javadocProjects= [
         'extension:extension-lookup'
 ]
 
+def toolchains = project(javadocProjects.first())
+        .extensions
+        .getByType(org.gradle.jvm.toolchain.JavaToolchainService)
+
 tasks.register('allJavadoc', Javadoc) {
     group = 'documentation'
 
-    source javadocProjects.collect { project(it).sourceSets.main.allJava }
-    classpath = files(javadocProjects.collect { project(it).sourceSets.main.compileClasspath }) +
-            files(javadocProjects.collect { project(it).configurations.findByName('compileOnlyWith') }.findAll { it != null })
-    javadocTool.set(javaToolchains.javadocToolFor {
+    source javadocProjects.collect {
+        project(it).sourceSets.main.allJava
+    }
+    classpath = files(
+            javadocProjects.collect {
+                project(it).sourceSets.main.compileClasspath
+            }
+    ) + files(
+            javadocProjects.collect {
+                project(it).configurations.findByName('compileOnlyWith')
+            }.findAll { it != null }
+    )
+    javadocTool.set(toolchains.javadocToolFor {
         languageVersion.set(JavaLanguageVersion.of(25))
     })
 
@@ -120,5 +133,5 @@ tasks.register('allJavadoc', Javadoc) {
         allLinks.each { link -> links link }
     }
 
-    destinationDir = file(project.layout.buildDirectory.dir('docs/all-javadoc'))
+    destinationDirectory = layout.buildDirectory.dir('docs/all-javadoc')
 }
