@@ -108,7 +108,7 @@ public class BukkitLang extends AbstractLang<CommandSender> {
     @Override
     public @NotNull Locale getHolderLocale(@Nullable Object holder) {
         if (holder instanceof CommandSender) {
-            if (holder instanceof Player) {
+            if (holder instanceof Player && MC.version().isNewerThanOrEquals(MC.V_1_12)) {
                 // TODO: Add Player#locale() from paper API
                 return MLocale.fromMinecraftLocale(((Player) holder).getLocale(), getDefaultLocale());
             } else {
