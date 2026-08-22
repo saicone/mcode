@@ -1,6 +1,16 @@
+import org.gradle.api.attributes.java.TargetJvmVersion
+
 repositories {
     maven { url = uri('https://repo.papermc.io/repository/maven-public/') }
     maven { url = uri('https://repo.codemc.io/repository/nms/') }
+}
+
+configurations.all {
+    if (canBeResolved) {
+        attributes {
+            attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 25)
+        }
+    }
 }
 
 dependencies {
@@ -18,7 +28,6 @@ dependencies {
     compileOnly project(':module:module-env')
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_25
-    targetCompatibility = JavaVersion.VERSION_25
+tasks.withType(JavaCompile).configureEach {
+    options.release = 17
 }
