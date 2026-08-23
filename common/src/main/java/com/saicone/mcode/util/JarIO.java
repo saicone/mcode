@@ -58,7 +58,7 @@ public class JarIO implements AutoCloseable {
             final Iterator<JarEntry> entries = stream.filter(predicate).iterator();
             while (entries.hasNext()) {
                 final JarEntry entry = entries.next();
-                final File file = new File(folder, entry.getName());
+                final File file = file(folder, entry.getName());
                 if (file.exists() && !replace) {
                     continue;
                 }
@@ -68,5 +68,14 @@ public class JarIO implements AutoCloseable {
                 }
             }
         }
+    }
+
+    @NotNull
+    private static File file(@NotNull File folder, @NotNull String name) {
+        File result = folder;
+        for (String part : name.split("/")) {
+            result = new File(result, part);
+        }
+        return result;
     }
 }

@@ -145,10 +145,10 @@ public class VelocityLang extends AbstractLang<CommandSource> implements Adventu
     }
 
     @Override
-    protected void saveFiles(@NotNull File folder) throws IOException {
-        final String prefix = "lang/";
+    protected void saveFiles(@NotNull File rootFolder) throws IOException {
+        final String prefix = AbstractLang.LANG_FOLDER + "/";
         try (JarIO jar = JarIO.valueOf(plugin.getClass())) {
-            jar.saveResources(folder, entry -> !entry.isDirectory() && entry.getName().startsWith(prefix));
+            jar.saveResources(rootFolder, entry -> !entry.isDirectory() && entry.getName().startsWith(prefix));
         }
     }
 

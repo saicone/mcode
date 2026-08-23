@@ -16,6 +16,8 @@ import java.util.function.Function;
 
 public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> implements DisplaySupplier<SenderT> {
 
+    public static String LANG_FOLDER = "lang";
+
     // Object parameters
     private LangSupplier langSupplier;
     private final Class<?>[] langProviders;
@@ -46,7 +48,7 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
     }
 
     public void load() {
-        load(getRootFolder());
+        load(getLangFolder());
     }
 
     public void load(@NotNull File langFolder) {
@@ -60,7 +62,7 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
 
         // Save language files
         try {
-            saveFiles(langFolder);
+            saveFiles(langFolder.getParentFile());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -84,7 +86,7 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
     }
 
     public void reload() {
-        reload(getRootFolder());
+        reload(getLangFolder());
     }
 
     public void reload(@NotNull File langFolder) {
@@ -102,7 +104,7 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
         }
     }
 
-    protected abstract void saveFiles(@NotNull File folder) throws IOException;
+    protected abstract void saveFiles(@NotNull File rootFolder) throws IOException;
 
     public void setLangSupplier(@Nullable LangSupplier langSupplier) {
         this.langSupplier = langSupplier;
@@ -122,6 +124,11 @@ public abstract class AbstractLang<SenderT> extends DisplayHolder<SenderT> imple
 
     @NotNull
     public abstract File getRootFolder();
+
+    @NotNull
+    public File getLangFolder() {
+        return new File(getRootFolder(), LANG_FOLDER);
+    }
 
     @NotNull
     protected Map<Locale, List<File>> getLangFiles(@NotNull File langFolder) {
