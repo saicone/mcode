@@ -34,10 +34,10 @@ public enum Addon {
     PLATFORM_VELOCITY(mcode("platform-velocity"), "com.saicone.mcode.velocity.VelocityPlatform"),
 
     // Libraries
-    LIBRARY_DELIVERY4J(library("com{}saicone{}delivery4j", "delivery4j", Constants.DELIVERY4J_VERSION),
+    LIBRARY_DELIVERY4J(library("com{}saicone", "delivery4j", Constants.DELIVERY4J_VERSION),
             "com.saicone.delivery4j.Broker"
     ),
-    LIBRARY_SETTINGS(library("com{}saicone{}settings", "settings", Constants.SETTINGS_VERSION),
+    LIBRARY_SETTINGS(library("com{}saicone", "settings", Constants.SETTINGS_VERSION),
             "com.saicone.settings.Settings"
     ),
     LIBRARY_TYPES(library("com{}saicone", "types", Constants.TYPES_VERSION),
