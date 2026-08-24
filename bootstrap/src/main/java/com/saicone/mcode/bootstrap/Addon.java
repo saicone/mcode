@@ -25,7 +25,6 @@ public enum Addon {
 
     // Extensions
     EXTENSION_CACHE(mcode("extension-cache"), "com.saicone.mcode.util.cache.Cache"),
-    EXTENSION_LOOKUP(mcode("extension-lookup"), "com.saicone.mcode.util.invoke.EasyLookup"),
 
     // Platforms
     PLATFORM_BUKKIT(mcode("platform-bukkit"), "com.saicone.mcode.bukkit.BukkitPlatform"),
@@ -100,7 +99,6 @@ public enum Addon {
     public boolean isExtension() {
         switch (this) {
             case EXTENSION_CACHE:
-            case EXTENSION_LOOKUP:
                 return true;
             default:
                 return false;

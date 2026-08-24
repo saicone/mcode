@@ -99,8 +99,7 @@ def javadocProjects= [
         'bootstrap:bootstrap-paper',
         'bootstrap:bootstrap-velocity',
         // Extensions
-        'extension:extension-cache',
-        'extension:extension-lookup'
+        'extension:extension-cache'
 ]
 
 def toolchains = project(javadocProjects.first())
