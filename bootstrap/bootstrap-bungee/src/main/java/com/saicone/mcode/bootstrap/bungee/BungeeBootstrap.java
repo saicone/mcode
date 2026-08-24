@@ -121,9 +121,6 @@ public class BungeeBootstrap extends net.md_5.bungee.api.plugin.Plugin implement
     }
 
     private void initAddons() {
-        if (this.addons.contains(Addon.MODULE_SCRIPT)) {
-            init("com.saicone.mcode.bungee.script.BungeeScripts");
-        }
         if (this.addons.contains(Addon.MODULE_TASK)) {
             final Object scheduler = build("com.saicone.mcode.bungee.scheduler.BungeeScheduler", this);
             run("com.saicone.mcode.module.task.Task", "setScheduler", scheduler);

@@ -18,9 +18,6 @@ dependencies {
     compileOnly libs.adventure.text.minimessage
     compileOnly libs.adventure.text.serializer.legacy
 
-    // Script module
-    compileOnly project(':module:module-script')
-
     // Command module
     compileOnly project(':module:module-command')
 

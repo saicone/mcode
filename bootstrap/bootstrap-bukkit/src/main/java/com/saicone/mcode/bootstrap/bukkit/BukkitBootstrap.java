@@ -147,9 +147,6 @@ public class BukkitBootstrap extends JavaPlugin implements Bootstrap {
     }
 
     private void initAddons() {
-        if (this.addons.contains(Addon.MODULE_SCRIPT)) {
-            init("com.saicone.mcode.bukkit.script.BukkitScripts");
-        }
         if (this.addons.contains(Addon.MODULE_TASK)) {
             final String schedulerName;
             if (PAPER_EXECUTOR && ServerInstance.Type.MULTITHREADING) {

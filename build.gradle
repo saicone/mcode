@@ -83,8 +83,6 @@ def javadocProjects= [
         'module:module-env',
         'module:module-lang',
         'module:module-lang-adventure',
-        'module:module-script',
-        'module:module-script-js',
         'module:module-task',
         // Platforms
         'platform:platform-bukkit',

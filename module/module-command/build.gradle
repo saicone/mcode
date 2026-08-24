@@ -1,6 +1,5 @@
 dependencies {
     api project(':common')
-    compileOnly project(':module:module-script')
     compileOnly libs.guava
     api libs.types
 }

@@ -121,9 +121,6 @@ public class PaperBootstrap extends JavaPlugin implements Bootstrap {
     }
 
     private void initAddons() {
-        if (this.addons.contains(Addon.MODULE_SCRIPT)) {
-            init("com.saicone.mcode.bukkit.script.BukkitScripts");
-        }
         if (this.addons.contains(Addon.MODULE_TASK)) {
             final String schedulerName;
             if (ServerInstance.Type.MULTITHREADING) {

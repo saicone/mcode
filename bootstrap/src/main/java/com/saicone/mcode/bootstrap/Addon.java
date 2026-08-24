@@ -19,8 +19,6 @@ public enum Addon {
     MODULE_ENV(mcode("module-env"), "com.saicone.mcode.env.Env"),
     MODULE_LANG(mcode("module-lang"), "com.saicone.mcode.module.lang.AbstractLang"),
     MODULE_LANG_ADVENTURE(mcode("module-lang-adventure"), "com.saicone.mcode.module.lang.AdventureLang"),
-    MODULE_SCRIPT(mcode("module-script"), "com.saicone.mcode.module.script.Script"),
-    MODULE_SCRIPT_JS(mcode("module-script-js")),
     MODULE_TASK(mcode("module-task"), "com.saicone.mcode.module.task.Scheduler"),
 
     // Extensions
@@ -87,8 +85,6 @@ public enum Addon {
             case MODULE_ENV:
             case MODULE_LANG:
             case MODULE_LANG_ADVENTURE:
-            case MODULE_SCRIPT:
-            case MODULE_SCRIPT_JS:
             case MODULE_TASK:
                 return true;
             default:

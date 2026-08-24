@@ -14,9 +14,6 @@ dependencies {
     compileOnly project(':module:module-lang')
     implementation project(':module:module-lang-adventure')
 
-    // Script module
-    compileOnly project(':module:module-script')
-
     // Command module
     compileOnly project(':module:module-command')
     compileOnly project(':module:module-command-brigadier')
