@@ -14,7 +14,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.nio.file.Path;
-import java.util.function.Supplier;
 
 public interface Bootstrap extends Loader {
 
@@ -23,12 +22,6 @@ public interface Bootstrap extends Loader {
 
     @NotNull
     Object logger();
-
-    void log(int level, @NotNull Supplier<String> msg);
-
-    void logException(int level, @NotNull Throwable throwable);
-
-    void logException(int level, @NotNull Throwable throwable, @NotNull Supplier<String> msg);
 
     default void loadDependencies() {
         // Conditions
@@ -52,7 +45,7 @@ public interface Bootstrap extends Loader {
             field.setAccessible(true);
             field.set(null, this);
         } catch (Throwable t) {
-            logException(1, t, () -> "Cannot set BOOTSTRAP instance field");
+            throw new RuntimeException("Cannot set BOOTSTRAP instance field", t);
         }
         try {
             final Class<? extends Plugin> clazz = (Class<? extends Plugin>) Class.forName(pluginClass);

@@ -24,7 +24,6 @@ import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.Supplier;
 
 public class VelocityBootstrap implements Bootstrap {
 
@@ -164,50 +163,5 @@ public class VelocityBootstrap implements Bootstrap {
     @Override
     public @NotNull Object logger() {
         return this.logger;
-    }
-
-    @Override
-    public void log(int level, @NotNull Supplier<String> msg) {
-        switch (level) {
-            case 1:
-                this.logger.error(msg.get());
-                break;
-            case 2:
-                this.logger.warn(msg.get());
-                break;
-            default:
-                this.logger.info(msg.get());
-                break;
-        }
-    }
-
-    @Override
-    public void logException(int level, @NotNull Throwable throwable) {
-        switch (level) {
-            case 1:
-                this.logger.error("", throwable);
-                break;
-            case 2:
-                this.logger.warn("", throwable);
-                break;
-            default:
-                this.logger.info("", throwable);
-                break;
-        }
-    }
-
-    @Override
-    public void logException(int level, @NotNull Throwable throwable, @NotNull Supplier<String> msg) {
-        switch (level) {
-            case 1:
-                this.logger.error(msg.get(), throwable);
-                break;
-            case 2:
-                this.logger.warn(msg.get(), throwable);
-                break;
-            default:
-                this.logger.info(msg.get(), throwable);
-                break;
-        }
     }
 }

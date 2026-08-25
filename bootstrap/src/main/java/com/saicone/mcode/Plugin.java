@@ -3,18 +3,18 @@ package com.saicone.mcode;
 import com.saicone.mcode.bootstrap.Bootstrap;
 import com.saicone.mcode.env.Env;
 import com.saicone.mcode.env.Executes;
-import com.saicone.mcode.util.text.Strings;
+import com.saicone.mcode.util.logging.LogFilter;
+import org.intellij.lang.annotations.MagicConstant;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
-import java.util.function.Supplier;
 
 public class Plugin {
 
     private static Bootstrap BOOTSTRAP;
     private static Plugin INSTANCE;
 
+    protected LogFilter logger;
     protected int logLevel = 3;
 
     @NotNull
@@ -23,39 +23,9 @@ public class Plugin {
         return (T) BOOTSTRAP;
     }
 
-    public static void log(int level, @NotNull Supplier<String> msg) {
-        if (level > INSTANCE.logLevel) {
-            return;
-        }
-        BOOTSTRAP.log(level, msg);
-    }
-
-    public static void log(int level, @NotNull String msg, @Nullable Object... args) {
-        if (level > INSTANCE.logLevel) {
-            return;
-        }
-        BOOTSTRAP.log(level, () -> Strings.replaceArgs(msg, args));
-    }
-
-    public static void logException(int level, @NotNull Throwable throwable) {
-        if (level > INSTANCE.logLevel) {
-            return;
-        }
-        BOOTSTRAP.logException(level, throwable);
-    }
-
-    public static void logException(int level, @NotNull Throwable throwable, @NotNull Supplier<String> msg) {
-        if (level > INSTANCE.logLevel) {
-            return;
-        }
-        BOOTSTRAP.logException(level, throwable, msg);
-    }
-
-    public static void logException(int level, @NotNull Throwable throwable, @NotNull String msg, @Nullable Object... args) {
-        if (level > INSTANCE.logLevel) {
-            return;
-        }
-        BOOTSTRAP.logException(level, throwable, () -> Strings.replaceArgs(msg, args));
+    @NotNull
+    public static LogFilter logger() {
+        return INSTANCE.logger;
     }
 
     public static void reload() {
@@ -69,6 +39,8 @@ public class Plugin {
             throw new IllegalStateException("The plugin instance is already initialized");
         }
         INSTANCE = this;
+
+        this.logger = LogFilter.valueOf(BOOTSTRAP.logger(), () -> this.logLevel);
     }
 
     @NotNull
@@ -86,7 +58,7 @@ public class Plugin {
         return logLevel;
     }
 
-    public void setLogLevel(int logLevel) {
+    public void setLogLevel(@MagicConstant(valuesFromClass = LogFilter.class) int logLevel) {
         this.logLevel = logLevel;
     }
 

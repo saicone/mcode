@@ -19,8 +19,6 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Supplier;
-import java.util.logging.Level;
 
 public class BungeeBootstrap extends net.md_5.bungee.api.plugin.Plugin implements Bootstrap {
 
@@ -166,29 +164,5 @@ public class BungeeBootstrap extends net.md_5.bungee.api.plugin.Plugin implement
     @Override
     public @NotNull Object logger() {
         return this.getLogger();
-    }
-
-    @Override
-    public void log(int level, @NotNull Supplier<String> msg) {
-        this.getLogger().log(level(level), msg);
-    }
-
-    @Override
-    public void logException(int level, @NotNull Throwable throwable) {
-        this.getLogger().log(level(level), throwable, () -> "");
-    }
-
-    @Override
-    public void logException(int level, @NotNull Throwable throwable, @NotNull Supplier<String> msg) {
-        this.getLogger().log(level(level), throwable, msg);
-    }
-
-    @NotNull
-    private Level level(int level) {
-        return switch (level) {
-            case 1 -> Level.SEVERE;
-            case 2 -> Level.WARNING;
-            default -> Level.INFO;
-        };
     }
 }
