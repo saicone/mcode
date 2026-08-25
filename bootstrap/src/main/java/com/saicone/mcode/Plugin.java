@@ -6,7 +6,12 @@ import com.saicone.mcode.env.Executes;
 import com.saicone.mcode.util.logging.LogFilter;
 import org.intellij.lang.annotations.MagicConstant;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.UnknownNullability;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
 import java.nio.file.Path;
 
 public class Plugin {
@@ -46,6 +51,19 @@ public class Plugin {
     @NotNull
     public Path getFolder() {
         return BOOTSTRAP.folder();
+    }
+
+    @UnknownNullability
+    public InputStream getResource(@NotNull String name) throws IOException {
+        final URL url = BOOTSTRAP.getClass().getClassLoader().getResource(name);
+        if (url == null) {
+            return null;
+        }
+
+        final URLConnection connection = url.openConnection();
+        connection.setUseCaches(false);
+
+        return connection.getInputStream();
     }
 
     @NotNull
