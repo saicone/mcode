@@ -14,7 +14,7 @@ public @interface Awake {
 
     Executes[] when();
 
-    int priority() default 0;
+    int priority() default 100;
 
     long delay() default 0L;
 
