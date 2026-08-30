@@ -14,6 +14,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -73,13 +74,20 @@ public class PaperBootstrap extends JavaPlugin implements Bootstrap {
 
         this.folder = getDataFolder().toPath();
 
-        // Load MCode information from paper-plugin.yml
+        // Load MCode information from paper-plugin.yml or plugin.yml
         this.addons = new HashSet<>();
         final YamlConfiguration plugin = new YamlConfiguration();
         final String pluginClass;
-        try (InputStreamReader reader = new InputStreamReader(new BufferedInputStream(this.getResource("paper-plugin.yml")))) {
+
+        InputStream resource = this.getResource("paper-plugin.yml");
+        String resourceName = "paper-plugin.yml";
+        if (resource == null) {
+            resource = this.getResource("plugin.yml");
+            resourceName = "plugin.yml";
+        }
+        try (InputStreamReader reader = new InputStreamReader(new BufferedInputStream(resource))) {
             plugin.load(reader);
-            pluginClass = Objects.requireNonNull(plugin.getString("mcode.plugin"), "Cannot find plugin class from mcode configuration inside paper-plugin.yml");
+            pluginClass = Objects.requireNonNull(plugin.getString("mcode.plugin"), "Cannot find plugin class from mcode configuration inside " + resourceName);
             for (String name : plugin.getStringList("mcode.addons")) {
                 final Addon addon = Addon.of(name);
                 if (addon != null) {
@@ -89,7 +97,7 @@ public class PaperBootstrap extends JavaPlugin implements Bootstrap {
                 }
             }
         } catch (IOException | InvalidConfigurationException e) {
-            throw new RuntimeException("Cannot read paper-plugin.yml from plugin JAR file", e);
+            throw new RuntimeException("Cannot read " + resourceName + " from plugin JAR file", e);
         }
 
         // Add replacements for libraries
