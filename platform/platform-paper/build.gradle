@@ -19,7 +19,7 @@ dependencies {
         transitive = false
     }
     api project(':platform:platform-bukkit')
-    compileOnlyApi libs.nbt.mapper.minecraft
+    api libs.nbt.mapper.minecraft
 
     // Task module
     compileOnly project(':module:module-task')
