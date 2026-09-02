@@ -428,14 +428,16 @@ public class TextComponent {
     }
 
     @NotNull
-    public static <T> MC readVersion(@NotNull T tag, @NotNull TagMapper<T> mapper) {
+    public static <T> MC readVersion(@NotNull T tag, @NotNull Object tagMapper) {
+        final TagMapper<T> mapper = (TagMapper<T>) tagMapper;
         final MC version = readVersion0(tag, mapper);
         return version != null ? version : MC.version();
     }
 
     @Nullable
     @SuppressWarnings("unchecked")
-    private static <T> MC readVersion0(@NotNull T tag, @NotNull TagMapper<T> mapper) {
+    private static <T> MC readVersion0(@NotNull T tag, @NotNull Object tagMapper) {
+        final TagMapper<T> mapper = (TagMapper<T>) tagMapper;
         final byte type = mapper.typeId(tag);
         if (type == Tag.COMPOUND) {
             return readVersion((Map<String, T>) mapper.extract(tag), mapper);
@@ -451,7 +453,8 @@ public class TextComponent {
     }
 
     @NotNull
-    public static <T> MC readVersion(@NotNull Map<String, T> map, @NotNull TagMapper<T> mapper) {
+    public static <T> MC readVersion(@NotNull Map<String, T> map, @NotNull Object tagMapper) {
+        final TagMapper<T> mapper = (TagMapper<T>) tagMapper;
         MC result = MC.first();
 
         if (map.containsKey("click_event")) {
@@ -524,7 +527,8 @@ public class TextComponent {
 
     @Nullable
     @SuppressWarnings("unchecked")
-    private static <T> T get(@NotNull Map<String, T> map, @NotNull TagMapper<T> mapper, @NotNull String... path) {
+    private static <T> T get(@NotNull Map<String, T> map, @NotNull Object tagMapper, @NotNull String... path) {
+        final TagMapper<T> mapper = (TagMapper<T>) tagMapper;
         T tag = null;
         int count = 0;
         for (@NotNull String key : path) {
@@ -561,7 +565,8 @@ public class TextComponent {
 
     @NotNull
     @SuppressWarnings("unchecked")
-    public static <T> T apply(@NotNull T tag, @NotNull TagMapper<T> mapper, @NotNull UnaryOperator<String> operator) {
+    public static <T> T apply(@NotNull T tag, @NotNull Object tagMapper, @NotNull UnaryOperator<String> operator) {
+        final TagMapper<T> mapper = (TagMapper<T>) tagMapper;
         final byte type = mapper.typeId(tag);
         if (type == Tag.COMPOUND) {
             final Map<String, T> map = new HashMap<>();

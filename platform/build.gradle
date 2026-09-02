@@ -1,5 +1,5 @@
 subprojects {
     dependencies {
-        api libs.nbt
+        compileOnlyApi libs.nbt
     }
 }

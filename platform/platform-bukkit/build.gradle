@@ -8,7 +8,7 @@ repositories {
 dependencies {
     compileOnly libs.spigot.api
     compileOnly libs.authlib
-    api libs.nbt.mapper.bukkit
+    compileOnlyApi libs.nbt.mapper.bukkit
 
     // Task module
     compileOnly project(':module:module-task')
