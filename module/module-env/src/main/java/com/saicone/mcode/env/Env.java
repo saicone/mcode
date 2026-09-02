@@ -359,7 +359,13 @@ public class Env {
             if (REGISTRAR != null) {
                 for (String dependency : dependsOn) {
                     if (!REGISTRAR.isPresent(dependency)) {
-                        return false;
+                        // The dependency was not a plugin, let's check if it's a class instead
+                        try {
+                            Class.forName(dependency);
+                        } catch (Throwable e) {
+                            // This also return false if there was an error while loading the class
+                            return false;
+                        }
                     }
                 }
             }
