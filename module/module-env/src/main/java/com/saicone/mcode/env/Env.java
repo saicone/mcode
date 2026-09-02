@@ -291,7 +291,7 @@ public class Env {
         for (String name : (List<String>) awake.getOrDefault("when", List.<String>of())) {
             when.add(Executes.valueOf(name));
         }
-        final int priority = ((Number) awake.getOrDefault("priority", 0)).intValue();
+        final int priority = ((Number) awake.getOrDefault("priority", 100)).intValue();
         final long delay = ((Number) awake.getOrDefault("delay", 0)).longValue();
         final long period = ((Number) awake.getOrDefault("period", 0)).longValue();
         final TimeUnit unit = TimeUnit.valueOf((String) awake.getOrDefault("unit", "SECONDS"));
