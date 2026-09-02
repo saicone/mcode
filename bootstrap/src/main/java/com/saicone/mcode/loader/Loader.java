@@ -63,7 +63,11 @@ public interface Loader {
                     break;
             }
         }).xmlParser(new EzlibLoader.XmlParser());
-        libraryLoader.applyAnnotationsDependency();
+        try {
+            Class.forName("com.saicone.ezlib.Dependency", false, Loader.class.getClassLoader());
+        } catch (Throwable t) {
+            libraryLoader.applyAnnotationsDependency();
+        }
         libraryLoader.loadRelocations(Addon.RELOCATIONS);
         libraryLoader.applyDependency(Addon.COMMON.dependency());
         libraryLoader.applyDependency(Addon.MODULE_ENV.dependency());
