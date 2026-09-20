@@ -1,19 +1,18 @@
 package com.saicone.mcode.module.command.impl;
 
-import com.google.common.base.Suppliers;
 import com.saicone.mcode.module.command.*;
+import com.saicone.mcode.util.function.Lazy;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 public abstract class AbstractCommandNode<SenderT> implements CommandNode<SenderT> {
 
     private CommandNode<SenderT> parent;
-    private final Supplier<String> path = Suppliers.memoize(() -> {
+    private final Lazy<String> path = Lazy.init(() -> {
         if (getParent() != null) {
             return getParent().getPath() + "." + getName();
         } else {

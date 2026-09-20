@@ -1,10 +1,10 @@
 package com.saicone.mcode.bukkit.lang;
 
-import com.google.common.base.Suppliers;
 import com.saicone.mcode.module.lang.AdventureBossBar;
 import com.saicone.mcode.module.lang.AdventureLang;
 import com.saicone.mcode.module.lang.display.BossBarDisplay;
 import com.saicone.mcode.module.lang.display.TextDisplay;
+import com.saicone.mcode.util.function.Lazy;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
@@ -14,11 +14,7 @@ import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.function.Supplier;
-
 public class BukkitAdventureLang extends BukkitLang implements AdventureLang<CommandSender> {
-
-    private final Supplier<BukkitAudiences> audiences = Suppliers.memoize(() -> BukkitAudiences.create(getPlugin()));
 
     private final AdventureLang.ActionBarLoader<CommandSender> actionbar = new AdventureLang.ActionBarLoader<>(this);
     private final AdventureLang.BossBarLoader<CommandSender> bossbar = new AdventureLang.BossBarLoader<>(this) {
@@ -56,6 +52,7 @@ public class BukkitAdventureLang extends BukkitLang implements AdventureLang<Com
     };
     private final AdventureLang.TitleLoader<CommandSender> title = new AdventureLang.TitleLoader<>(this);
 
+    private Lazy<BukkitAudiences> audiences = Lazy.mutable(() -> BukkitAudiences.create(getPlugin()));
     private transient boolean useMiniMessage;
 
     public BukkitAdventureLang(@NotNull Plugin plugin, @NotNull Object... providers) {
@@ -75,6 +72,14 @@ public class BukkitAdventureLang extends BukkitLang implements AdventureLang<Com
     @NotNull
     public BukkitAudiences getAudiences() {
         return audiences.get();
+    }
+
+    public void setAudiences(@NotNull BukkitAudiences audiences) {
+        this.audiences.set(audiences);
+    }
+
+    public void setAudiences(@NotNull Lazy<BukkitAudiences> audiences) {
+        this.audiences = audiences;
     }
 
     @NotNull

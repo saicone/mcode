@@ -1,10 +1,10 @@
 package com.saicone.mcode.bungee.lang;
 
-import com.google.common.base.Suppliers;
 import com.saicone.mcode.module.lang.AdventureBossBar;
 import com.saicone.mcode.module.lang.AdventureLang;
 import com.saicone.mcode.module.lang.display.BossBarDisplay;
 import com.saicone.mcode.module.lang.display.TextDisplay;
+import com.saicone.mcode.util.function.Lazy;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.platform.bungeecord.BungeeAudiences;
@@ -14,11 +14,7 @@ import net.md_5.bungee.api.plugin.Plugin;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.function.Supplier;
-
 public class BungeeAdventureLang extends BungeeLang implements AdventureLang<CommandSender> {
-
-    private final Supplier<BungeeAudiences> audiences = Suppliers.memoize(() -> BungeeAudiences.create(getPlugin()));
 
     private final AdventureLang.ActionBarLoader<CommandSender> actionbar = new AdventureLang.ActionBarLoader<>(this);
     private final AdventureLang.BossBarLoader<CommandSender> bossbar = new AdventureLang.BossBarLoader<>(this) {
@@ -60,6 +56,7 @@ public class BungeeAdventureLang extends BungeeLang implements AdventureLang<Com
     };
     private final AdventureLang.TitleLoader<CommandSender> title = new AdventureLang.TitleLoader<>(this);
 
+    private Lazy<BungeeAudiences> audiences = Lazy.mutable(() -> BungeeAudiences.create(getPlugin()));
     private transient boolean useMiniMessage;
 
     public BungeeAdventureLang(@NotNull Plugin plugin, @NotNull Object... providers) {
@@ -79,6 +76,14 @@ public class BungeeAdventureLang extends BungeeLang implements AdventureLang<Com
     @NotNull
     public BungeeAudiences getAudiences() {
         return audiences.get();
+    }
+
+    public void setAudiences(@NotNull BungeeAudiences audiences) {
+        this.audiences.set(audiences);
+    }
+
+    public void setAudiences(@NotNull Lazy<BungeeAudiences> audiences) {
+        this.audiences = audiences;
     }
 
     @NotNull

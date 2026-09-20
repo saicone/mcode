@@ -1,11 +1,11 @@
 package com.saicone.mcode.bukkit;
 
-import com.google.common.base.Suppliers;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.gson.JsonElement;
 import com.saicone.mcode.platform.MC;
 import com.saicone.mcode.platform.Text;
+import com.saicone.mcode.util.function.Lazy;
 import com.saicone.mcode.util.text.Replacer;
 import com.saicone.mcode.util.text.TextComponent;
 import com.saicone.nbt.io.TagReader;
@@ -23,12 +23,11 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
 public class BukkitText {
 
-    private static final Supplier<Boolean> USE_PLACEHOLDERAPI = Suppliers.memoize(() -> Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null);
+    private static final Lazy<Boolean> USE_PLACEHOLDERAPI = Lazy.init(() -> Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null);
     private static final Cache<String, Object> CACHED_PLACEHOLDERS = CacheBuilder.newBuilder().expireAfterWrite(2, TimeUnit.MINUTES).build();
     public static final Function<String, Replacer> PLACEHOLDER_LOOKUP = identifier -> {
         if (!USE_PLACEHOLDERAPI.get()) {
