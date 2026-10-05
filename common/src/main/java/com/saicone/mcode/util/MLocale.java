@@ -25,6 +25,7 @@ public class MLocale {
         ALIASES.put("brb", "qbr-NL");
         ALIASES.put("bs_ba", "bs-BA");
         ALIASES.put("ca_es", "ca-ES");
+        ALIASES.put("cv_cu", "cv-RU");
         ALIASES.put("cs_cz", "cs-CZ");
         ALIASES.put("cy_gb", "cy-GB");
         ALIASES.put("da_dk", "da-DK");
@@ -57,6 +58,7 @@ public class MLocale {
         ALIASES.put("fil_ph", "fil-PH");
         ALIASES.put("fo_fo", "fo-FO");
         ALIASES.put("fr_ca", "fr-CA");
+        ALIASES.put("fr_ch", "fr-CH");
         ALIASES.put("fr_fr", "fr-FR");
         ALIASES.put("fra_de", "vmf-DE");
         ALIASES.put("fur_it", "fur-IT");
@@ -64,6 +66,8 @@ public class MLocale {
         ALIASES.put("ga_ie", "ga-IE");
         ALIASES.put("gd_gb", "gd-GB");
         ALIASES.put("gl_es", "gl-ES");
+        ALIASES.put("go_fr", "qga-FR");
+        ALIASES.put("got_de", "got-DE");
         ALIASES.put("hal_ua", "qha-UA");
         ALIASES.put("haw_us", "haw-US");
         ALIASES.put("he_il", "he-IL");
@@ -140,8 +144,10 @@ public class MLocale {
         ALIASES.put("tt_ru", "tt-RU");
         ALIASES.put("tzo_mx", "tzo-MX");
         ALIASES.put("uk_ua", "uk-UA");
+        ALIASES.put("uz_uz", "uz-UZ");
         ALIASES.put("val_es", "ca-ES-VC");
         ALIASES.put("vec_it", "vec-IT");
+        ALIASES.put("vro", "vro-EE");
         ALIASES.put("vi_vn", "vi-VN");
         ALIASES.put("vp_vl", "qpv-QP");
         ALIASES.put("yi_de", "yi-IL");
