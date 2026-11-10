@@ -622,9 +622,14 @@ public final class MC implements Comparable<MC> {
 
         // parse
         final int major = Integer.parseInt(split[0]);
-        final int feature = Integer.parseInt(split[1]);
+        final int feature;
+        if (split[1].equalsIgnoreCase("x")) {
+            feature = Integer.MAX_VALUE;
+        } else {
+            feature = Integer.parseInt(split[1]);
+        }
         int minor = 0;
-        if (split.length > 2 && !split[2].equals("x")) {
+        if (split.length > 2 && !split[2].equalsIgnoreCase("x")) {
             minor = Integer.parseInt(split[2]);
         }
 
@@ -638,7 +643,7 @@ public final class MC implements Comparable<MC> {
         // find latest supported patch
         for (int i = VALUES.size(); i-- > 0; ) {
             final MC value = VALUES.get(i);
-            if (value.major == major && value.feature == feature) {
+            if (value.major == major && value.feature <= feature) {
                 return value;
             }
         }
